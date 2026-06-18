@@ -1,7 +1,8 @@
-# Film Recipes · Fuji
+# Fudge
 
-Webapp mobile-first (compatible desktop) reprenant **1058 recettes de simulation de film Fujifilm**
-issues du Google Sheet source, transformées en **presets applicables + curseurs classiques** d'app photo.
+**Fudge** — webapp mobile-first (compatible desktop) reprenant **1058 recettes de simulation de film
+Fujifilm** issues du Google Sheet source, transformées en **presets applicables + curseurs classiques**
+d'app photo. Interface noir & jaune (Kodak), typographie Helvetica.
 
 ## Fonctionnalités
 - **Moteur de rendu pixel** (`renderRecipe`, traitement canvas pixel par pixel) qui réinterprète
