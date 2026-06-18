@@ -101,6 +101,7 @@ img.logo::after{display:none}
 .fav{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;
   display:grid;place-items:center;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);color:#fff;z-index:3;transition:background .15s,transform .15s}
 .fav:hover{background:rgba(0,0,0,.65);transform:scale(1.08)}
+.fav::before{content:"";position:absolute;inset:-8px}  /* ≥44px touch target */
 .fav.on{color:var(--accent)}
 .card .body{padding:10px 11px 12px}
 .card .name{font-size:13px;font-weight:600;line-height:1.25;margin:0 0 3px;
@@ -127,12 +128,13 @@ img.logo::after{display:none}
 }
 .ed-head{display:flex;align-items:center;gap:12px;padding:calc(var(--safe-t) + 12px) 16px 12px;
   border-bottom:1px solid var(--line);flex:none}
-.ed-head .x{width:34px;height:34px;border-radius:var(--r-md);background:var(--panel2);display:grid;place-items:center;flex:none;transition:background .15s}
+.ed-head .x{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:var(--panel2);display:grid;place-items:center;flex:none;transition:background .15s}
 .ed-head .x:hover{background:var(--line2)}
+.ed-head .x::before,.ed-head .hfav::before{content:"";position:absolute;inset:-5px}  /* ≥44px touch target */
 .ed-head .t{min-width:0;flex:1}
 .ed-head .t h2{margin:0;font-size:18px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ed-head .t span{font-size:11px;color:var(--txt3)}
-.ed-head .hfav{width:34px;height:34px;border-radius:var(--r-md);background:var(--panel2);display:grid;place-items:center;flex:none;transition:background .15s}
+.ed-head .hfav{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:var(--panel2);display:grid;place-items:center;flex:none;transition:background .15s}
 .ed-head .hfav:hover{background:var(--line2)}
 .ed-head .hfav.on{color:var(--accent)}
 
@@ -196,9 +198,6 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .ed-foot button{flex:1;padding:13px;border-radius:var(--r-md);font-weight:600;font-size:14px;transition:filter .15s,background .15s}
 .btn-reset{background:var(--panel2);border:1px solid var(--line2);color:var(--txt)}
 .btn-reset:hover{background:var(--line2)}
-.btn-src{background:var(--accent);color:var(--ink)}
-.btn-src:hover{filter:brightness(1.08)}
-.btn-src.dis{opacity:.4;pointer-events:none}
 .btn-export{background:var(--accent2);color:var(--ink);display:flex;align-items:center;justify-content:center}
 .btn-export:hover{filter:brightness(1.08)}
 .btn-export.busy{opacity:.6;pointer-events:none}
@@ -311,7 +310,6 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
     <button class="btn-export" id="btnExport" hidden>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align:-3px;margin-right:6px"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>Exporter
     </button>
-    <button class="btn-src" id="btnSrc">Source ↗</button>
   </div>
 </div>
 
@@ -332,6 +330,29 @@ function svgIcon(path,size){return `<svg width="${size}" height="${size}" viewBo
 // favorite heart that swaps filled/outline by state
 function heartSvg(on,size){return svgIcon(on?MI.heart:MI.heartO,size);}
 function setHeart(btn,on){if(!btn)return;const p=btn.querySelector('path');if(p)p.setAttribute('d',on?MI.heart:MI.heartO);btn.setAttribute('aria-pressed',!!on);}
+
+// Turn a container of role=radio buttons into a keyboard radiogroup:
+// roving tabindex + arrow/Home/End navigation (selection follows focus).
+function wireRadios(group){
+  const radios=[...group.querySelectorAll('[role=radio]')];
+  if(!radios.length)return;
+  let ci=radios.findIndex(b=>b.getAttribute('aria-checked')==='true');
+  if(ci<0)ci=0;
+  radios.forEach((b,i)=>b.tabIndex=i===ci?0:-1);
+  const rg=group.getAttribute('data-rg');
+  group.onkeydown=e=>{
+    const i=radios.indexOf(document.activeElement);if(i<0)return;
+    let n=null;const k=e.key;
+    if(k==='ArrowRight'||k==='ArrowDown')n=(i+1)%radios.length;
+    else if(k==='ArrowLeft'||k==='ArrowUp')n=(i-1+radios.length)%radios.length;
+    else if(k==='Home')n=0;else if(k==='End')n=radios.length-1;else return;
+    e.preventDefault();
+    const val=radios[n].getAttribute('data-rv');
+    radios[n].click();                 // selects -> rebuilds the group(s)
+    const sel=document.querySelector(`[data-rg="${rg}"] [data-rv="${val}"]`);
+    if(sel)sel.focus();
+  };
+}
 
 //// ---------- PREVIEW IMAGES ----------
 // Generic royalty-free photo (served alongside the app) used on cards + as default preview.
@@ -630,7 +651,6 @@ function openEditor(r,blank){
   $('#edSub').textContent=blank?'Partez des curseurs ci-dessous':`${r.creator||'—'} · ${r.sensor||r.camera||''}`;
   $('#rawSec').style.display=blank?'none':'';
   if(!blank)$('#rawBox').textContent=(r.raw||'').trim()||'—';
-  const src=$('#btnSrc');src.classList.toggle('dis',!(r.url&&/^http/.test(r.url)));
   syncFav();
   buildBasePick();buildSliders();buildSegments();
   paint();
@@ -658,9 +678,11 @@ $('#edFav').onclick=()=>{if(!cur||cur._blank)return;toggleFav(cur._i);syncFav();
 
 function buildBasePick(){
   const w=$('#basepick');w.innerHTML='';
-  BASES.forEach(b=>{const btn=el('button');btn.textContent=b;if(vals.base===b)btn.classList.add('on');
-    btn.setAttribute('aria-pressed',vals.base===b?'true':'false');
+  w.setAttribute('role','radiogroup');w.setAttribute('aria-label','Simulation de base');w.setAttribute('data-rg','base');
+  BASES.forEach(b=>{const btn=el('button');btn.textContent=b;const on=vals.base===b;if(on)btn.classList.add('on');
+    btn.setAttribute('role','radio');btn.setAttribute('aria-checked',on?'true':'false');btn.setAttribute('data-rv',b);
     btn.onclick=()=>{vals.base=b;vals.mono=/acros|mono|sepia/i.test(b);buildBasePick();paint();};w.appendChild(btn);});
+  wireRadios(w);
 }
 function buildSliders(){
   const w=$('#sliders');w.innerHTML='';
@@ -696,17 +718,20 @@ function buildSegments(){
     w.appendChild(segLv('Color Chrome Effect',vals.colorChrome,v=>{vals.colorChrome=v;buildSegments();paintLook();}));
     w.appendChild(segLv('Color Chrome Blue',vals.colorChromeBlue,v=>{vals.colorChromeBlue=v;buildSegments();paintLook();}));
   }
+  w.querySelectorAll('.seg').forEach(wireRadios);
 }
 function seg(label,opts,val,fn,acc){
   const row=el('div','seg-row');row.innerHTML=`<label>${label}</label>`;
-  const s=el('div','seg');s.setAttribute('role','group');s.setAttribute('aria-label',label);
-  opts.forEach(o=>{const b=el('button');b.textContent=o;if(o===val){b.classList.add('on');if(acc)b.classList.add('acc');}b.setAttribute('aria-pressed',o===val?'true':'false');b.onclick=()=>fn(o);s.appendChild(b);});
+  const s=el('div','seg');s.setAttribute('role','radiogroup');s.setAttribute('aria-label',label);s.setAttribute('data-rg',label);
+  opts.forEach(o=>{const b=el('button');b.textContent=o;const on=o===val;if(on){b.classList.add('on');if(acc)b.classList.add('acc');}
+    b.setAttribute('role','radio');b.setAttribute('aria-checked',on?'true':'false');b.setAttribute('data-rv',o);b.onclick=()=>fn(o);s.appendChild(b);});
   row.appendChild(s);return row;
 }
 function segLv(label,val,fn){
   const row=el('div','seg-row');row.innerHTML=`<label>${label}</label>`;
-  const s=el('div','seg');s.setAttribute('role','group');s.setAttribute('aria-label',label);
-  LV.forEach(o=>{const b=el('button');b.textContent=LVfr[o];if(o===val)b.classList.add('on');b.setAttribute('aria-pressed',o===val?'true':'false');b.onclick=()=>fn(o);s.appendChild(b);});
+  const s=el('div','seg');s.setAttribute('role','radiogroup');s.setAttribute('aria-label',label);s.setAttribute('data-rg',label);
+  LV.forEach(o=>{const b=el('button');b.textContent=LVfr[o];const on=o===val;if(on)b.classList.add('on');
+    b.setAttribute('role','radio');b.setAttribute('aria-checked',on?'true':'false');b.setAttribute('data-rv',o);b.onclick=()=>fn(o);s.appendChild(b);});
   row.appendChild(s);return row;
 }
 
@@ -738,7 +763,6 @@ $('#upload').addEventListener('change',e=>{
 
 //// foot buttons
 $('#btnReset').onclick=()=>{if(cur)openEditor(cur,cur._blank);toast('Réglages réinitialisés');};
-$('#btnSrc').onclick=()=>{if(cur&&cur.url)window.open(cur.url,'_blank');};
 
 //// EXPORT (bake the current look into the uploaded photo)
 function slugify(s){return (s||'recette').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
