@@ -445,50 +445,50 @@ const I3=[1,0,0, 0,1,0, 0,0,1];
 // ---------------------------------------------------------------------------
 const PRESETS=[
  // — Négatifs couleur (chauds, peau crémeuse) —
- {name:'Maple 400', film:'Négatif portrait · chaud & crémeux', cat:'Négatif',
+ {name:'Kodak Portra 400', film:'Négatif portrait · chaud & crémeux', cat:'Négatif',
   temp:18,tint:-4,sat:.92,con:.93,lift:.05,split:.4,splitS:[-.01,0,.02],splitH:[.04,.02,-.02],grain:.4,vig:.12},
- {name:'Honey 200', film:'Négatif doré · nostalgique', cat:'Négatif',
+ {name:'Kodak Gold 200', film:'Négatif doré · nostalgique', cat:'Négatif',
   temp:30,tint:2,sat:1.05,con:1.0,lift:.04,split:.45,splitS:[0,.005,.01],splitH:[.06,.03,-.045],grain:.5,vig:.15},
- {name:'Sunday 400', film:'Négatif du quotidien · vif', cat:'Négatif',
+ {name:'Fujifilm Superia 400', film:'Négatif du quotidien · vif', cat:'Négatif',
   temp:12,tint:-6,sat:1.16,con:1.05,lift:.03,split:.3,splitS:[-.02,.02,0],splitH:[.03,.02,-.02],grain:.6,vig:.12},
 
  // — Diapositives (saturées, contrastées) —
- {name:'Velvet 50', film:'Diapo ultra-saturée · paysage', cat:'Diapo',
+ {name:'Fujifilm Velvia 50', film:'Diapo ultra-saturée · paysage', cat:'Diapo',
   temp:-4,sat:1.42,con:1.2,mx:[1.10,-.06,-.04, -.05,1.10,-.05, -.03,-.07,1.10],split:.2,splitS:[-.01,0,.02],grain:.2,vig:.18},
- {name:'Chrome 100', film:'Diapo équilibrée · propre', cat:'Diapo',
+ {name:'Fujifilm Provia 100F', film:'Diapo équilibrée · propre', cat:'Diapo',
   temp:2,sat:1.12,con:1.08,grain:.2,vig:.1},
- {name:'Archive 64', film:'Diapo vintage · rouges riches', cat:'Diapo',
+ {name:'Kodachrome 64', film:'Diapo vintage · rouges riches', cat:'Diapo',
   temp:14,sat:1.1,con:1.12,mx:[1.08,-.02,-.03, -.02,1.0,-.02, -.02,-.02,.96],split:.35,splitS:[.01,0,-.01],splitH:[.03,.01,-.03],lift:.02,grain:.35,vig:.18},
 
  // — Cinéma —
- {name:'Neon 800T', film:'Ciné tungstène · halation & teal', cat:'Ciné',
+ {name:'CineStill 800T', film:'Ciné tungstène · halation & teal', cat:'Ciné',
   temp:-22,tint:-2,sat:.98,con:1.05,lift:.05,split:.6,splitS:[-.03,.02,.05],splitH:[.06,0,-.03],grain:.8,vig:.2},
- {name:'Daylight 250', film:'Ciné lumière du jour · doux', cat:'Ciné',
+ {name:'Kodak Vision3 250D', film:'Ciné lumière du jour · doux', cat:'Ciné',
   temp:6,sat:.95,con:.95,lift:.06,split:.45,splitS:[-.02,.005,.02],splitH:[.03,.02,-.02],grain:.5,vig:.15},
- {name:'Cinéma', film:'Étalonnage teal & orange', cat:'Ciné',
+ {name:'Kodak Vision3 500T', film:'Étalonnage teal & orange', cat:'Ciné',
   temp:8,sat:1.05,con:1.12,split:.7,splitS:[-.04,.01,.05],splitH:[.06,.03,-.05],lift:.04,grain:.3,vig:.22},
 
  // — Lomo / expérimental —
- {name:'Lomo Pop', film:'Lomo · saturé & vignette', cat:'Lomo',
+ {name:'Lomography Color 400', film:'Lomo · saturé & vignette', cat:'Lomo',
   temp:0,tint:-10,sat:1.5,con:1.25,lift:.02,split:.4,splitS:[-.02,.04,-.02],splitH:[.03,.04,-.04],grain:.7,vig:.5},
- {name:'X-Pro', film:'Cross-process · couleurs folles', cat:'Lomo',
+ {name:'Lomography X-Pro 200', film:'Cross-process · couleurs folles', cat:'Lomo',
   temp:4,tint:6,sat:1.3,con:1.3,mx:[1.05,0,-.05, -.03,1.05,-.02, .02,-.04,.95],split:.7,splitS:[-.05,.02,.04],splitH:[.06,.05,-.08],lift:.03,grain:.6,vig:.3},
- {name:'Redscale', film:'Pellicule inversée · rouge intense', cat:'Lomo',
+ {name:'Lomography Redscale', film:'Pellicule inversée · rouge intense', cat:'Lomo',
   temp:40,sat:1.1,con:1.1,mx:[1.15,.05,.05, 0,.85,.05, 0,0,.5],split:.3,splitH:[.06,0,-.06],grain:.6,vig:.25},
 
  // — Vintage / délavé —
- {name:'Faded 78', film:'Rétro délavé · seventies', cat:'Vintage',
+ {name:'Kodak ColorPlus 200', film:'Rétro délavé · seventies', cat:'Vintage',
   temp:16,sat:.72,con:.85,lift:.13,split:.4,splitS:[.01,.005,-.01],splitH:[.04,.02,-.03],grain:.6,vig:.15},
- {name:'Instant', film:'Instantané · doux & froid', cat:'Vintage',
+ {name:'Polaroid 600', film:'Instantané · doux & froid', cat:'Vintage',
   temp:-6,tint:-4,sat:.88,con:.9,lift:.1,split:.4,splitS:[-.02,.01,.03],splitH:[.03,.02,-.01],grain:.4,vig:.32},
- {name:'Expired', film:'Pellicule périmée · dérive verte', cat:'Vintage',
+ {name:'Lomochrome Metropolis', film:'Pellicule périmée · dérive verte', cat:'Vintage',
   temp:-2,tint:-14,sat:.85,con:.95,mx:[.98,.03,0, 0,1.04,0, .02,.02,.94],lift:.08,split:.4,splitS:[-.03,.05,-.02],grain:1.4,vig:.2},
 
  // — Noir & blanc —
- {name:'Mono 400', film:'N&B classique · contrasté', cat:'N&B', mono:1,con:1.15,lift:.01,grain:1.2,vig:.12},
- {name:'Mono 5', film:'N&B reportage · souple', cat:'N&B', mono:1,con:1.05,lift:.03,grain:.9,vig:.1},
- {name:'Mono Fine', film:'N&B grain fin · net', cat:'N&B', mono:1,con:1.08,grain:.3,vig:.08},
- {name:'Noir', film:'N&B graphique · contraste fort', cat:'N&B', mono:1,con:1.4,grain:.7,vig:.18},
+ {name:'Kodak Tri-X 400', film:'N&B classique · contrasté', cat:'N&B', mono:1,con:1.15,lift:.01,grain:1.2,vig:.12},
+ {name:'Ilford HP5 Plus', film:'N&B reportage · souple', cat:'N&B', mono:1,con:1.05,lift:.03,grain:.9,vig:.1},
+ {name:'Fujifilm Acros 100', film:'N&B grain fin · net', cat:'N&B', mono:1,con:1.08,grain:.3,vig:.08},
+ {name:'Ilford Delta 3200', film:'N&B graphique · contraste fort', cat:'N&B', mono:1,con:1.4,grain:1.0,vig:.18},
  {name:'Sépia', film:'N&B viré sépia · chaud', cat:'N&B', mono:1,con:1.05,grain:.6,tone:[.07,-.01,-.16],vig:.15},
  {name:'Sélénium', film:'N&B viré froid', cat:'N&B', mono:1,con:1.12,grain:.5,tone:[-.04,0,.06],vig:.12},
 
