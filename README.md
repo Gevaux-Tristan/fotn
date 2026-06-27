@@ -45,6 +45,9 @@ python3 -m http.server 8765
 ## Déployer
 N'importe quel hébergement statique (Vercel, Netlify, GitHub Pages…). Déposer le dossier tel quel.
 
-## Mettre à jour les données
-Réexporter le Google Sheet en CSV puis relancer le parseur (`parse.py`, voir historique) pour
-régénérer `recipes.json`.
+## Looks (LUTs 3D)
+Six presets de la catégorie **Look** sont de vrais LUTs `.cube` (ré-échantillonnés en 16³,
+appliqués par interpolation trilinéaire) issus de packs gratuits :
+Téal & Orange / Automne (PhilStrahl), Bleach Bypass (RocketStock — 35 Free LUTs),
+Nuit Froide / Vert Malsain (SmallHD — BMDFilm), Kodak 2383 (Juan Melara — print emulation).
+Crédits aux auteurs respectifs ; LUTs intégrés comme données de transformation colorimétrique.
