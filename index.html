@@ -250,6 +250,14 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .cam-focus{position:absolute;z-index:3;width:74px;height:74px;margin:-37px 0 0 -37px;border:2px solid var(--accent);
   border-radius:8px;pointer-events:none;opacity:0;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
 .cam-focus.show{animation:camfocus .9s ease-out}
+.cam-expo{position:absolute;z-index:4;width:46px;height:200px;margin-top:-100px;touch-action:none}
+.cam-expo[hidden]{display:none}
+.cam-expo-track{position:relative;width:3px;height:100%;margin:0 auto;background:rgba(255,255,255,.45);border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.cam-expo-knob{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;
+  background:var(--accent);color:var(--ink);display:grid;place-items:center;box-shadow:0 1px 7px rgba(0,0,0,.55)}
+.cam-zoom{width:48px;height:48px;flex:none;border-radius:50%;font-size:13px;font-weight:700;color:#fff;
+  background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2)}
+.cam-zoom[hidden]{display:none}
 @keyframes camfocus{0%{opacity:0;transform:scale(1.5)}15%{opacity:1}40%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
 @media (prefers-reduced-motion: reduce){.cam-focus.show{animation:none;opacity:0}}
 .cam-top{position:absolute;top:calc(var(--safe-t) + 10px);left:0;right:0;z-index:3;
@@ -388,6 +396,13 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   <video id="camVideo" playsinline autoplay muted></video>
   <canvas id="camCanvas"></canvas>
   <div class="cam-focus" id="camFocus" aria-hidden="true"></div>
+  <div class="cam-expo" id="camExpo" hidden>
+    <div class="cam-expo-track" id="camExpoTrack">
+      <div class="cam-expo-knob" id="camExpoKnob">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"></path></svg>
+      </div>
+    </div>
+  </div>
   <div class="cam-top">
     <button class="cam-ic" id="camGallery" aria-label="Ouvrir la galerie" title="Galerie">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"></path></svg>
@@ -403,7 +418,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
     </button>
     <button class="cam-shutter" id="camShutter" aria-label="Prendre la photo"></button>
-    <span class="cam-spacer"></span>
+    <button class="cam-zoom" id="camZoom" aria-label="Zoom" hidden>1×</button>
   </div>
   <div class="cam-start" id="camStart" hidden>
     <img src="logo.svg?v=3" alt="Fudge">
@@ -879,6 +894,8 @@ $('#upload').addEventListener('change',e=>{
 
 //// ---------- PHOTO-FIRST CAMERA (live preset viewfinder) ----------
 let camStream=null, camFacing='environment', camRAF=0, camPreset=null;
+let camExpoVal=0, camExpoHW=false, camExpoTimer=0, camZoom=1;   // tap exposure + zoom state
+const camAdj={exposure:0};                                      // software exposure (used when no hardware EV)
 const LIVE_MAX=540;   // processing long-edge for the live feed (scaled up to fill)
 
 function buildCamStrip(){
@@ -896,7 +913,7 @@ function drawLive(){
   if(v.videoWidth&&camPreset){
     const ar=v.videoWidth/v.videoHeight;
     let w,h; if(ar>=1){w=LIVE_MAX;h=Math.round(LIVE_MAX/ar);} else {h=LIVE_MAX;w=Math.round(LIVE_MAX*ar);}
-    renderRecipe(v, camPreset, NEUTRAL, $('#camCanvas'), w, h, {mirror:camFacing==='user', noGrain:true});
+    renderRecipe(v, camPreset, camAdj, $('#camCanvas'), w, h, {mirror:camFacing==='user', noGrain:true});
   }
   camRAF=requestAnimationFrame(drawLive);
 }
@@ -905,6 +922,13 @@ async function startCam(){
   camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:camFacing,width:{ideal:1280},height:{ideal:1280}},audio:false});
   const v=$('#camVideo');v.srcObject=camStream;await v.play().catch(()=>{});
   $('#camStart').hidden=true;
+  // reset & probe capabilities for this stream/lens
+  camExpoVal=0;camAdj.exposure=0;camZoom=1;$('#camExpo').hidden=true;
+  const track=camStream.getVideoTracks()[0];
+  const caps=track&&track.getCapabilities?track.getCapabilities():{};
+  camExpoHW=!!caps.exposureCompensation;
+  const zEl=$('#camZoom');
+  if(caps.zoom){zEl.hidden=false;zEl.textContent='1×';}else{zEl.hidden=true;}
   cancelAnimationFrame(camRAF);camRAF=requestAnimationFrame(drawLive);
 }
 async function openCam(){
@@ -927,7 +951,7 @@ async function flipCam(){
 function shootCam(){
   const v=$('#camVideo'); if(!v.videoWidth){toast('Caméra pas prête');return;}
   const cv=document.createElement('canvas');
-  renderRecipe(v, camPreset, NEUTRAL, cv, v.videoWidth, v.videoHeight, {mirror:camFacing==='user'});
+  renderRecipe(v, camPreset, camAdj, cv, v.videoWidth, v.videoHeight, {mirror:camFacing==='user'});
   const im=new Image();
   im.onload=()=>{ userImg=im; const p=camPreset; closeCam(); openEditor(p); toast('Photo capturée'); };
   im.src=cv.toDataURL('image/jpeg',0.92);
@@ -938,6 +962,7 @@ function focusAt(clientX,clientY){
   // visual feedback ring at the tap point
   const f=$('#camFocus');f.style.left=(clientX-rect.left)+'px';f.style.top=(clientY-rect.top)+'px';
   f.classList.remove('show');void f.offsetWidth;f.classList.add('show');
+  showExpoAt(clientX,clientY);   // native-style exposure slider next to the focus point
   if(!camStream)return;
   const track=camStream.getVideoTracks()[0];if(!track)return;
   const v=$('#camVideo'),vw=v.videoWidth,vh=v.videoHeight;if(!vw)return;
@@ -955,6 +980,47 @@ function focusAt(clientX,clientY){
   track.applyConstraints({advanced:[adv]}).catch(()=>{});
 }
 $('#camCanvas').addEventListener('click',e=>focusAt(e.clientX,e.clientY));
+
+// ---- exposure slider (appears next to the focus point) ----
+function positionExpoKnob(){
+  const k=$('#camExpoKnob');k.style.top=((1-(camExpoVal+100)/200)*100)+'%';
+}
+function setCamExposure(v){
+  camExpoVal=Math.max(-100,Math.min(100,v));
+  positionExpoKnob();
+  if(camExpoHW&&camStream){
+    const t=camStream.getVideoTracks()[0],c=t.getCapabilities().exposureCompensation;
+    const ev=c.min+(camExpoVal+100)/200*(c.max-c.min);
+    t.applyConstraints({advanced:[{exposureMode:'continuous',exposureCompensation:ev}]}).catch(()=>{});
+    camAdj.exposure=0;
+  }else{ camAdj.exposure=camExpoVal; }   // software exposure (live + capture)
+  armExpoHide();
+}
+function showExpoAt(clientX,clientY){
+  const rect=$('#camCanvas').getBoundingClientRect();
+  let lx=clientX-rect.left+52; if(lx>rect.width-40)lx=clientX-rect.left-52;
+  const w=$('#camExpo');w.style.left=Math.max(12,Math.min(rect.width-34,lx))+'px';
+  w.style.top=(clientY-rect.top)+'px';w.hidden=false;positionExpoKnob();armExpoHide();
+}
+function armExpoHide(){clearTimeout(camExpoTimer);camExpoTimer=setTimeout(()=>{$('#camExpo').hidden=true;},3800);}
+(function expoDrag(){
+  const w=$('#camExpo'),track=$('#camExpoTrack');let on=false;
+  const set=y=>{const r=track.getBoundingClientRect();const ratio=Math.max(0,Math.min(1,(y-r.top)/r.height));setCamExposure((1-ratio)*200-100);};
+  w.addEventListener('pointerdown',e=>{on=true;w.setPointerCapture(e.pointerId);set(e.clientY);e.preventDefault();});
+  w.addEventListener('pointermove',e=>{if(on)set(e.clientY);});
+  w.addEventListener('pointerup',()=>{on=false;});
+  w.addEventListener('pointercancel',()=>{on=false;});
+})();
+
+// ---- zoom (1× / 2× / 5× via hardware zoom) ----
+function applyZoom(f){
+  if(!camStream)return;const t=camStream.getVideoTracks()[0],caps=t.getCapabilities?t.getCapabilities():{};
+  if(!caps.zoom){toast('Zoom non disponible');return;}
+  const z=Math.max(caps.zoom.min,Math.min(caps.zoom.max,f));
+  t.applyConstraints({advanced:[{zoom:z}]}).catch(()=>{});
+  camZoom=f;$('#camZoom').textContent=f+'×';
+}
+$('#camZoom').onclick=()=>{const seq=[1,2,5];applyZoom(seq[(seq.indexOf(camZoom)+1)%seq.length]);};
 
 $('#camGallery').onclick=closeCam;
 $('#camStartGallery').onclick=closeCam;
