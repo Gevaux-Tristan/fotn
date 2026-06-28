@@ -873,7 +873,7 @@ $('#upload').addEventListener('change',e=>{
 
 //// ---------- PHOTO-FIRST CAMERA (live preset viewfinder) ----------
 let camStream=null, camFacing='environment', camRAF=0, camPreset=null;
-const LIVE_MAX=360;   // processing long-edge for the live feed (scaled up to fill)
+const LIVE_MAX=540;   // processing long-edge for the live feed (scaled up to fill)
 
 function buildCamStrip(){
   const wrap=$('#camStrip');wrap.innerHTML='';
