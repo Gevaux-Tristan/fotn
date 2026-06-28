@@ -1,53 +1,36 @@
 # Fudge
 
-**Fudge** — webapp mobile-first (compatible desktop) reprenant **1058 recettes de simulation de film
-Fujifilm** issues du Google Sheet source, transformées en **presets applicables + curseurs classiques**
-d'app photo. Interface noir & jaune (Kodak), typographie Helvetica.
+**Fudge** — webapp photo mobile-first (compatible desktop), **caméra d'abord** : on arrive sur le
+viseur, on photographie avec un **preset appliqué en temps réel**, puis on affine et on exporte.
+Interface noir & jaune (Kodak), typographie Google Sans. App mono-fichier (`index.html`, sans dépendance).
 
-## Fonctionnalités
-- **Moteur de rendu pixel** (`renderRecipe`, traitement canvas pixel par pixel) qui réinterprète
-  chaque recette : **balance des blancs réelle** (Kelvin + presets Shade/Fluorescent/Underwater… +
-  shift Rouge/Bleu), **matrice colorimétrique propre à chaque simulation** (split-tone ambre/teal de
-  Classic Negative, cyans éteints de Classic Chrome, matte cinématographique d'Eterna, N&B filtré
-  d'Acros…), courbes hautes/basses lumières, Color Chrome, grain et vignettage. Le **même moteur**
-  alimente les cartes, l'aperçu éditeur et l'export → cohérence totale.
-- **Galerie de presets** : les 1058 recettes, chaque carte applique le rendu de la recette sur
-  **une même image générique** (`generic.jpg`, libre de droit) → vue d'ensemble comparable d'un
-  coup d'œil. Filtres : Couleur / N&B, simulation de base, favoris.
-- **Éditeur** : aperçu live (image générique ou **votre propre photo**) recalculé en temps réel, et
-  des **curseurs réglables** : Hautes lumières, Ombres, Couleur, Netteté, Clarté, Réduction du bruit,
-  WB Rouge/Bleu, + segments Plage dynamique, Grain, Color Chrome Effect / Blue.
-- **Export** : une fois votre photo ajoutée (« Ma photo »), un bouton **Exporter** (à côté de
-  « Réinitialiser ») cuit le rendu courant dans l'image et la télécharge avec un **nom de fichier
-  unique** (`fuji_<recette>_<base>_<horodatage>-<id>.jpg`).
-- **Simulation de base** sélectionnable (Provia, Astia, Velvia, Classic Chrome/Negative, Eterna,
-  Acros…), chacune avec son grading colorimétrique propre.
-- **Favoris** (stockés localement), bouton **« Créer la vôtre »** pour partir d'une base vierge,
-  lien vers la **source d'origine** de chaque recette.
-
-> L'aperçu est une **approximation** du rendu (filtres CSS) pour donner le « feel » de la recette.
-> Les valeurs exactes restent celles à reporter dans le boîtier Fuji — visibles dans
-> « Recette d'origine ».
+## Logique
+- **Caméra-first** : à l'ouverture, le viseur live s'affiche. Un bandeau de presets se parcourt
+  horizontalement et le rendu s'applique **en direct** sur le flux (résolution réduite pour la fluidité,
+  grain ajouté à la capture). Déclencheur → la photo est capturée avec le look, puis ouverte dans
+  l'éditeur pour réglages + export. Bascule avant/arrière, import depuis la galerie, repli si la
+  caméra est refusée/indisponible.
+- **Bibliothèque de presets** (~22) inspirés de pellicules réelles : négatifs (Portra, Gold, Superia),
+  diapos (Velvia, Provia, Kodachrome), ciné (CineStill 800T, Vision3), lomo/cross-process, vintage,
+  N&B (Tri-X, HP5, Acros, Delta, Sépia, Sélénium). Chaque preset est un **look paramétrique** calibré.
+- **Moteur de rendu pixel** (`renderRecipe` / `buildOps`) : balance des blancs, matrice
+  colorimétrique, split-tone, contraste, courbes hautes/basses lumières, grain, vignettage. Le même
+  moteur alimente le viseur live, les cartes de la galerie, l'aperçu éditeur et l'export.
+- **Galerie** : chaque carte applique le preset sur une même image de référence (`generic.jpg`).
+  Filtres Favoris / Couleur / Noir & blanc ; affichage compact / grand / liste + « Charger plus ».
+- **Éditeur** : aperçu plein cadre de votre photo + **réglages universels** en onglets (Lumière :
+  exposition, contraste, hautes lumières, ombres ; Couleur : saturation, température, teinte ;
+  Rendu : grain, vignettage, estompé). Export → `fudge_<preset>_<horodatage>.jpg`.
 
 ## Fichiers
-- `index.html` — l'app complète (HTML + CSS + JS, sans dépendances).
-- `recipes.json` — les 1058 recettes structurées (généré depuis le Google Sheet).
-- `generic.jpg` — image générique libre de droit utilisée pour les aperçus des cartes.
+- `index.html` — toute l'app (presets embarqués). `generic.jpg` — image de référence des cartes.
+- `logo.svg`, `icon.svg` + PNG, `manifest.webmanifest` — branding / PWA.
 
 ## Lancer en local
-Servir le dossier en HTTP (le `fetch` de `recipes.json` ne marche pas en `file://`) :
 ```bash
-cd fuji-recipes
-python3 -m http.server 8765
-# puis ouvrir http://localhost:8765/
+cd fuji-recipes && python3 -m http.server 8765   # puis http://localhost:8765/
 ```
+La caméra exige un contexte sécurisé (**HTTPS** ou `localhost`).
 
 ## Déployer
-N'importe quel hébergement statique (Vercel, Netlify, GitHub Pages…). Déposer le dossier tel quel.
-
-## Looks (LUTs 3D)
-Six presets de la catégorie **Look** sont de vrais LUTs `.cube` (ré-échantillonnés en 16³,
-appliqués par interpolation trilinéaire) issus de packs gratuits :
-Téal & Orange / Automne (PhilStrahl), Bleach Bypass (RocketStock — 35 Free LUTs),
-Nuit Froide / Vert Malsain (SmallHD — BMDFilm), Kodak 2383 (Juan Melara — print emulation).
-Crédits aux auteurs respectifs ; LUTs intégrés comme données de transformation colorimétrique.
+Hébergement statique. Déployé sur GitHub Pages : https://gevaux-tristan.github.io/Fudge/
