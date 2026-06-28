@@ -160,7 +160,7 @@ header.top{
 .ed-head .hfav.on{color:var(--accent)}
 
 /* pinned preview — full photo (contain), ~half the screen */
-.preview{position:relative;width:100%;height:50vh;background:#000;overflow:hidden;flex:none}
+.preview{position:relative;width:100%;height:46vh;background:#000;overflow:hidden;flex:none}
 .preview canvas{width:100%;height:100%;object-fit:contain;display:block}
 @media(min-width:880px){.preview{height:300px}}
 .pv-tools{position:absolute;left:10px;bottom:10px;display:flex;gap:8px;z-index:4}
@@ -242,51 +242,21 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   z-index:100;opacity:0;transition:.25s;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* in-app camera — live preset viewfinder */
-.cam{position:fixed;inset:0;z-index:90;background:#000}
-.cam[hidden]{display:none}
-.cam video{position:absolute;width:8px;height:8px;top:0;left:0;opacity:0;pointer-events:none}
-#camCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:block;touch-action:manipulation}
-.cam-focus{position:absolute;z-index:3;width:74px;height:74px;margin:-37px 0 0 -37px;border:2px solid var(--accent);
-  border-radius:8px;pointer-events:none;opacity:0;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
-.cam-focus.show{animation:camfocus .9s ease-out}
-.cam-expo{position:absolute;z-index:4;width:46px;height:200px;margin-top:-100px;touch-action:none}
-.cam-expo[hidden]{display:none}
-.cam-expo-track{position:relative;width:3px;height:100%;margin:0 auto;background:rgba(255,255,255,.45);border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
-.cam-expo-knob{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;
-  background:var(--accent);color:var(--ink);display:grid;place-items:center;box-shadow:0 1px 7px rgba(0,0,0,.55)}
-.cam-zoom{width:48px;height:48px;flex:none;border-radius:50%;font-size:13px;font-weight:700;color:#fff;
-  background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2)}
-.cam-zoom[hidden]{display:none}
-@keyframes camfocus{0%{opacity:0;transform:scale(1.5)}15%{opacity:1}40%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
-@media (prefers-reduced-motion: reduce){.cam-focus.show{animation:none;opacity:0}}
-.cam-top{position:absolute;top:calc(var(--safe-t) + 10px);left:0;right:0;z-index:3;
-  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px}
-.cam-ic{width:42px;height:42px;flex:none;border-radius:50%;display:grid;place-items:center;
-  background:rgba(0,0,0,.42);backdrop-filter:blur(6px);color:#fff}
-.cam-name{color:#fff;font-weight:650;font-size:14px;letter-spacing:.2px;text-shadow:0 1px 4px rgba(0,0,0,.7);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:center}
-.cam-strip{position:absolute;left:0;right:0;bottom:calc(var(--safe-b) + 112px);z-index:3;
-  display:flex;gap:8px;overflow-x:auto;padding:0 16px;scrollbar-width:none;-ms-overflow-style:none}
-.cam-strip::-webkit-scrollbar{display:none}
-.cam-chip{flex:none;padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap;
-  color:#fff;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.18)}
-.cam-chip.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
-.cam-bar{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:18px 30px calc(var(--safe-b) + 26px);
-  display:flex;align-items:center;justify-content:space-between;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent)}
-.cam-import{width:48px;height:48px;flex:none;border-radius:12px;display:grid;place-items:center;
-  background:rgba(0,0,0,.42);backdrop-filter:blur(6px);color:#fff}
-.cam-spacer{width:48px;flex:none}
-.cam-shutter{width:74px;height:74px;flex:none;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.5);
-  box-shadow:0 0 0 2px rgba(0,0,0,.35);transition:transform .1s}
-.cam-shutter:active{transform:scale(.92)}
-.cam-start{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:16px;padding:34px;text-align:center;background:#000}
-.cam-start[hidden]{display:none}
-.cam-start .logo{margin-bottom:6px}
-.cam-start p{color:var(--txt2);max-width:300px;font-size:15px;line-height:1.55;margin:0}
-.cam-start button{padding:13px 24px;border-radius:999px;font-weight:650;font-size:15px;background:var(--accent);color:var(--ink)}
-.cam-start button.ghost{background:transparent;color:var(--txt2);border:1px solid var(--line2)}
+/* editor preset strip — VSCO-style filter row: switch the look on your own photo */
+.ed-strip{display:flex;gap:11px;overflow-x:auto;flex:none;padding:12px 16px;
+  border-bottom:1px solid var(--line);background:var(--bg2);
+  scrollbar-width:none;-ms-overflow-style:none}
+.ed-strip::-webkit-scrollbar{display:none}
+.pchip{flex:none;display:flex;flex-direction:column;align-items:center;gap:7px;width:60px;cursor:pointer;
+  background:none;padding:0}
+.pchip canvas{width:56px;height:56px;border-radius:var(--r-md);display:block;background:var(--panel);
+  border:2px solid var(--line);transition:border-color .15s,transform .15s}
+.pchip:hover canvas{transform:translateY(-2px);border-color:var(--line2)}
+.pchip.on canvas{border-color:var(--accent)}
+.pchip:active canvas{transform:translateY(0) scale(.96)}
+.pchip span{font-size:10px;line-height:1.2;color:var(--txt3);max-width:60px;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+.pchip.on span{color:var(--accent);font-weight:600}
 
 .fabs{position:fixed;right:16px;bottom:calc(var(--safe-b) + 16px);z-index:30;display:flex;flex-direction:column;gap:10px}
 .fab{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--ink);
@@ -338,13 +308,15 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   <button class="fab sec" id="fabFav" title="Favoris" aria-label="Afficher les favoris" aria-pressed="false">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
   </button>
-  <button class="fab sec" id="fabCam" title="Prendre une photo" aria-label="Prendre une photo">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path></svg>
+  <button class="fab sec" id="fabImport" title="Importer une photo" aria-label="Importer une photo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
   </button>
-  <button class="fab" id="fabNew" title="Créer la vôtre" aria-label="Créer une recette">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+  <button class="fab" id="fabCam" title="Prendre une photo" aria-label="Prendre une photo">
+    <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path></svg>
   </button>
 </div>
+<!-- native system camera (capture) + library import file inputs -->
+<input id="camInput" type="file" accept="image/*" capture="environment" hidden>
 
 <!-- EDITOR -->
 <div class="scrim" id="scrim"></div>
@@ -374,6 +346,8 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
     </div>
   </div>
 
+  <div class="ed-strip" id="edStrip" role="listbox" aria-label="Presets — choisir un look"></div>
+
   <div class="tabs" id="edTabs" role="tablist" aria-label="Sections de réglage"></div>
   <div class="panels" id="edPanels">
     <section class="panel" id="panel-light" role="tabpanel" aria-label="Lumière"></section>
@@ -390,43 +364,6 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
 </div>
 
 <div class="toast" id="toast"></div>
-
-<!-- PHOTO-FIRST CAMERA — live preset viewfinder -->
-<div class="cam" id="cam" aria-label="Caméra" hidden>
-  <video id="camVideo" playsinline autoplay muted></video>
-  <canvas id="camCanvas"></canvas>
-  <div class="cam-focus" id="camFocus" aria-hidden="true"></div>
-  <div class="cam-expo" id="camExpo" hidden>
-    <div class="cam-expo-track" id="camExpoTrack">
-      <div class="cam-expo-knob" id="camExpoKnob">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"></path></svg>
-      </div>
-    </div>
-  </div>
-  <div class="cam-top">
-    <button class="cam-ic" id="camGallery" aria-label="Ouvrir la galerie" title="Galerie">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"></path></svg>
-    </button>
-    <span class="cam-name" id="camName">—</span>
-    <button class="cam-ic" id="camFlip" aria-label="Changer de caméra" title="Avant / arrière">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"></path></svg>
-    </button>
-  </div>
-  <div class="cam-strip" id="camStrip" aria-label="Presets"></div>
-  <div class="cam-bar">
-    <button class="cam-import" id="camImport" aria-label="Importer une photo" title="Importer">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
-    </button>
-    <button class="cam-shutter" id="camShutter" aria-label="Prendre la photo"></button>
-    <button class="cam-zoom" id="camZoom" aria-label="Zoom" hidden>1×</button>
-  </div>
-  <div class="cam-start" id="camStart" hidden>
-    <span class="logo">fotn</span>
-    <p>Activez la caméra pour photographier avec vos presets appliqués en temps réel.</p>
-    <button id="camStartBtn">Activer la caméra</button>
-    <button id="camStartGallery" class="ghost">Parcourir la galerie</button>
-  </div>
-</div>
 
 <script>
 //// ---------- MATERIAL DESIGN ICONS (Apache 2.0) ----------
@@ -474,6 +411,7 @@ const baseImg=new Image();let baseReady=false;
 baseImg.onload=()=>{baseReady=true;rerenderCards();};
 baseImg.src=GENERIC_IMG;
 function clamp(x,a,b){return x<a?a:x>b?b:x;}
+function lerp(a,b,t){return a+(b-a)*t;}
 
 //// ====================================================================
 //// FILM ENGINE — real per-pixel reinterpretation of each Fuji recipe.
@@ -553,23 +491,28 @@ PRESETS.forEach(p=>{p.mono=!!p.mono;});
 const NEUTRAL={};
 
 // Merge a preset (P) with live user adjustments (A) into per-pixel constants.
+// k = preset intensity (0..1): scales the PRESET toward neutral, while the
+// universal user adjustments always apply at full strength.
 function buildOps(P,A){
   A=A||NEUTRAL;
-  const warm=((P.temp||0)+(A.temperature||0))/100;
-  const grn =((P.tint||0)+(A.tint||0))/100;
+  const k=(A.intensity==null?100:A.intensity)/100;
+  const warm=((P.temp||0)*k+(A.temperature||0))/100;
+  const grn =((P.tint||0)*k+(A.tint||0))/100;
   const rG=1+0.22*warm, bG=1-0.22*warm, gG=1-0.10*grn;
   const exp=1+(A.exposure||0)/100*0.55;
-  const sat=P.mono?0:Math.max(0,(P.sat==null?1:P.sat)*(1+(A.saturation||0)/100));
-  const con=(P.con==null?1:P.con)*(1+(A.contrast||0)/100*0.6);
+  const pSat=P.mono?1:lerp(1,(P.sat==null?1:P.sat),k);      // mono keeps colour for the blend
+  const sat=Math.max(0,pSat*(1+(A.saturation||0)/100));
+  const con=lerp(1,(P.con==null?1:P.con),k)*(1+(A.contrast||0)/100*0.6);
   const hi=(A.highlights||0)/100*4;
   const sh=(A.shadows||0)/100*4;
-  const lift=clamp((P.lift||0)+(A.fade||0)/100*0.45,0,0.7);
-  const grain=clamp((P.grain||0)+(A.grain||0)/100*2,0,3);
-  const vig=clamp((P.vig||0)+(A.vignette||0)/100*0.55,0,0.85);
+  const lift=clamp((P.lift||0)*k+(A.fade||0)/100*0.45,0,0.7);
+  const grain=clamp((P.grain||0)*k+(A.grain||0)/100*2,0,3);
+  const vig=clamp((P.vig||0)*k+(A.vignette||0)/100*0.55,0,0.85);
+  const baseMx=P.mx||I3, mx=baseMx===I3?I3:baseMx.map((v,i)=>lerp(I3[i],v,k));
   return {rG,gG,bG,exp,sat,con,hi,sh,lift,grain,vig,
-    split:P.split||0, splitS:P.splitS||[0,0,0], splitH:P.splitH||[0,0,0],
-    mx:P.mx||I3,
-    mono:!!P.mono, filt:P.filt||[0.30,0.59,0.11], tone:P.tone||null};
+    split:(P.split||0)*k, splitS:P.splitS||[0,0,0], splitH:P.splitH||[0,0,0],
+    mx,
+    mono:!!P.mono, monoK:k, filt:P.filt||[0.30,0.59,0.11], tone:P.tone||null};
 }
 
 // Cover-draw an image into a w×h context (object-fit: cover).
@@ -618,11 +561,13 @@ function renderRecipe(src,P,A,canvas,w,h,opts){
       if(O.sh&&lum<0.55){const f=(0.55-lum)/0.55*O.sh*0.028;r-=f;g-=f;b-=f;}
       // 7. matte / fade
       if(O.lift){const L=O.lift;r=L+r*(1-L);g=L+g*(1-L);b=L+b*(1-L);}
-      // 8. mono + toning
+      // 8. mono + toning (blended toward colour by preset intensity)
       if(O.mono){
-        let yv=O.filt[0]*r+O.filt[1]*g+O.filt[2]*b;
-        if(O.tone){r=yv+O.tone[0];g=yv+O.tone[1];b=yv+O.tone[2];}
-        else{r=g=b=yv;}
+        const yv=O.filt[0]*r+O.filt[1]*g+O.filt[2]*b, k=O.monoK;
+        let mr,mg,mb;
+        if(O.tone){mr=yv+O.tone[0];mg=yv+O.tone[1];mb=yv+O.tone[2];}
+        else{mr=mg=mb=yv;}
+        r=r+(mr-r)*k; g=g+(mg-g)*k; b=b+(mb-b)*k;
       }
       // 9. grain (luminance noise) — skipped on the live feed
       if(O.grain&&!(opts&&opts.noGrain)){const n=(Math.random()-0.5)*O.grain*0.05;r+=n;g+=n;b+=n;}
@@ -762,19 +707,22 @@ const ADJ=[
   {k:'saturation', label:'Saturation',     min:-100,max:100,step:1},
   {k:'temperature',label:'Température',     min:-100,max:100,step:1},
   {k:'tint',       label:'Teinte',         min:-100,max:100,step:1},
+  {k:'intensity',  label:'Intensité',      min:0,   max:100,step:1,def:100},
   {k:'grain',      label:'Grain',          min:0,   max:100,step:1},
   {k:'vignette',   label:'Vignettage',     min:0,   max:100,step:1},
   {k:'fade',       label:'Estompé',        min:0,   max:100,step:1},
 ];
-function neutralAdj(){const o={};ADJ.forEach(a=>o[a.k]=0);return o;}
+function neutralAdj(){const o={};ADJ.forEach(a=>o[a.k]=(a.def==null?0:a.def));return o;}
 
+let lastPreset=null;        // last look opened — reused when capturing/importing a photo
 function openEditor(r){
-  cur=r;
+  cur=r;lastPreset=r;
   vals=neutralAdj();
   $('#edName').textContent=r.name||'';
   $('#edSub').textContent=r.film||'';
   syncFav();
   buildEditorPanels();
+  buildEditStrip();
   paint();
   document.body.style.overflow='hidden';
   // a11y: remember focus origin, neutralise background, move focus into the dialog
@@ -797,12 +745,55 @@ function syncFav(){const on=cur&&favs.has(cur._i);const b=$('#edFav');
 $('#edFav').onclick=()=>{if(!cur)return;toggleFav(cur._i);syncFav();
   document.querySelectorAll(`.fav[data-i="${cur._i}"]`).forEach(b=>{const on=favs.has(cur._i);b.classList.toggle('on',on);setHeart(b,on);});};
 
+//// ---------- EDITOR PRESET STRIP (VSCO-style: switch the look on your photo) ----------
+// Each chip previews the preset on the current photo (or the reference image).
+function buildEditStrip(){
+  const wrap=$('#edStrip');if(!wrap)return;wrap.innerHTML='';
+  const frag=document.createDocumentFragment();
+  RECIPES.forEach(p=>{
+    const b=el('button','pchip');b.dataset.i=p._i;
+    b.setAttribute('role','option');b.setAttribute('aria-label',p.name||'');
+    const cv=el('canvas');cv.width=112;cv.height=112;cv.setAttribute('aria-hidden','true');
+    const sp=el('span');sp.textContent=p.name||'';
+    b.appendChild(cv);b.appendChild(sp);
+    b.onclick=()=>selectPreset(p);
+    frag.appendChild(b);
+  });
+  wrap.appendChild(frag);
+  markEditStrip();
+  paintEditStrip();      // thumbnails (deferred so the open animation stays smooth)
+}
+let stripScheduled=false;
+function paintEditStrip(){
+  if(stripScheduled)return;stripScheduled=true;
+  requestAnimationFrame(()=>{stripScheduled=false;
+    const src=userImg||baseImg;
+    if(!src||!(src.naturalWidth||src.width))return;
+    document.querySelectorAll('#edStrip .pchip canvas').forEach(cv=>{
+      const p=RECIPES[+cv.parentNode.dataset.i];if(p)renderRecipe(src,p,NEUTRAL,cv,112,112);
+    });
+  });
+}
+function markEditStrip(){
+  document.querySelectorAll('#edStrip .pchip').forEach(c=>{
+    const on=cur&&+c.dataset.i===cur._i;
+    c.classList.toggle('on',on);c.setAttribute('aria-selected',on?'true':'false');
+    if(on)c.scrollIntoView({inline:'center',block:'nearest'});
+  });
+}
+// Switch preset inside the editor — keeps the user's manual adjustments.
+function selectPreset(p){
+  if(!p)return;cur=p;lastPreset=p;
+  $('#edName').textContent=p.name||'';$('#edSub').textContent=p.film||'';
+  syncFav();markEditStrip();paint();
+}
+
 //// ---------- EDITOR PANELS (tabs + horizontal swipe) ----------
 const SLIDER_BY_K=Object.fromEntries(ADJ.map(s=>[s.k,s]));
 const ED_PANELS=[
   {id:'light', label:'Lumière', sliders:['exposure','contrast','highlights','shadows']},
   {id:'color', label:'Couleur', sliders:['saturation','temperature','tint']},
-  {id:'fx',    label:'Rendu',   sliders:['grain','vignette','fade']},
+  {id:'fx',    label:'Rendu',   sliders:['intensity','grain','vignette','fade']},
 ];
 let curTab=0;
 
@@ -855,7 +846,8 @@ function buildEditorPanels(){
 })();
 function updSlider(s){
   const v=vals[s.k];const span=$('#v_'+s.k);
-  const txt=(v>0?'+':'')+ (Number.isInteger(v)?v:v.toFixed(1));
+  const num=(Number.isInteger(v)?v:v.toFixed(1));
+  const txt=(s.min<0&&v>0?'+':'')+num;        // sign only on bipolar sliders
   span.textContent=txt;
   span.className='sld-val '+(v>0?'pos':v<0?'neg':'zero');
   $('#i_'+s.k).setAttribute('aria-valuetext',txt);   // a11y: announce the signed value
@@ -882,188 +874,26 @@ function paintPreview(){
 // slider handlers call paintLook(); keep the name, route to the canvas render.
 const paintLook=paintPreview;
 
-$('#upload').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+// Load a photo from the native camera or the library, then open/refresh the editor.
+function loadPhotoFile(f){
+  if(!f)return;const rd=new FileReader();
   rd.onload=()=>{const im=new Image();im.onload=()=>{
     userImg=im;
-    if($('#editor').classList.contains('open'))paint();
-    else{const p=camPreset||FILTERED[0]||RECIPES[0]; if(!$('#cam').hidden)closeCam(); if(p)openEditor(p);}
+    if($('#editor').classList.contains('open')){buildEditStrip();paint();}
+    else openEditor(lastPreset||FILTERED[0]||RECIPES[0]);
   };im.src=rd.result;};
   rd.readAsDataURL(f);
-});
+}
+// reset value so re-picking the same file still fires "change"
+$('#upload').addEventListener('change',e=>{loadPhotoFile(e.target.files[0]);e.target.value='';});
+$('#camInput').addEventListener('change',e=>{loadPhotoFile(e.target.files[0]);e.target.value='';});
 
-//// ---------- PHOTO-FIRST CAMERA (live preset viewfinder) ----------
-let camStream=null, camFacing='environment', camRAF=0, camPreset=null;
-let camExpoVal=0, camExpoHW=false, camExpoTimer=0, camZoom=1;   // tap exposure + zoom state
-const camAdj={exposure:0};                                      // software exposure (used when no hardware EV)
-const LIVE_MAX=540;   // processing long-edge for the live feed (scaled up to fill)
-
-function buildCamStrip(){
-  const wrap=$('#camStrip');wrap.innerHTML='';
-  RECIPES.forEach(p=>{const b=el('button','cam-chip');b.textContent=p.name;b.dataset.i=p._i;
-    b.onclick=()=>setCamPreset(p);wrap.appendChild(b);});
-}
-function setCamPreset(p){
-  camPreset=p;$('#camName').textContent=p.name;
-  document.querySelectorAll('#camStrip .cam-chip').forEach(c=>c.classList.toggle('on',+c.dataset.i===p._i));
-  const a=document.querySelector('#camStrip .cam-chip.on');if(a)a.scrollIntoView({inline:'center',block:'nearest'});
-}
-// capture/viewfinder frame aspect (w/h): 3:2 in landscape, 2:3 in portrait
-function targetAspect(){return (window.innerWidth>window.innerHeight)?3/2:2/3;}
-// largest centered crop of a wxh source matching the given aspect
-function coverCrop(vw,vh,aspect){let sw,sh;if(vw/vh>aspect){sh=vh;sw=vh*aspect;}else{sw=vw;sh=vw/aspect;}
-  return {sx:(vw-sw)/2,sy:(vh-sh)/2,sw,sh};}
-function drawLive(){
-  const v=$('#camVideo');
-  if(v.videoWidth&&camPreset){
-    const a=targetAspect();
-    let w,h; if(a>=1){w=LIVE_MAX;h=Math.round(LIVE_MAX/a);} else {h=LIVE_MAX;w=Math.round(LIVE_MAX*a);}
-    // drawCover crops the video to the target-aspect frame → WYSIWYG with the capture
-    renderRecipe(v, camPreset, camAdj, $('#camCanvas'), w, h, {mirror:camFacing==='user', noGrain:true});
-  }
-  camRAF=requestAnimationFrame(drawLive);
-}
-async function startCam(){
-  if(camStream)camStream.getTracks().forEach(t=>t.stop());
-  camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:camFacing,width:{ideal:3840},height:{ideal:2160},frameRate:{ideal:30}},audio:false});
-  const v=$('#camVideo');v.srcObject=camStream;await v.play().catch(()=>{});
-  $('#camStart').hidden=true;
-  // reset & probe capabilities for this stream/lens
-  camExpoVal=0;camAdj.exposure=0;camZoom=1;$('#camExpo').hidden=true;
-  const track=camStream.getVideoTracks()[0];
-  const caps=track&&track.getCapabilities?track.getCapabilities():{};
-  camExpoHW=!!caps.exposureCompensation;
-  const zEl=$('#camZoom');
-  if(caps.zoom){zEl.hidden=false;zEl.textContent='1×';}else{zEl.hidden=true;}
-  cancelAnimationFrame(camRAF);camRAF=requestAnimationFrame(drawLive);
-}
-async function openCam(){
-  $('#cam').hidden=false;
-  if(!camPreset)camPreset=RECIPES[0];
-  buildCamStrip();setCamPreset(camPreset);
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$('#camStart').hidden=false;return;}
-  try{ await startCam(); }
-  catch(e){ $('#camStart').hidden=false; }   // permission needs a gesture or was denied
-}
-function closeCam(){
-  cancelAnimationFrame(camRAF);camRAF=0;
-  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
-  $('#camVideo').srcObject=null;$('#cam').hidden=true;
-}
-async function flipCam(){
-  camFacing=camFacing==='environment'?'user':'environment';
-  try{ await startCam(); }catch(e){ toast('Caméra indisponible'); }
-}
-// grab the highest-quality frame available, orientation kept consistent with the viewfinder
-async function captureFrame(){
-  const v=$('#camVideo');
-  const track=camStream&&camStream.getVideoTracks&&camStream.getVideoTracks()[0];
-  if(track&&window.ImageCapture){
-    try{
-      const ic=new ImageCapture(track);
-      const blob=await ic.takePhoto();                                   // full sensor resolution
-      const bmp=await createImageBitmap(blob,{imageOrientation:'from-image'});
-      const vLand=v.videoWidth>=v.videoHeight, pLand=bmp.width>=bmp.height;
-      if(vLand===pLand) return bmp;                                      // orientation matches viewfinder → use it
-      if(bmp.close)bmp.close();                                          // mismatch → fall back (avoids sideways photo)
-    }catch(e){}
-  }
-  return v.videoWidth?v:null;                                            // fallback: current video frame (WYSIWYG)
-}
-async function shootCam(){
-  const btn=$('#camShutter');btn.style.opacity=.5;
-  try{
-    const src=await captureFrame();
-    const sw=(src&&(src.width||src.videoWidth))||0, sh=(src&&(src.height||src.videoHeight))||0;
-    if(!sw){toast('Caméra pas prête');return;}
-    const a=targetAspect(),c=coverCrop(sw,sh,a);                        // crop to 2:3 / 3:2
-    const cv=document.createElement('canvas');
-    renderRecipe(src, camPreset, camAdj, cv, Math.round(c.sw), Math.round(c.sh), {mirror:camFacing==='user'});
-    if(src.close)src.close();
-    const im=new Image();
-    im.onload=()=>{ userImg=im; const p=camPreset; closeCam(); openEditor(p); toast('Photo capturée'); };
-    im.src=cv.toDataURL('image/jpeg',0.95);
-  }finally{btn.style.opacity='';}
-}
-// tap-to-focus: map the tap to the sensor frame (cover-crop + selfie mirror) and apply
-function focusAt(clientX,clientY){
-  const cnv=$('#camCanvas'),rect=cnv.getBoundingClientRect();
-  // the framed view (object-fit:contain of the target-aspect canvas) is centred in the element
-  const a=targetAspect();
-  let cw,ch; if(rect.width/rect.height>a){ch=rect.height;cw=ch*a;}else{cw=rect.width;ch=cw/a;}
-  const cx0=rect.left+(rect.width-cw)/2, cy0=rect.top+(rect.height-ch)/2;
-  const fx=(clientX-cx0)/cw, fy=(clientY-cy0)/ch;        // 0..1 within the framed view
-  if(fx<0||fx>1||fy<0||fy>1)return;                      // tap in the letterbox → ignore
-  // visual feedback ring + native-style exposure slider at the tap point
-  const f=$('#camFocus');f.style.left=(clientX-rect.left)+'px';f.style.top=(clientY-rect.top)+'px';
-  f.classList.remove('show');void f.offsetWidth;f.classList.add('show');
-  showExpoAt(clientX,clientY);
-  if(!camStream)return;
-  const track=camStream.getVideoTracks()[0];if(!track)return;
-  const v=$('#camVideo'),vw=v.videoWidth,vh=v.videoHeight;if(!vw)return;
-  const crop=coverCrop(vw,vh,a);                          // video region shown in the frame
-  let x=(crop.sx+fx*crop.sw)/vw, y=(crop.sy+fy*crop.sh)/vh;
-  if(camFacing==='user')x=1-x;                            // display is mirrored
-  x=Math.max(0,Math.min(1,x));y=Math.max(0,Math.min(1,y));
-  const caps=track.getCapabilities?track.getCapabilities():{};
-  const adv={pointsOfInterest:[{x,y}]};
-  if(caps.focusMode&&caps.focusMode.includes('single-shot'))adv.focusMode='single-shot';
-  else if(caps.focusMode&&caps.focusMode.includes('continuous'))adv.focusMode='continuous';
-  if(caps.exposureMode&&caps.exposureMode.includes('continuous'))adv.exposureMode='continuous';
-  track.applyConstraints({advanced:[adv]}).catch(()=>{});
-}
-$('#camCanvas').addEventListener('click',e=>focusAt(e.clientX,e.clientY));
-
-// ---- exposure slider (appears next to the focus point) ----
-function positionExpoKnob(){
-  const k=$('#camExpoKnob');k.style.top=((1-(camExpoVal+100)/200)*100)+'%';
-}
-function setCamExposure(v){
-  camExpoVal=Math.max(-100,Math.min(100,v));
-  positionExpoKnob();
-  if(camExpoHW&&camStream){
-    const t=camStream.getVideoTracks()[0],c=t.getCapabilities().exposureCompensation;
-    const ev=c.min+(camExpoVal+100)/200*(c.max-c.min);
-    t.applyConstraints({advanced:[{exposureMode:'continuous',exposureCompensation:ev}]}).catch(()=>{});
-    camAdj.exposure=0;
-  }else{ camAdj.exposure=camExpoVal; }   // software exposure (live + capture)
-  armExpoHide();
-}
-function showExpoAt(clientX,clientY){
-  const rect=$('#camCanvas').getBoundingClientRect();
-  let lx=clientX-rect.left+52; if(lx>rect.width-40)lx=clientX-rect.left-52;
-  const w=$('#camExpo');w.style.left=Math.max(12,Math.min(rect.width-34,lx))+'px';
-  w.style.top=(clientY-rect.top)+'px';w.hidden=false;positionExpoKnob();armExpoHide();
-}
-function armExpoHide(){clearTimeout(camExpoTimer);camExpoTimer=setTimeout(()=>{$('#camExpo').hidden=true;},3800);}
-(function expoDrag(){
-  const w=$('#camExpo'),track=$('#camExpoTrack');let on=false;
-  const set=y=>{const r=track.getBoundingClientRect();const ratio=Math.max(0,Math.min(1,(y-r.top)/r.height));setCamExposure((1-ratio)*200-100);};
-  w.addEventListener('pointerdown',e=>{on=true;w.setPointerCapture(e.pointerId);set(e.clientY);e.preventDefault();});
-  w.addEventListener('pointermove',e=>{if(on)set(e.clientY);});
-  w.addEventListener('pointerup',()=>{on=false;});
-  w.addEventListener('pointercancel',()=>{on=false;});
-})();
-
-// ---- zoom (1× / 2× / 5× via hardware zoom) ----
-function applyZoom(f){
-  if(!camStream)return;const t=camStream.getVideoTracks()[0],caps=t.getCapabilities?t.getCapabilities():{};
-  if(!caps.zoom){toast('Zoom non disponible');return;}
-  const z=Math.max(caps.zoom.min,Math.min(caps.zoom.max,f));
-  t.applyConstraints({advanced:[{zoom:z}]}).catch(()=>{});
-  camZoom=f;$('#camZoom').textContent=f+'×';
-}
-$('#camZoom').onclick=()=>{const seq=[1,2,5];applyZoom(seq[(seq.indexOf(camZoom)+1)%seq.length]);};
-
-$('#camGallery').onclick=closeCam;
-$('#camStartGallery').onclick=closeCam;
-$('#camStartBtn').onclick=()=>startCam().catch(()=>toast('Accès caméra refusé'));
-$('#camFlip').onclick=flipCam;
-$('#camShutter').onclick=shootCam;
-$('#camImport').onclick=()=>$('#upload').click();
-$('#btnCam').onclick=openCam;
-$('#fabCam').onclick=openCam;
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#cam').hidden)closeCam();});
+//// ---------- CAMERA / IMPORT (native system camera) ----------
+// The OS camera handles capture (best quality, native aspect, no custom UI);
+// the look is then applied & tweaked in the editor.
+$('#fabCam').onclick=()=>$('#camInput').click();
+$('#btnCam').onclick=()=>$('#camInput').click();
+$('#fabImport').onclick=()=>$('#upload').click();
 
 //// foot buttons
 $('#btnReset').onclick=()=>{if(cur){vals=neutralAdj();ED_PANELS.forEach(p=>fillPanel(p.id));paint();}toast('Réglages réinitialisés');};
@@ -1082,9 +912,9 @@ async function exportImage(){
   const btn=$('#btnExport');btn.classList.add('busy');
   try{
     let w=userImg.naturalWidth||1200,h=userImg.naturalHeight||800;
-    const maxW=2600;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+    const maxE=3200,m=Math.max(w,h);if(m>maxE){const s=maxE/m;w=Math.round(w*s);h=Math.round(h*s);}
     const cv=document.createElement('canvas');
-    renderRecipe(userImg, cur, vals, cv, w, h);   // full film engine, native resolution
+    renderRecipe(userImg, cur, vals, cv, w, h);   // full film engine, near-native resolution
     const name=uniqueName();
     await new Promise(res=>cv.toBlob(b=>{
       if(!b){toast('Export impossible');return res();}
@@ -1092,23 +922,17 @@ async function exportImage(){
       document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(a.href),4000);
       toast('Exporté · '+name);res();
-    },'image/jpeg',0.92));
+    },'image/jpeg',0.94));
   }catch(e){toast('Export impossible');}
   finally{btn.classList.remove('busy');}
 }
 $('#btnExport').onclick=exportImage;
-
-//// neutral starting point
-$('#fabNew').onclick=()=>{openEditor(PRESETS.find(p=>p.name==='Neutre')||RECIPES[0]);};
 
 //// toast
 let tT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),1800);}
 
 // close on Esc
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cur)closeEditor();});
-
-// photo-first: land on the camera (after all definitions, so vars are initialised)
-openCam();
 </script>
 </body>
 </html>

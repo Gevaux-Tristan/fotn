@@ -25,7 +25,10 @@ Geist (fallback Helvetica Neue, Arial). Fixed px scale (product register): 17 (h
 - pill `999px` (filter chips), circles `50%` (fav, fab)
 
 ## Components
-Preset card · filter chip · base-pick button · custom slider (track + polarity fill + thumb) · segmented control · FAB · bottom-sheet/side-drawer editor · toast. Every interactive element has default / hover / focus-visible / active; `--accent` focus ring (`:focus-visible`).
+Preset card · filter chip · **editor preset strip** (VSCO-style row of 56px thumbnails, each previewing the look on the user's own photo; active = `--accent` border) · custom slider (track + polarity fill + thumb; bipolar sliders show a signed value, magnitude sliders like Intensité/Grain/Vignettage/Estompé show none) · segmented control · FAB (fav / import / camera) · bottom-sheet/side-drawer editor · toast. Every interactive element has default / hover / focus-visible / active; `--accent` focus ring (`:focus-visible`).
+
+## Capture
+No custom viewfinder — the camera FAB opens the **native OS camera** via `<input type="file" accept="image/*" capture="environment">` (best quality, native aspect, correct orientation). Import uses the same pattern without `capture`. The captured/imported photo opens straight into the editor.
 
 ## Motion
 150–340ms, ease-out curves. Editor slides in (sheet on mobile, drawer ≥880px). Preview re-renders on `requestAnimationFrame`. Full `prefers-reduced-motion: reduce` fallback (transitions/animations collapsed).
