@@ -246,7 +246,12 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .cam{position:fixed;inset:0;z-index:90;background:#000}
 .cam[hidden]{display:none}
 .cam video{position:absolute;width:8px;height:8px;top:0;left:0;opacity:0;pointer-events:none}
-#camCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;display:block}
+#camCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;display:block;touch-action:manipulation}
+.cam-focus{position:absolute;z-index:3;width:74px;height:74px;margin:-37px 0 0 -37px;border:2px solid var(--accent);
+  border-radius:8px;pointer-events:none;opacity:0;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.cam-focus.show{animation:camfocus .9s ease-out}
+@keyframes camfocus{0%{opacity:0;transform:scale(1.5)}15%{opacity:1}40%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.cam-focus.show{animation:none;opacity:0}}
 .cam-top{position:absolute;top:calc(var(--safe-t) + 10px);left:0;right:0;z-index:3;
   display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px}
 .cam-ic{width:42px;height:42px;flex:none;border-radius:50%;display:grid;place-items:center;
@@ -382,6 +387,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
 <div class="cam" id="cam" aria-label="Caméra" hidden>
   <video id="camVideo" playsinline autoplay muted></video>
   <canvas id="camCanvas"></canvas>
+  <div class="cam-focus" id="camFocus" aria-hidden="true"></div>
   <div class="cam-top">
     <button class="cam-ic" id="camGallery" aria-label="Ouvrir la galerie" title="Galerie">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"></path></svg>
@@ -926,6 +932,30 @@ function shootCam(){
   im.onload=()=>{ userImg=im; const p=camPreset; closeCam(); openEditor(p); toast('Photo capturée'); };
   im.src=cv.toDataURL('image/jpeg',0.92);
 }
+// tap-to-focus: map the tap to the sensor frame (cover-crop + selfie mirror) and apply
+function focusAt(clientX,clientY){
+  const cnv=$('#camCanvas'),rect=cnv.getBoundingClientRect();
+  // visual feedback ring at the tap point
+  const f=$('#camFocus');f.style.left=(clientX-rect.left)+'px';f.style.top=(clientY-rect.top)+'px';
+  f.classList.remove('show');void f.offsetWidth;f.classList.add('show');
+  if(!camStream)return;
+  const track=camStream.getVideoTracks()[0];if(!track)return;
+  const v=$('#camVideo'),vw=v.videoWidth,vh=v.videoHeight;if(!vw)return;
+  const tx=(clientX-rect.left)/rect.width, ty=(clientY-rect.top)/rect.height;   // 0..1 on screen
+  const scale=Math.max(rect.width/vw,rect.height/vh);                            // object-fit cover
+  const fracX=rect.width/(vw*scale), fracY=rect.height/(vh*scale);
+  let x=(1-fracX)/2+tx*fracX, y=(1-fracY)/2+ty*fracY;                            // 0..1 in sensor frame
+  if(camFacing==='user')x=1-x;                                                   // display is mirrored
+  x=Math.max(0,Math.min(1,x));y=Math.max(0,Math.min(1,y));
+  const caps=track.getCapabilities?track.getCapabilities():{};
+  const adv={pointsOfInterest:[{x,y}]};
+  if(caps.focusMode&&caps.focusMode.includes('single-shot'))adv.focusMode='single-shot';
+  else if(caps.focusMode&&caps.focusMode.includes('continuous'))adv.focusMode='continuous';
+  if(caps.exposureMode&&caps.exposureMode.includes('continuous'))adv.exposureMode='continuous';
+  track.applyConstraints({advanced:[adv]}).catch(()=>{});
+}
+$('#camCanvas').addEventListener('click',e=>focusAt(e.clientX,e.clientY));
+
 $('#camGallery').onclick=closeCam;
 $('#camStartGallery').onclick=closeCam;
 $('#camStartBtn').onclick=()=>startCam().catch(()=>toast('Accès caméra refusé'));
