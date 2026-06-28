@@ -1,6 +1,6 @@
-# Fudge
+# fotn
 
-**Fudge** — webapp photo mobile-first (compatible desktop), **caméra d'abord** : on arrive sur le
+**fotn** — webapp photo mobile-first (compatible desktop), **caméra d'abord** : on arrive sur le
 viseur, on photographie avec un **preset appliqué en temps réel**, puis on affine et on exporte.
 Interface noir & jaune (Kodak), typographie Google Sans. App mono-fichier (`index.html`, sans dépendance).
 

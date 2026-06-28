@@ -1,7 +1,7 @@
 {
-  "name": "Fudge",
-  "short_name": "Fudge",
-  "description": "Recettes de simulation de film Fujifilm en presets + curseurs, pour retoucher vos photos.",
+  "name": "fotn",
+  "short_name": "fotn",
+  "description": "Presets photo inspirés des pellicules argentiques, à appliquer et régler sur vos photos.",
   "lang": "fr",
   "start_url": "./index.html",
   "scope": "./",

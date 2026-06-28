@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Fudge</title>
-<meta name="description" content="Fudge — presets photo inspirés des pellicules argentiques classiques, à appliquer et régler sur vos photos.">
+<title>fotn</title>
+<meta name="description" content="fotn — presets photo inspirés des pellicules argentiques classiques, à appliquer et régler sur vos photos.">
 <link rel="icon" type="image/svg+xml" href="icon.svg?v=3">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Fudge">
+<meta name="apple-mobile-web-app-title" content="fotn">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap">
@@ -54,8 +54,8 @@ header.top{
   background:linear-gradient(180deg,var(--bg) 62%,rgba(0,0,0,0));
 }
 .brand{display:flex;align-items:center;gap:11px;margin-bottom:13px}
-/* Branding — the Fudge wordmark (logo.svg) on the dark header. */
-.logo{height:36px;width:auto;flex:none;display:block}
+/* Branding — "fotn" text wordmark on the dark header. */
+.logo{font-size:30px;font-weight:800;letter-spacing:-.03em;color:var(--accent);line-height:1;flex:none;display:block}
 .brand h1{font-size:21px;font-weight:700;letter-spacing:-.01em;margin:0;line-height:1}
 .count{margin-left:auto;font-size:11px;color:var(--txt3);text-align:right;flex:none}
 .count b{color:var(--accent);font-weight:700}
@@ -283,7 +283,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .cam-start{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:16px;padding:34px;text-align:center;background:#000}
 .cam-start[hidden]{display:none}
-.cam-start img{height:34px;margin-bottom:6px}
+.cam-start .logo{margin-bottom:6px}
 .cam-start p{color:var(--txt2);max-width:300px;font-size:15px;line-height:1.55;margin:0}
 .cam-start button{padding:13px 24px;border-radius:999px;font-weight:650;font-size:15px;background:var(--accent);color:var(--ink)}
 .cam-start button.ghost{background:transparent;color:var(--txt2);border:1px solid var(--line2)}
@@ -310,7 +310,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
 <div class="app">
   <header class="top">
     <div class="brand">
-      <img class="logo" src="logo.svg?v=3" alt="Fudge" width="161" height="36">
+      <span class="logo">fotn</span>
     </div>
     <div class="toolbar">
       <div class="filters" id="filters"></div>
@@ -421,7 +421,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
     <button class="cam-zoom" id="camZoom" aria-label="Zoom" hidden>1×</button>
   </div>
   <div class="cam-start" id="camStart" hidden>
-    <img src="logo.svg?v=3" alt="Fudge">
+    <span class="logo">fotn</span>
     <p>Activez la caméra pour photographier avec vos presets appliqués en temps réel.</p>
     <button id="camStartBtn">Activer la caméra</button>
     <button id="camStartGallery" class="ghost">Parcourir la galerie</button>
@@ -1042,7 +1042,7 @@ function uniqueName(){
   const d=new Date();const p=n=>String(n).padStart(2,'0');
   const stamp=`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
   const rnd=Math.floor(1000+ (Date.now()%9000));
-  return `fudge_${slugify(cur&&cur.name)}_${stamp}-${rnd}.jpg`;
+  return `fotn_${slugify(cur&&cur.name)}_${stamp}-${rnd}.jpg`;
 }
 async function exportImage(){
   if(!userImg)return;
