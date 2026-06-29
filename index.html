@@ -159,10 +159,9 @@ header.top{
 .ed-head .hfav:hover{background:var(--line2)}
 .ed-head .hfav.on{color:var(--accent)}
 
-/* pinned preview — full photo (contain), ~half the screen */
-.preview{position:relative;width:100%;height:46vh;background:#000;overflow:hidden;flex:none}
+/* preview fills the space above the dock — the photo is the hero */
+.preview{position:relative;width:100%;background:#000;overflow:hidden;flex:1;min-height:0}
 .preview canvas{width:100%;height:100%;object-fit:contain;display:block}
-@media(min-width:880px){.preview{height:300px}}
 .pv-tools{position:absolute;left:10px;bottom:10px;display:flex;gap:8px;z-index:4}
 .pv-btn{font-size:12px;padding:7px 11px;border-radius:var(--r-md);background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
   color:#fff;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.16);transition:background .15s,border-color .15s}
@@ -198,39 +197,7 @@ header.top{
   background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2)}
 .crop-ic.ok{background:#fff;color:var(--ink);border-color:#fff}
 
-/* section tabs */
-.tabs{display:flex;gap:4px;overflow-x:auto;flex:none;padding:9px 12px;border-bottom:1px solid var(--line);
-  scrollbar-width:none;-ms-overflow-style:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex:none;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--txt3);white-space:nowrap;transition:.12s}
-.tab:hover{color:var(--txt2)}
-.tab.on{background:var(--panel2);color:var(--accent)}
-
-/* horizontally-swipeable panels — one section at a time, preview stays pinned */
-.panels{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
-  scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch}
-.panels::-webkit-scrollbar{display:none}
-.panel{flex:0 0 100%;width:100%;scroll-snap-align:start;overflow-y:auto;overscroll-behavior:contain;
-  padding:16px 16px calc(var(--safe-b) + 16px)}
-
-.sec-h{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--txt3);
-  margin:14px 0 12px;font-weight:700;display:flex;align-items:center;gap:8px}
-.sec-h .ln{flex:1;height:1px;background:var(--line)}
-
-.basepick{display:flex;flex-wrap:wrap;gap:7px}
-.basepick button{padding:8px 12px;border-radius:var(--r-md);background:var(--panel);border:1px solid var(--line);
-  font-size:12px;color:var(--txt2);transition:border-color .15s,color .15s}
-.basepick button:hover{border-color:var(--line2);color:var(--txt)}
-.basepick button.on{background:var(--accent);color:var(--ink);border-color:var(--accent);font-weight:600}
-.basepick button.on:hover{color:var(--ink)}
-
-/* slider */
-.sld{margin-bottom:18px}
-.sld:last-child{margin-bottom:4px}
-.sld-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
-.sld-top label{font-size:13px;font-weight:500;color:var(--txt)}
-.sld-val{font-variant-numeric:tabular-nums;font-weight:700;font-size:14px;min-width:42px;text-align:right}
-.sld-val.pos{color:var(--pos)} .sld-val.neg{color:var(--neg)} .sld-val.zero{color:var(--txt3)}
+/* single-adjustment slider (reused by the tool-edit view) */
 .range{position:relative;height:26px;display:flex;align-items:center}
 .range .track{position:absolute;left:0;right:0;height:4px;border-radius:3px;background:var(--line2)}
 .range .midmark{position:absolute;top:50%;transform:translateY(-50%);width:1px;height:11px;background:var(--txt3);opacity:.6}
@@ -241,44 +208,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.12)}
 input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #0a0a0a}
 
-/* segmented */
-.seg-row{margin-bottom:16px}
-.seg-row > label{font-size:13px;font-weight:500;display:block;margin-bottom:8px}
-.seg{display:flex;gap:5px;background:var(--panel);padding:4px;border-radius:var(--r-md);border:1px solid var(--line)}
-.seg button{flex:1;padding:8px 4px;border-radius:var(--r-sm);font-size:12px;color:var(--txt2);transition:.12s;font-weight:500}
-.seg button:hover{color:var(--txt)}
-.seg button.on{background:var(--panel2);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.3);font-weight:600}
-.seg button.on.acc{background:var(--accent);color:var(--ink)}
+/* header action buttons (reset / export) */
+.ed-head .hbtn{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:var(--panel2);
+  display:grid;place-items:center;flex:none;color:var(--txt);transition:background .15s,filter .15s}
+.ed-head .hbtn:hover{background:var(--line2)}
+.ed-head .hbtn::before{content:"";position:absolute;inset:-5px}   /* ≥44px touch target */
+.ed-head .hbtn.exp{background:var(--accent);color:var(--ink)}
+.ed-head .hbtn.exp:hover{background:var(--accent);filter:brightness(1.08)}
+.ed-head .hbtn.exp.busy{opacity:.6;pointer-events:none}
+.ed-head .hbtn[hidden]{display:none}
 
-.wbline{font-size:13px;color:var(--txt2);background:var(--panel);border:1px solid var(--line);
-  border-radius:var(--r-md);padding:11px 13px;display:flex;justify-content:space-between;align-items:center}
-.wbline b{color:var(--txt);font-weight:600}
-
-.rawbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;
-  font-size:12px;color:var(--txt2);white-space:pre-wrap;line-height:1.6;font-family:ui-monospace,Menlo,monospace}
-
-.ed-foot{flex:none;display:flex;gap:10px;padding:12px 16px calc(var(--safe-b) + 14px);
-  border-top:1px solid var(--line);background:var(--bg2)}
-.ed-foot button{flex:1;padding:13px;border-radius:var(--r-md);font-weight:600;font-size:14px;transition:filter .15s,background .15s}
-.btn-reset{background:var(--panel2);border:1px solid var(--line2);color:var(--txt)}
-.btn-reset:hover{background:var(--line2)}
-.btn-export{background:var(--accent2);color:var(--ink);display:flex;align-items:center;justify-content:center}
-.btn-export:hover{filter:brightness(1.08)}
-.btn-export.busy{opacity:.6;pointer-events:none}
-.btn-export[hidden]{display:none}
-
-.toast{position:fixed;bottom:calc(var(--safe-b) + 22px);left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--accent);color:var(--ink);padding:11px 18px;border-radius:var(--r-md);font-size:13px;font-weight:600;
-  z-index:100;opacity:0;transition:.25s;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* editor preset strip — VSCO-style filter row: switch the look on your own photo */
-.ed-strip{display:flex;gap:11px;overflow-x:auto;flex:none;padding:12px 16px;
-  border-bottom:1px solid var(--line);background:var(--bg2);
-  scrollbar-width:none;-ms-overflow-style:none}
-.ed-strip::-webkit-scrollbar{display:none}
-.pchip{flex:none;display:flex;flex-direction:column;align-items:center;gap:7px;width:60px;cursor:pointer;
-  background:none;padding:0}
+/* ---------- EDITOR DOCK (VSCO-style): a rail above a two-tab menu ---------- */
+.ed-dock{flex:none;background:var(--bg2);border-top:1px solid var(--line)}
+.ed-rail{display:flex;align-items:center;min-height:98px;padding:12px 14px}
+.ed-rail.scroller{overflow-x:auto;gap:11px;scrollbar-width:none;-ms-overflow-style:none}
+.ed-rail.scroller::-webkit-scrollbar{display:none}
+/* presets rail — thumbnail chips */
+.pchip{flex:none;display:flex;flex-direction:column;align-items:center;gap:7px;width:60px;cursor:pointer;background:none;padding:0}
 .pchip canvas{width:56px;height:56px;border-radius:var(--r-md);display:block;background:var(--panel);
   border:2px solid var(--line);transition:border-color .15s,transform .15s}
 .pchip:hover canvas{transform:translateY(-2px);border-color:var(--line2)}
@@ -287,6 +233,38 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .pchip span{font-size:10px;line-height:1.2;color:var(--txt3);max-width:60px;text-align:center;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
 .pchip.on span{color:var(--accent);font-weight:600}
+/* tools rail — labelled chips (show the live value when active) */
+.tchip{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  min-width:70px;height:66px;padding:0 13px;border-radius:var(--r-md);background:var(--panel);
+  border:1px solid var(--line);color:var(--txt2);cursor:pointer;transition:.15s}
+.tchip:hover{border-color:var(--line2);color:var(--txt)}
+.tchip .tlabel{font-size:12.5px;font-weight:600;white-space:nowrap}
+.tchip .tval{font-size:11px;font-variant-numeric:tabular-nums;color:var(--txt3);min-height:13px;line-height:1}
+.tchip.act{border-color:var(--accent)}
+.tchip.act .tlabel{color:var(--accent)} .tchip.act .tval{color:var(--accent2)}
+/* tool-edit — one full-width slider */
+.ed-rail.editing{flex-direction:column;align-items:stretch;gap:11px;padding:16px 20px}
+.tool-val{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--txt)}
+/* two-tab menu */
+.ed-menu{display:flex;align-items:stretch;border-top:1px solid var(--line);padding-bottom:var(--safe-b)}
+.ed-menu .m{flex:1;padding:15px 6px;background:none;font-size:13px;font-weight:600;letter-spacing:.2px;
+  color:var(--txt3);transition:.15s;position:relative}
+.ed-menu .m:hover{color:var(--txt2)}
+.ed-menu .m.on{color:var(--accent)}
+.ed-menu .m.on::after{content:"";position:absolute;left:50%;top:7px;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--accent)}
+/* tool-edit menu = cancel · label · confirm */
+.ed-menu.editing{align-items:center;padding:5px 8px;padding-bottom:calc(var(--safe-b) + 5px)}
+.ed-menu .ticon{flex:none;width:60px;height:44px;display:grid;place-items:center;background:none;color:var(--txt)}
+.ed-menu .ticon.ok{color:var(--accent)}
+.ed-menu .tname{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:13px;font-weight:600;color:var(--accent)}
+.ed-menu .tname::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+.toast{position:fixed;bottom:calc(var(--safe-b) + 22px);left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--accent);color:var(--ink);padding:11px 18px;border-radius:var(--r-md);font-size:13px;font-weight:600;
+  z-index:100;opacity:0;transition:.25s;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 .fabs{position:fixed;right:16px;bottom:calc(var(--safe-b) + 16px);z-index:30;display:flex;flex-direction:column;align-items:center;gap:10px}
 .fab{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--ink);
@@ -361,6 +339,12 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
     <button class="hfav" id="edFav" aria-label="Favori" aria-pressed="false">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"></path></svg>
     </button>
+    <button class="hbtn" id="btnReset" aria-label="Réinitialiser" title="Réinitialiser">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"></path></svg>
+    </button>
+    <button class="hbtn exp" id="btnExport" aria-label="Exporter" title="Exporter" hidden>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
+    </button>
   </div>
 
   <div class="preview" id="preview">
@@ -400,20 +384,10 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
     </div>
   </div>
 
-  <div class="ed-strip" id="edStrip" role="listbox" aria-label="Presets — choisir un look"></div>
-
-  <div class="tabs" id="edTabs" role="tablist" aria-label="Sections de réglage"></div>
-  <div class="panels" id="edPanels">
-    <section class="panel" id="panel-light" role="tabpanel" aria-label="Lumière"></section>
-    <section class="panel" id="panel-color" role="tabpanel" aria-label="Couleur"></section>
-    <section class="panel" id="panel-fx" role="tabpanel" aria-label="Rendu"></section>
-  </div>
-
-  <div class="ed-foot">
-    <button class="btn-reset" id="btnReset">Réinitialiser</button>
-    <button class="btn-export" id="btnExport" hidden>
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align:-3px;margin-right:6px"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>Exporter
-    </button>
+  <!-- VSCO-style dock: rail (presets / tools / one slider) above a two-tab menu -->
+  <div class="ed-dock" id="edDock">
+    <div class="ed-rail" id="edRail"></div>
+    <div class="ed-menu" id="edMenu"></div>
   </div>
 </div>
 
@@ -477,7 +451,7 @@ function onLutReady(){
   if(lutRepaintScheduled)return;lutRepaintScheduled=true;
   requestAnimationFrame(()=>{lutRepaintScheduled=false;
     rerenderCards();
-    if($('#editor').classList.contains('open')){paintEditStrip();paint();}
+    if($('#editor').classList.contains('open')){paint();if(edMode==='presets'&&!toolK)paintPresetRail();}
   });
 }
 function loadLUT(file){
@@ -800,8 +774,8 @@ function openEditor(r){
   $('#edName').textContent=r.name||'';
   $('#edSub').textContent=r.film||'';
   syncFav();
-  buildEditorPanels();
-  buildEditStrip();
+  edMode='presets';toolK=null;
+  renderDock();
   paint();
   document.body.style.overflow='hidden';
   // a11y: remember focus origin, neutralise background, move focus into the dialog
@@ -824,10 +798,33 @@ function syncFav(){const on=cur&&favs.has(cur._i);const b=$('#edFav');
 $('#edFav').onclick=()=>{if(!cur)return;toggleFav(cur._i);syncFav();
   document.querySelectorAll(`.fav[data-i="${cur._i}"]`).forEach(b=>{const on=favs.has(cur._i);b.classList.toggle('on',on);setHeart(b,on);});};
 
-//// ---------- EDITOR PRESET STRIP (VSCO-style: switch the look on your photo) ----------
-// Each chip previews the preset on the current photo (or the reference image).
-function buildEditStrip(){
-  const wrap=$('#edStrip');if(!wrap)return;wrap.innerHTML='';
+//// ---------- EDITOR DOCK (VSCO-style: Préréglages / Réglages / single tool) ----------
+const SLIDER_BY_K=Object.fromEntries(ADJ.map(s=>[s.k,s]));
+const adjDef=a=>(a.def==null?0:a.def);
+function fmtAdj(a,v){const num=Number.isInteger(v)?v:v.toFixed(1);return (a.min<0&&v>0?'+':'')+num;}
+let edMode='presets';        // 'presets' | 'adjust'
+let toolK=null, toolEntry=0;  // adjustment currently edited (single-slider), and its value on entry
+
+function renderDock(){renderRail();renderMenu();}
+function renderRail(){
+  const rail=$('#edRail');if(!rail)return;rail.className='ed-rail';rail.innerHTML='';
+  if(toolK){rail.classList.add('editing');buildToolSlider(rail);return;}
+  rail.classList.add('scroller');
+  if(edMode==='presets')buildPresetRail(rail);else buildToolChips(rail);
+}
+function renderMenu(){
+  const menu=$('#edMenu');if(!menu)return;menu.className='ed-menu';menu.innerHTML='';
+  if(toolK){menu.classList.add('editing');buildToolMenu(menu);return;}
+  [['presets','Préréglages'],['adjust','Réglages']].forEach(([m,label])=>{
+    const b=el('button','m');b.textContent=label;b.setAttribute('role','tab');
+    if(edMode===m){b.classList.add('on');b.setAttribute('aria-selected','true');}
+    b.onclick=()=>{if(edMode!==m){edMode=m;toolK=null;renderDock();}};
+    menu.appendChild(b);
+  });
+}
+
+// — presets rail: one thumbnail per look, previewed on the current photo —
+function buildPresetRail(rail){
   const frag=document.createDocumentFragment();
   RECIPES.forEach(p=>{
     const b=el('button','pchip');b.dataset.i=p._i;
@@ -838,23 +835,22 @@ function buildEditStrip(){
     b.onclick=()=>selectPreset(p);
     frag.appendChild(b);
   });
-  wrap.appendChild(frag);
-  markEditStrip();
-  paintEditStrip();      // thumbnails (deferred so the open animation stays smooth)
+  rail.appendChild(frag);
+  markPresetRail();paintPresetRail();
 }
 let stripScheduled=false;
-function paintEditStrip(){
+function paintPresetRail(){
   if(stripScheduled)return;stripScheduled=true;
   requestAnimationFrame(()=>{stripScheduled=false;
     const src=userImg||baseImg;
     if(!src||!(src.naturalWidth||src.width))return;
-    document.querySelectorAll('#edStrip .pchip canvas').forEach(cv=>{
+    document.querySelectorAll('#edRail .pchip canvas').forEach(cv=>{
       const p=RECIPES[+cv.parentNode.dataset.i];if(p)renderRecipe(src,p,NEUTRAL,cv,112,112);
     });
   });
 }
-function markEditStrip(){
-  document.querySelectorAll('#edStrip .pchip').forEach(c=>{
+function markPresetRail(){
+  document.querySelectorAll('#edRail .pchip').forEach(c=>{
     const on=cur&&+c.dataset.i===cur._i;
     c.classList.toggle('on',on);c.setAttribute('aria-selected',on?'true':'false');
     if(on)c.scrollIntoView({inline:'center',block:'nearest'});
@@ -864,77 +860,52 @@ function markEditStrip(){
 function selectPreset(p){
   if(!p)return;cur=p;lastPreset=p;
   $('#edName').textContent=p.name||'';$('#edSub').textContent=p.film||'';
-  syncFav();markEditStrip();paint();
+  syncFav();markPresetRail();paint();
 }
 
-//// ---------- EDITOR PANELS (tabs + horizontal swipe) ----------
-const SLIDER_BY_K=Object.fromEntries(ADJ.map(s=>[s.k,s]));
-const ED_PANELS=[
-  {id:'light', label:'Lumière', sliders:['exposure','contrast','highlights','shadows']},
-  {id:'color', label:'Couleur', sliders:['saturation','temperature','tint']},
-  {id:'fx',    label:'Rendu',   sliders:['intensity','grain','vignette','fade']},
-];
-let curTab=0;
-
-function makeSlider(s){
-  const row=el('div','sld');
-  row.innerHTML=`<div class="sld-top"><label for="i_${s.k}">${s.label}</label><span class="sld-val" id="v_${s.k}" aria-hidden="true"></span></div>
-    <div class="range"><div class="track"></div><div class="midmark"></div><div class="fill" id="f_${s.k}"></div>
-    <input type="range" min="${s.min}" max="${s.max}" step="${s.step}" value="${vals[s.k]}" id="i_${s.k}"></div>`;
-  const inp=row.querySelector('input');
-  inp.addEventListener('input',()=>{vals[s.k]=parseFloat(inp.value);updSlider(s);paintLook();});
-  return row;
-}
-function fillPanel(id){
-  const cfg=ED_PANELS.find(p=>p.id===id);const host=document.getElementById('panel-'+id);
-  host.innerHTML='';
-  (cfg.sliders||[]).forEach(k=>host.appendChild(makeSlider(SLIDER_BY_K[k])));
-  (cfg.sliders||[]).forEach(k=>updSlider(SLIDER_BY_K[k]));
-}
-function buildTabs(){
-  const t=$('#edTabs');t.innerHTML='';
-  ED_PANELS.forEach((p,i)=>{const b=el('button','tab');b.textContent=p.label;b.setAttribute('role','tab');b.dataset.i=i;
-    b.setAttribute('aria-controls','panel-'+p.id);b.onclick=()=>setTab(i);t.appendChild(b);});
-}
-function highlightTab(i){
-  document.querySelectorAll('#edTabs .tab').forEach((b,j)=>{const on=j===i;b.classList.toggle('on',on);
-    b.setAttribute('aria-selected',on?'true':'false');b.tabIndex=on?0:-1;});
-}
-function setTab(i,smooth=true){
-  i=clamp(i,0,ED_PANELS.length-1);curTab=i;
-  const p=$('#edPanels');const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  p.scrollTo({left:i*p.clientWidth,behavior:(smooth&&!reduce)?'smooth':'auto'});
-  highlightTab(i);
-}
-function buildEditorPanels(){
-  buildTabs();
-  ED_PANELS.forEach(p=>fillPanel(p.id));
-  setTab(0,false);
-}
-// sync active tab while swiping; arrow-key tab navigation
-(function initTabs(){
-  const p=$('#edPanels');let raf;
-  p.addEventListener('scroll',()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=null;
-    const i=Math.round(p.scrollLeft/p.clientWidth);if(i!==curTab){curTab=i;highlightTab(i);}});});
-  $('#edTabs').addEventListener('keydown',e=>{
-    if(e.key==='ArrowRight'){e.preventDefault();setTab(curTab+1);}
-    else if(e.key==='ArrowLeft'){e.preventDefault();setTab(curTab-1);}
-    else return;
-    const b=document.querySelector('#edTabs .tab.on');if(b)b.focus();
+// — réglages rail: one chip per adjustment (shows its value when active) —
+function buildToolChips(rail){
+  ADJ.forEach(a=>{
+    const v=vals[a.k], active=v!==adjDef(a);
+    const b=el('button','tchip'+(active?' act':''));b.setAttribute('aria-label',a.label);
+    const lab=el('span','tlabel');lab.textContent=a.label;
+    const val=el('span','tval');val.textContent=active?fmtAdj(a,v):'';
+    b.appendChild(lab);b.appendChild(val);
+    b.onclick=()=>openTool(a.k);
+    rail.appendChild(b);
   });
-})();
-function updSlider(s){
-  const v=vals[s.k];const span=$('#v_'+s.k);
-  const num=(Number.isInteger(v)?v:v.toFixed(1));
-  const txt=(s.min<0&&v>0?'+':'')+num;        // sign only on bipolar sliders
-  span.textContent=txt;
-  span.className='sld-val '+(v>0?'pos':v<0?'neg':'zero');
-  $('#i_'+s.k).setAttribute('aria-valuetext',txt);   // a11y: announce the signed value
-  const pct=(v-s.min)/(s.max-s.min)*100, mid=(0-s.min)/(s.max-s.min)*100;
-  const f=$('#f_'+s.k);
+}
+
+// — single-adjustment editing: one slider with cancel / confirm —
+function openTool(k){toolK=k;toolEntry=vals[k];renderDock();}
+function confirmTool(){toolK=null;edMode='adjust';renderDock();}
+function cancelTool(){if(toolK!=null){vals[toolK]=toolEntry;paint();}toolK=null;edMode='adjust';renderDock();}
+function buildToolSlider(rail){
+  const a=SLIDER_BY_K[toolK];
+  const val=el('div','tool-val');val.id='toolVal';
+  const range=el('div','range');
+  range.innerHTML=`<div class="track"></div><div class="midmark"></div><div class="fill" id="toolFill"></div>
+    <input type="range" min="${a.min}" max="${a.max}" step="${a.step}" id="toolInput" aria-label="${a.label}">`;
+  rail.appendChild(val);rail.appendChild(range);
+  const inp=range.querySelector('input');inp.value=vals[toolK];
+  updToolSlider();
+  inp.addEventListener('input',()=>{vals[toolK]=parseFloat(inp.value);updToolSlider();paintLook();});
+}
+function updToolSlider(){
+  const a=SLIDER_BY_K[toolK], v=vals[toolK], f=$('#toolFill'), inp=$('#toolInput');
+  const txt=fmtAdj(a,v);
+  $('#toolVal').textContent=txt; if(inp)inp.setAttribute('aria-valuetext',txt);
+  const pct=(v-a.min)/(a.max-a.min)*100, mid=(0-a.min)/(a.max-a.min)*100;
   if(v>=0){f.style.left=mid+'%';f.style.width=(pct-mid)+'%';f.style.background='var(--pos)';}
   else{f.style.left=pct+'%';f.style.width=(mid-pct)+'%';f.style.background='var(--neg)';}
-  $('#i_'+s.k).parentNode.querySelector('.midmark').style.left=mid+'%';
+  f.parentNode.querySelector('.midmark').style.left=mid+'%';
+}
+function buildToolMenu(menu){
+  const a=SLIDER_BY_K[toolK];
+  const x=el('button','ticon');x.innerHTML=svgIcon(MI.close,22);x.setAttribute('aria-label','Annuler');x.onclick=cancelTool;
+  const name=el('div','tname');name.textContent=a.label;
+  const ok=el('button','ticon ok');ok.innerHTML=svgIcon('M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',22);ok.setAttribute('aria-label','Valider');ok.onclick=confirmTool;
+  menu.appendChild(x);menu.appendChild(name);menu.appendChild(ok);
 }
 //// ---------- EDITOR PREVIEW (canvas, full film engine) ----------
 const pvCanvas=$('#pvCanvas');
@@ -962,7 +933,7 @@ function loadPhotoFile(f){
   if(!f)return;const rd=new FileReader();
   rd.onload=()=>{const im=new Image();im.onload=()=>{
     userImg=im;cropN=null;                    // new photo → drop any previous crop
-    if($('#editor').classList.contains('open')){if(cropMode)cancelCrop();buildEditStrip();paint();}
+    if($('#editor').classList.contains('open')){if(cropMode)cancelCrop();renderDock();paint();}
     else openEditor(lastPreset||FILTERED[0]||RECIPES[0]);
   };im.src=rd.result;};
   rd.readAsDataURL(f);
@@ -1085,7 +1056,7 @@ $('#btnCam').onclick=()=>$('#camInput').click();
 $('#fabImport').onclick=()=>$('#upload').click();
 
 //// foot buttons
-$('#btnReset').onclick=()=>{if(cur){vals=neutralAdj();cropN=null;if(cropMode)exitCrop();ED_PANELS.forEach(p=>fillPanel(p.id));paint();}toast('Réglages réinitialisés');};
+$('#btnReset').onclick=()=>{if(cur){vals=neutralAdj();cropN=null;if(cropMode)exitCrop();toolK=null;renderDock();paint();}toast('Réglages réinitialisés');};
 
 //// EXPORT (bake the current look into the uploaded photo)
 function slugify(s){return (s||'recette').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
@@ -1123,7 +1094,7 @@ $('#btnExport').onclick=exportImage;
 let tT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),1800);}
 
 // close on Esc (crop overlay first, then the editor)
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(cropMode)cancelCrop();else if(cur)closeEditor();});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(toolK)cancelTool();else if(cropMode)cancelCrop();else if(cur)closeEditor();});
 </script>
 </body>
 </html>
