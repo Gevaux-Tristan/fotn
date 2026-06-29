@@ -666,7 +666,8 @@ function photoCard(it){
   c.onclick=()=>openItem(it);
   c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openItem(it);}};
   const img=el('img');img.alt='';img.loading='lazy';
-  if(it.w&&it.h)img.style.aspectRatio=it.w+'/'+it.h;   // reserve space → no reflow as thumbs load
+  // ratio comes from the thumbnail's real pixels (matches the bitmap → no stretch); else natural
+  if(it.tw&&it.th)img.style.aspectRatio=it.tw+'/'+it.th;
   if(it.thumb)img.src=it.thumb;
   c.appendChild(img);
   return c;
@@ -748,12 +749,12 @@ function makeThumb(){
   let w=reg.sw,h=reg.sh,m=Math.max(w,h),cap=480;if(m>cap){const s=cap/m;w*=s;h*=s;}
   const cv=document.createElement('canvas');
   renderRecipe(userImg,cur,vals,cv,Math.max(1,Math.round(w)),Math.max(1,Math.round(h)),{crop:reg});
-  try{return cv.toDataURL('image/jpeg',0.82);}catch(e){return null;}
+  try{return {data:cv.toDataURL('image/jpeg',0.82), w:cv.width, h:cv.height};}catch(e){return null;}
 }
 function saveItem(silent){
   if(!currentItem)return Promise.resolve();
   currentItem.edit=gatherEdit();
-  const t=makeThumb();if(t)currentItem.thumb=t;
+  const t=makeThumb();if(t){currentItem.thumb=t.data;currentItem.tw=t.w;currentItem.th=t.h;}
   const ix=library.findIndex(x=>x.id===currentItem.id);if(ix>=0)library[ix]=currentItem;
   return idbPut(currentItem).then(()=>{renderLibrary();if(!silent)toast('Modifications enregistrées');})
                             .catch(()=>{if(!silent)toast('Échec de l’enregistrement');});
@@ -935,7 +936,7 @@ function thumbFromImage(img){
   let w=IW,h=IH,m=Math.max(w,h),cap=560;if(m>cap){const s=cap/m;w*=s;h*=s;}
   const cv=document.createElement('canvas');
   renderRecipe(img,ORIGINAL,NEUTRAL,cv,Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));
-  try{return cv.toDataURL('image/jpeg',0.82);}catch(e){return null;}
+  try{return {data:cv.toDataURL('image/jpeg',0.82), w:cv.width, h:cv.height};}catch(e){return null;}
 }
 // Add one or many photos (camera or library) → store each, then open the editor
 // only when a single photo was added (multi-import just populates the library).
@@ -945,8 +946,10 @@ async function addPhotos(files, openIfSingle){
   for(let i=0;i<list.length;i++){
     let r; try{r=await blobToImage(list[i]);}catch(e){continue;}
     const iw=r.img.naturalWidth||r.img.width, ih=r.img.naturalHeight||r.img.height;
+    const tb=thumbFromImage(r.img);
     const item={id:uid(), created:Date.now()+i, blob:list[i], w:iw, h:ih,
-      edit:{presetName:'',vals:neutralAdj(),crop:null}, thumb:thumbFromImage(r.img)};
+      tw:tb?tb.w:iw, th:tb?tb.h:ih,
+      edit:{presetName:'',vals:neutralAdj(),crop:null}, thumb:tb?tb.data:null};
     library.unshift(item);
     try{await idbPut(item);}catch(e){}
     added.push({item,r});
