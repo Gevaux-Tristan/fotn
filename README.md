@@ -9,12 +9,15 @@ mono-fichier (`index.html`, sans dépendance, sans build).
 - **Caméra native** : le bouton appareil photo ouvre la caméra **du système** (`<input capture>`) —
   qualité maximale, format natif, orientation correcte, aucun viseur custom. La photo revient dans
   l'app et s'ouvre dans l'éditeur. Import depuis la galerie via le bouton image.
-- **Bibliothèque de presets** (~22) inspirés de pellicules réelles : négatifs (Portra, Gold, Superia),
-  diapos (Velvia, Provia, Kodachrome), ciné (CineStill 800T, Vision3), lomo/cross-process, vintage,
-  N&B (Tri-X, HP5, Acros, Delta, Sépia, Sélénium). Chaque preset est un **look paramétrique** calibré.
-- **Moteur de rendu pixel** (`renderRecipe` / `buildOps`) : balance des blancs, matrice
-  colorimétrique, split-tone, contraste, courbes hautes/basses lumières, grain, vignettage. Le même
-  moteur alimente les cartes de la galerie, les vignettes du bandeau, l'aperçu éditeur et l'export.
+- **Presets = vraies LUTs 3D** issues des profils Lightroom *Analog Vision Studio V2 (Frontier)* :
+  Portra 400, Pro 400H, Gold 200, ColorPlus 200, Kodacolor 100, UltraMax 400, Velvia 100, HP5+.
+  Chaque profil `.xmp` est un *Look* dont toute la couleur est une LUT 3D embarquée ; elle est
+  « cuite » sur une image identité (Hald CLUT) dans Lightroom puis stockée en PNG (`luts/<stock>.png`,
+  125×125 = 25³ nœuds) et appliquée en **interpolation trilinéaire** → rendu identique au profil.
+- **Moteur de rendu pixel** (`renderRecipe` / `buildOps`) : la **LUT** porte le look (appliquée en
+  premier, dosée par l'**intensité**), puis les réglages universels (expo, balance des blancs,
+  contraste, hautes/basses lumières, saturation, grain, vignettage) se superposent. Le même moteur
+  alimente les cartes de la galerie, les vignettes du bandeau, l'aperçu éditeur et l'export.
 - **Galerie** : chaque carte applique le preset sur une même image de référence (`generic.jpg`).
   Filtres Favoris / Couleur / Noir & blanc ; affichage compact / grand / liste + « Charger plus ».
 - **Éditeur (façon VSCO)** : aperçu plein cadre de votre photo, **bandeau de presets** dont chaque
@@ -26,7 +29,9 @@ mono-fichier (`index.html`, sans dépendance, sans build).
   Rendu : intensité, grain, vignettage, estompé). Export → `fotn_<preset>_<horodatage>-<id>.jpg`.
 
 ## Fichiers
-- `index.html` — toute l'app (presets embarqués). `generic.jpg` — image de référence des cartes.
+- `index.html` — toute l'app. `generic.jpg` — image de référence des cartes.
+- `luts/<stock>.png` — les LUTs 3D (Hald CLUT 125×125) chargées à l'exécution. `luts/lut-identity.png`
+  + `luts/genhald.py` — image identité et générateur pour cuire de nouvelles LUTs dans Lightroom.
 - `icon.svg` + PNG, `manifest.webmanifest` — branding / PWA.
 
 ## Lancer en local

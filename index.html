@@ -465,6 +465,42 @@ baseImg.src=GENERIC_IMG;
 function clamp(x,a,b){return x<a?a:x>b?b:x;}
 function lerp(a,b,t){return a+(b-a)*t;}
 
+//// ---------- 3D LUT CACHE ----------
+// Each film look is a Hald-CLUT PNG (125×125 = 25³ nodes) baked in Lightroom.
+// Load it once into a Float32 cube; renderRecipe samples it trilinearly.
+const LUT_N=25;
+const LUTS={};
+let lutRepaintScheduled=false;
+function onLutReady(){
+  if(lutRepaintScheduled)return;lutRepaintScheduled=true;
+  requestAnimationFrame(()=>{lutRepaintScheduled=false;
+    rerenderCards();
+    if($('#editor').classList.contains('open')){paintEditStrip();paint();}
+  });
+}
+function loadLUT(file){
+  if(LUTS[file])return LUTS[file];
+  const o={ready:false,data:null,n:LUT_N,img:new Image()};
+  LUTS[file]=o;
+  o.img.onload=()=>{
+    const N=LUT_N, side=125;   // 125×125 image = N√N per side, one pixel per node
+    const c=document.createElement('canvas');c.width=side;c.height=side;
+    const cx=c.getContext('2d',{willReadFrequently:true});cx.drawImage(o.img,0,0,side,side);
+    const d=cx.getImageData(0,0,side,side).data;
+    const data=new Float32Array(N*N*N*3);
+    for(let i=0;i<N*N*N;i++){
+      const r=i%N, g=((i/N)|0)%N, b=(i/(N*N))|0;
+      const px=i%side, py=(i/side)|0, off=(py*side+px)*4;
+      const ci=(b*N*N+g*N+r)*3;
+      data[ci]=d[off]/255; data[ci+1]=d[off+1]/255; data[ci+2]=d[off+2]/255;
+    }
+    o.data=data;o.ready=true;onLutReady();
+  };
+  o.img.onerror=()=>{};
+  o.img.src=file;
+  return o;
+}
+
 //// ====================================================================
 //// FILM ENGINE — real per-pixel reinterpretation of each Fuji recipe.
 //// Pipeline / pixel: White Balance -> simulation colour matrix -> saturation
@@ -486,57 +522,21 @@ const I3=[1,0,0, 0,1,0, 0,0,1];
 // Inspired by documented stocks (warm portrait/consumer negatives, vivid
 // slides, motion-picture stocks, lomo/cross-process, faded vintage, B&W).
 // ---------------------------------------------------------------------------
+// LUT-based film looks — real 3D LUTs baked from the Analog Vision Studio V2
+// "Frontier" Lightroom profiles (one PNG Hald per stock, applied trilinearly).
+// The LUT carries the whole colour; universal sliders layer on top.
 const PRESETS=[
- // — Négatifs couleur (chauds, peau crémeuse) —
- {name:'Kodak Portra 400', film:'Négatif portrait · chaud & crémeux', cat:'Négatif',
-  temp:18,tint:-4,sat:.92,con:.93,lift:.05,split:.4,splitS:[-.01,0,.02],splitH:[.04,.02,-.02],grain:.4,vig:.12},
- {name:'Kodak Gold 200', film:'Négatif doré · nostalgique', cat:'Négatif',
-  temp:30,tint:2,sat:1.05,con:1.0,lift:.04,split:.45,splitS:[0,.005,.01],splitH:[.06,.03,-.045],grain:.5,vig:.15},
- {name:'Fujifilm Superia 400', film:'Négatif du quotidien · vif', cat:'Négatif',
-  temp:12,tint:-6,sat:1.16,con:1.05,lift:.03,split:.3,splitS:[-.02,.02,0],splitH:[.03,.02,-.02],grain:.6,vig:.12},
-
- // — Diapositives (saturées, contrastées) —
- {name:'Fujifilm Velvia 50', film:'Diapo ultra-saturée · paysage', cat:'Diapo',
-  temp:-4,sat:1.42,con:1.2,mx:[1.10,-.06,-.04, -.05,1.10,-.05, -.03,-.07,1.10],split:.2,splitS:[-.01,0,.02],grain:.2,vig:.18},
- {name:'Fujifilm Provia 100F', film:'Diapo équilibrée · propre', cat:'Diapo',
-  temp:2,sat:1.12,con:1.08,grain:.2,vig:.1},
- {name:'Kodachrome 64', film:'Diapo vintage · rouges riches', cat:'Diapo',
-  temp:14,sat:1.1,con:1.12,mx:[1.08,-.02,-.03, -.02,1.0,-.02, -.02,-.02,.96],split:.35,splitS:[.01,0,-.01],splitH:[.03,.01,-.03],lift:.02,grain:.35,vig:.18},
-
- // — Cinéma —
- {name:'CineStill 800T', film:'Ciné tungstène · halation & teal', cat:'Ciné',
-  temp:-22,tint:-2,sat:.98,con:1.05,lift:.05,split:.6,splitS:[-.03,.02,.05],splitH:[.06,0,-.03],grain:.8,vig:.2},
- {name:'Kodak Vision3 250D', film:'Ciné lumière du jour · doux', cat:'Ciné',
-  temp:6,sat:.95,con:.95,lift:.06,split:.45,splitS:[-.02,.005,.02],splitH:[.03,.02,-.02],grain:.5,vig:.15},
- {name:'Kodak Vision3 500T', film:'Étalonnage teal & orange', cat:'Ciné',
-  temp:8,sat:1.05,con:1.12,split:.7,splitS:[-.04,.01,.05],splitH:[.06,.03,-.05],lift:.04,grain:.3,vig:.22},
-
- // — Lomo / expérimental —
- {name:'Lomography Color 400', film:'Lomo · saturé & vignette', cat:'Lomo',
-  temp:0,tint:-10,sat:1.5,con:1.25,lift:.02,split:.4,splitS:[-.02,.04,-.02],splitH:[.03,.04,-.04],grain:.7,vig:.5},
- {name:'Lomography X-Pro 200', film:'Cross-process · couleurs folles', cat:'Lomo',
-  temp:4,tint:6,sat:1.3,con:1.3,mx:[1.05,0,-.05, -.03,1.05,-.02, .02,-.04,.95],split:.7,splitS:[-.05,.02,.04],splitH:[.06,.05,-.08],lift:.03,grain:.6,vig:.3},
- {name:'Lomography Redscale', film:'Pellicule inversée · rouge intense', cat:'Lomo',
-  temp:40,sat:1.1,con:1.1,mx:[1.15,.05,.05, 0,.85,.05, 0,0,.5],split:.3,splitH:[.06,0,-.06],grain:.6,vig:.25},
-
- // — Vintage / délavé —
- {name:'Kodak ColorPlus 200', film:'Rétro délavé · seventies', cat:'Vintage',
-  temp:16,sat:.72,con:.85,lift:.13,split:.4,splitS:[.01,.005,-.01],splitH:[.04,.02,-.03],grain:.6,vig:.15},
- {name:'Polaroid 600', film:'Instantané · doux & froid', cat:'Vintage',
-  temp:-6,tint:-4,sat:.88,con:.9,lift:.1,split:.4,splitS:[-.02,.01,.03],splitH:[.03,.02,-.01],grain:.4,vig:.32},
- {name:'Lomochrome Metropolis', film:'Pellicule périmée · dérive verte', cat:'Vintage',
-  temp:-2,tint:-14,sat:.85,con:.95,mx:[.98,.03,0, 0,1.04,0, .02,.02,.94],lift:.08,split:.4,splitS:[-.03,.05,-.02],grain:1.4,vig:.2},
-
+ // — Négatifs couleur —
+ {name:'Portra 400',    film:'Négatif portrait · Frontier',  cat:'Négatif', lut:'luts/portra400.png'},
+ {name:'Pro 400H',      film:'Négatif pro · Frontier',       cat:'Négatif', lut:'luts/pro400h.png'},
+ {name:'Gold 200',      film:'Négatif doré · Frontier',      cat:'Négatif', lut:'luts/gold200.png'},
+ {name:'ColorPlus 200', film:'Négatif du quotidien · Frontier', cat:'Négatif', lut:'luts/colorplus200.png'},
+ {name:'Kodacolor 100', film:'Négatif grain fin · Frontier', cat:'Négatif', lut:'luts/kodacolor100.png'},
+ {name:'UltraMax 400',  film:'Négatif polyvalent · Frontier',cat:'Négatif', lut:'luts/ultramax400.png'},
+ // — Diapositive —
+ {name:'Velvia 100',    film:'Diapo saturée · Frontier',     cat:'Diapo',   lut:'luts/velvia100.png'},
  // — Noir & blanc —
- {name:'Kodak Tri-X 400', film:'N&B classique · contrasté', cat:'N&B', mono:1,con:1.15,lift:.01,grain:1.2,vig:.12},
- {name:'Ilford HP5 Plus', film:'N&B reportage · souple', cat:'N&B', mono:1,con:1.05,lift:.03,grain:.9,vig:.1},
- {name:'Fujifilm Acros 100', film:'N&B grain fin · net', cat:'N&B', mono:1,con:1.08,grain:.3,vig:.08},
- {name:'Ilford Delta 3200', film:'N&B graphique · contraste fort', cat:'N&B', mono:1,con:1.4,grain:1.0,vig:.18},
- {name:'Sépia', film:'N&B viré sépia · chaud', cat:'N&B', mono:1,con:1.05,grain:.6,tone:[.07,-.01,-.16],vig:.15},
- {name:'Sélénium', film:'N&B viré froid', cat:'N&B', mono:1,con:1.12,grain:.5,tone:[-.04,0,.06],vig:.12},
-
- // — Net —
- {name:'Neutre', film:'Couleur neutre · point de départ', cat:'Net', sat:1.0,con:1.0,grain:0,vig:0},
+ {name:'HP5+',          film:'N&B classique · Frontier',     cat:'N&B', mono:1, lut:'luts/hp5.png'},
 ];
 PRESETS.forEach(p=>{p.mono=!!p.mono;});
 // neutral user adjustments (cards render presets at their default look)
@@ -548,6 +548,7 @@ const NEUTRAL={};
 function buildOps(P,A){
   A=A||NEUTRAL;
   const k=(A.intensity==null?100:A.intensity)/100;
+  const L=P.lut?LUTS[P.lut]:null, lutReady=!!(L&&L.ready);   // the film look is a 3D LUT
   const warm=((P.temp||0)*k+(A.temperature||0))/100;
   const grn =((P.tint||0)*k+(A.tint||0))/100;
   const rG=1+0.22*warm, bG=1-0.22*warm, gG=1-0.10*grn;
@@ -564,7 +565,8 @@ function buildOps(P,A){
   return {rG,gG,bG,exp,sat,con,hi,sh,lift,grain,vig,
     split:(P.split||0)*k, splitS:P.splitS||[0,0,0], splitH:P.splitH||[0,0,0],
     mx,
-    mono:!!P.mono, monoK:k, filt:P.filt||[0.30,0.59,0.11], tone:P.tone||null};
+    lut:lutReady?L.data:null, lutN:lutReady?L.n:LUT_N, lutK:k,   // LUT applied first, blended by intensity
+    mono:(!!P.mono)&&!P.lut, monoK:k, filt:P.filt||[0.30,0.59,0.11], tone:P.tone||null};
 }
 
 // Cover-draw an image into a w×h context (object-fit: cover).
@@ -587,10 +589,29 @@ function renderRecipe(src,P,A,canvas,w,h,opts){
   const id=ctx.getImageData(0,0,w,h),d=id.data;
   const O=buildOps(P,A);
   const mx=O.mx, cx=w/2, cy=h/2, maxd=Math.sqrt(cx*cx+cy*cy);
+  const LD=O.lut, LN=O.lutN, LN1=O.lutN-1, LNN=O.lutN*O.lutN, LK=O.lutK;   // LUT locals
   let p=0;
   for(let y=0;y<h;y++){
     for(let x=0;x<w;x++,p+=4){
       let r=d[p]/255, g=d[p+1]/255, b=d[p+2]/255;
+      // 0. film LUT (trilinear) — the whole look, blended by intensity
+      if(LD){
+        let fr=r<0?0:r>1?1:r, fg=g<0?0:g>1?1:g, fb=b<0?0:b>1?1:b;
+        fr*=LN1; fg*=LN1; fb*=LN1;
+        const r0=fr|0, g0=fg|0, b0=fb|0;
+        const r1=r0<LN1?r0+1:r0, g1=g0<LN1?g0+1:g0, b1=b0<LN1?b0+1:b0;
+        const dr=fr-r0, dg=fg-g0, db=fb-b0, mr=1-dr, mg=1-dg, mb=1-db;
+        const w000=mr*mg*mb, w100=dr*mg*mb, w010=mr*dg*mb, w110=dr*dg*mb,
+              w001=mr*mg*db, w101=dr*mg*db, w011=mr*dg*db, w111=dr*dg*db;
+        const o000=(b0*LNN+g0*LN+r0)*3, o100=(b0*LNN+g0*LN+r1)*3,
+              o010=(b0*LNN+g1*LN+r0)*3, o110=(b0*LNN+g1*LN+r1)*3,
+              o001=(b1*LNN+g0*LN+r0)*3, o101=(b1*LNN+g0*LN+r1)*3,
+              o011=(b1*LNN+g1*LN+r0)*3, o111=(b1*LNN+g1*LN+r1)*3;
+        const lr=LD[o000]*w000+LD[o100]*w100+LD[o010]*w010+LD[o110]*w110+LD[o001]*w001+LD[o101]*w101+LD[o011]*w011+LD[o111]*w111;
+        const lg=LD[o000+1]*w000+LD[o100+1]*w100+LD[o010+1]*w010+LD[o110+1]*w110+LD[o001+1]*w001+LD[o101+1]*w101+LD[o011+1]*w011+LD[o111+1]*w111;
+        const lb=LD[o000+2]*w000+LD[o100+2]*w100+LD[o010+2]*w010+LD[o110+2]*w110+LD[o001+2]*w001+LD[o101+2]*w101+LD[o011+2]*w011+LD[o111+2]*w111;
+        r+=(lr-r)*LK; g+=(lg-g)*LK; b+=(lb-b)*LK;
+      }
       // 1. exposure + white balance
       r*=O.rG*O.exp; g*=O.gG*O.exp; b*=O.bG*O.exp;
       // 2. film colour matrix
@@ -651,6 +672,7 @@ const el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;}
 
 //// ---------- LOAD ----------
 RECIPES=PRESETS.map((p,i)=>{p._i=i;return p;});
+RECIPES.forEach(p=>{if(p.lut)loadLUT(p.lut);});   // warm the LUT cache (small Hald PNGs)
 buildFilters();
 applyFilters();
 
