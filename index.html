@@ -135,13 +135,8 @@ header.top{
 /* preview fills the space above the dock — the photo is the hero */
 .preview{position:relative;width:100%;background:var(--bg2);overflow:hidden;flex:1;min-height:0}
 .preview canvas{width:100%;height:100%;object-fit:contain;display:block}
-.pv-tools{position:absolute;left:10px;bottom:10px;display:flex;gap:8px;z-index:4}
-.pv-btn{font-size:12px;padding:7px 11px;border-radius:var(--r-md);background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
-  color:#fff;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.16);transition:background .15s,border-color .15s}
-.pv-btn:hover{background:rgba(0,0,0,.7);border-color:rgba(255,255,255,.3)}
-.preview.cropping .pv-tools{display:none}
 
-/* crop tool — ratio chips + adjustable box with rule-of-thirds */
+/* crop tool — adjustable box with rule-of-thirds (ratio/apply controls live in the dock) */
 .crop{position:absolute;inset:0;z-index:6;touch-action:none}
 .crop[hidden]{display:none}
 .crop-box{position:absolute;box-sizing:border-box;border:1px solid rgba(255,255,255,.95);
@@ -159,17 +154,6 @@ header.top{
 .crop-h.tr{right:-15px;top:-15px}.crop-h.tr::before{right:0;top:0;border-left:none;border-bottom:none}
 .crop-h.bl{left:-15px;bottom:-15px}.crop-h.bl::before{left:0;bottom:0;border-right:none;border-top:none}
 .crop-h.br{right:-15px;bottom:-15px}.crop-h.br::before{right:0;bottom:0;border-left:none;border-top:none}
-.crop-bar{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;align-items:center;gap:9px;
-  padding:10px 12px calc(var(--safe-b)/2 + 10px);background:linear-gradient(0deg,rgba(0,0,0,.65),transparent)}
-.crop-ratios{display:flex;gap:7px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;-ms-overflow-style:none}
-.crop-ratios::-webkit-scrollbar{display:none}
-.crop-rchip{flex:none;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;
-  color:#fff;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2)}
-.crop-rchip.on{background:#fff;color:#111;border-color:#fff}
-.crop-ic{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;color:#fff;
-  background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2)}
-.crop-ic.ok{background:#fff;color:#111;border-color:#fff}
-
 /* single-adjustment slider (reused by the tool-edit view) */
 .range{position:relative;height:26px;display:flex;align-items:center}
 .range .track{position:absolute;left:0;right:0;height:4px;border-radius:3px;background:var(--line2)}
@@ -193,7 +177,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 
 /* ---------- EDITOR DOCK (VSCO-style): a rail above a two-tab menu ---------- */
 .ed-dock{flex:none;background:var(--bg2);border-top:1px solid var(--line)}
-.ed-rail{display:flex;align-items:center;min-height:98px;padding:12px 14px}
+.ed-rail{display:flex;align-items:center;min-height:80px;padding:7px 14px}
 .ed-rail.scroller{overflow-x:auto;gap:11px;scrollbar-width:none;-ms-overflow-style:none}
 .ed-rail.scroller::-webkit-scrollbar{display:none}
 /* presets rail — thumbnail chips */
@@ -208,9 +192,14 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .pchip.on span{color:var(--accent);font-weight:600}
 /* tools rail — labelled chips (show the live value when active) */
 .tchip{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  min-width:74px;height:78px;padding:0 13px;border-radius:var(--r-md);background:var(--panel);
+  min-width:74px;height:66px;padding:0 13px;border-radius:var(--r-md);background:var(--panel);
   border:1px solid var(--line);color:var(--txt2);cursor:pointer;transition:.15s}
 .tchip:hover{border-color:var(--line2);color:var(--txt)}
+/* dock ratio chips (crop) */
+.rchip{flex:none;align-self:center;padding:9px 14px;border-radius:999px;font-size:12.5px;font-weight:600;
+  white-space:nowrap;background:var(--panel);border:1px solid var(--line);color:var(--txt2);cursor:pointer;transition:.15s}
+.rchip:hover{border-color:var(--line2);color:var(--txt)}
+.rchip.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
 .tchip .tico{display:grid;place-items:center;height:24px;color:var(--txt2);transition:color .15s}
 .tchip .tlabel{font-size:12px;font-weight:600;white-space:nowrap}
 .tchip .tval{font-size:11px;font-variant-numeric:tabular-nums;color:var(--txt3);min-height:13px;line-height:1}
@@ -319,28 +308,13 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
 
   <div class="preview" id="preview">
     <canvas id="pvCanvas" role="img" aria-label="Aperçu de la recette appliquée à la photo"></canvas>
-    <div class="pv-tools">
-      <button class="pv-btn" id="btnCrop">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 17V1H5v4H1v2h4v10c0 1.1.9 2 2 2h10v4h2v-4h4v-2H7zm10-2h2V7c0-1.1-.9-2-2-2H9v2h8v8z"></path></svg>
-        Recadrer
-      </button>
-    </div>
-    <!-- crop overlay -->
+    <!-- crop overlay (just the adjustable box; ratio/apply controls live in the dock) -->
     <div class="crop" id="crop" hidden>
       <div class="crop-box" id="cropBox">
         <span class="crop-h tl" data-c="tl"></span>
         <span class="crop-h tr" data-c="tr"></span>
         <span class="crop-h bl" data-c="bl"></span>
         <span class="crop-h br" data-c="br"></span>
-      </div>
-      <div class="crop-bar">
-        <button class="crop-ic" id="cropCancel" aria-label="Annuler le recadrage">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
-        </button>
-        <div class="crop-ratios" id="cropRatios" role="radiogroup" aria-label="Format de recadrage"></div>
-        <button class="crop-ic ok" id="cropApply" aria-label="Appliquer le recadrage">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>
-        </button>
       </div>
     </div>
   </div>
@@ -799,12 +773,14 @@ let toolK=null, toolEntry=0;  // adjustment currently edited (single-slider), an
 function renderDock(){renderRail();renderMenu();}
 function renderRail(){
   const rail=$('#edRail');if(!rail)return;rail.className='ed-rail';rail.innerHTML='';
+  if(cropMode){rail.classList.add('scroller');buildCropRatios(rail);return;}
   if(toolK){rail.classList.add('editing');buildToolSlider(rail);return;}
   rail.classList.add('scroller');
   if(edMode==='presets')buildPresetRail(rail);else buildToolChips(rail);
 }
 function renderMenu(){
   const menu=$('#edMenu');if(!menu)return;menu.className='ed-menu';menu.innerHTML='';
+  if(cropMode){menu.classList.add('editing');buildCropMenu(menu);return;}
   if(toolK){menu.classList.add('editing');buildToolMenu(menu);return;}
   [['presets','Filtres'],['adjust','Réglages']].forEach(([m,label])=>{
     const b=el('button','m');b.setAttribute('role','tab');
@@ -856,8 +832,16 @@ function selectPreset(p){
   markPresetRail();paint();
 }
 
-// — réglages rail: one chip per adjustment (shows its value when active) —
+// — réglages rail: a Crop entry + one chip per adjustment (value shown when active) —
+const CROP_ICON='M7 17V1H5v4H1v2h4v10c0 1.1.9 2 2 2h10v4h2v-4h4v-2H7zm10-2h2V7c0-1.1-.9-2-2-2H9v2h8v8z';
 function buildToolChips(rail){
+  const cb=el('button','tchip'+(cropN?' act':''));cb.setAttribute('aria-label','Recadrer');
+  const ci=el('span','tico');ci.innerHTML=svgIcon(CROP_ICON,22);
+  const cl=el('span','tlabel');cl.textContent='Recadrer';
+  const cvl=el('span','tval');cvl.textContent=cropN?'•':'';
+  cb.appendChild(ci);cb.appendChild(cl);cb.appendChild(cvl);
+  cb.onclick=enterCrop;
+  rail.appendChild(cb);
   ADJ.forEach(a=>{
     const v=vals[a.k], active=v!==adjDef(a);
     const b=el('button','tchip'+(active?' act':''));b.setAttribute('aria-label',a.label);
@@ -987,14 +971,21 @@ function layoutCropBox(){
   b.style.left=(R.left+c.x*R.w)+'px';b.style.top=(R.top+c.y*R.h)+'px';
   b.style.width=(c.w*R.w)+'px';b.style.height=(c.h*R.h)+'px';
 }
-function buildCropRatios(){
-  const wrap=$('#cropRatios');wrap.innerHTML='';
-  CROP_RATIOS.forEach(c=>{const b=el('button','crop-rchip');b.textContent=c.label;b.dataset.k=c.k;
-    b.setAttribute('role','radio');b.onclick=()=>setCropRatio(c.k);wrap.appendChild(b);});
-  markCropRatios();
+function buildCropRatios(rail){
+  const frag=document.createDocumentFragment();
+  CROP_RATIOS.forEach(c=>{const b=el('button','rchip');b.textContent=c.label;b.dataset.k=c.k;
+    b.setAttribute('role','radio');b.onclick=()=>setCropRatio(c.k);frag.appendChild(b);});
+  rail.appendChild(frag);markCropRatios();
 }
-function markCropRatios(){document.querySelectorAll('#cropRatios .crop-rchip').forEach(b=>{
-  const on=b.dataset.k===cropARkey;b.classList.toggle('on',on);b.setAttribute('aria-checked',on?'true':'false');});}
+function markCropRatios(){document.querySelectorAll('#edRail .rchip').forEach(b=>{
+  const on=b.dataset.k===cropARkey;b.classList.toggle('on',on);b.setAttribute('aria-checked',on?'true':'false');
+  if(on)b.scrollIntoView({inline:'center',block:'nearest'});});}
+function buildCropMenu(menu){
+  const x=el('button','ticon');x.innerHTML=svgIcon(MI.close,22);x.setAttribute('aria-label','Annuler');x.onclick=cancelCrop;
+  const name=el('div','tname');name.innerHTML=svgIcon(CROP_ICON,18)+'<span>Recadrer</span>';
+  const ok=el('button','ticon ok');ok.innerHTML=svgIcon('M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',22);ok.setAttribute('aria-label','Valider');ok.onclick=applyCrop;
+  menu.appendChild(x);menu.appendChild(name);menu.appendChild(ok);
+}
 function setCropRatio(key){
   cropARkey=key;cropARn=arnFor((CROP_RATIOS.find(c=>c.k===key)||{}).r);markCropRatios();
   if(cropARn){                                   // snap to the largest box of this ratio, kept around the current centre
@@ -1029,7 +1020,6 @@ function resizeCropCorner(corner,s,dnx,dny){
 (function cropDrag(){
   const ov=$('#crop');let active=null;
   ov.addEventListener('pointerdown',e=>{
-    if(e.target.closest('.crop-bar'))return;                 // let the chips/buttons work
     const h=e.target.closest('.crop-h');
     const box=$('#cropBox').getBoundingClientRect();
     const inBox=e.clientX>=box.left&&e.clientX<=box.right&&e.clientY>=box.top&&e.clientY<=box.bottom;
@@ -1049,22 +1039,19 @@ function resizeCropCorner(corner,s,dnx,dny){
 })();
 function enterCrop(){
   if(!cur)return;
-  cropMode=true;cropDraft=cropN?{...cropN}:{x:0,y:0,w:1,h:1};
+  cropMode=true;toolK=null;cropDraft=cropN?{...cropN}:{x:0,y:0,w:1,h:1};
   cropARkey='free';cropARn=null;
-  $('#preview').classList.add('cropping');$('#crop').hidden=false;
-  buildCropRatios();paintPreview();              // show the whole image while cropping
+  $('#crop').hidden=false;
+  renderDock();paintPreview();                   // ratio chips + ✕/✓ go into the dock; show whole image
   requestAnimationFrame(layoutCropBox);
 }
-function exitCrop(){cropMode=false;$('#crop').hidden=true;$('#preview').classList.remove('cropping');}
-function cancelCrop(){exitCrop();paintPreview();}
+function exitCrop(){cropMode=false;$('#crop').hidden=true;}
+function cancelCrop(){exitCrop();renderDock();paintPreview();}
 function applyCrop(){
   const c=cropDraft;
   cropN=(c.w>=0.999&&c.h>=0.999&&c.x<=0.001&&c.y<=0.001)?null:{...c};   // full = no crop
-  exitCrop();paint();
+  exitCrop();renderDock();paint();
 }
-$('#btnCrop').onclick=enterCrop;
-$('#cropApply').onclick=applyCrop;
-$('#cropCancel').onclick=cancelCrop;
 window.addEventListener('resize',()=>{if(cropMode)layoutCropBox();});
 
 //// ---------- CAMERA / IMPORT (native system camera) ----------
