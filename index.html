@@ -700,7 +700,7 @@ function teardownEditor(){
 }
 function closeEditor(){if(currentItem)saveItem(true);teardownEditor();}   // closing auto-saves
 $('#edClose').onclick=closeEditor;$('#scrim').onclick=closeEditor;
-$('#btnSave').onclick=()=>saveItem(false);
+$('#btnSave').onclick=()=>{saveItem(false);teardownEditor();};   // save → back to the gallery
 $('#btnDelete').onclick=deleteCurrent;
 
 //// ---------- EDITOR DOCK (VSCO-style: Préréglages / Réglages / single tool) ----------
