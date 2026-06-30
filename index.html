@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#ffffff">
 <title>fotn</title>
 <meta name="description" content="fotn — presets photo inspirés des pellicules argentiques classiques, à appliquer et régler sur vos photos.">
 <link rel="icon" type="image/svg+xml" href="icon.svg?v=6">
@@ -11,20 +11,20 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=6">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="fotn">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
-  /* Monochrome — black / white / grey (colour lives only in the photos) */
-  --bg:#000000; --bg2:#0c0c0c; --panel:#151515; --panel2:#1e1e1e;
-  --line:#2a2a2a; --line2:#3a3a3a;
-  --txt:#f4f4f4; --txt2:#aeaeae; --txt3:#8c8c8c;
-  --accent:#ffffff; --accent2:#e6e6e6;   /* "accent" = the brightest neutral, for active/primary */
-  --pos:#f0f0f0; --neg:#8a8a8a;
-  --ink:#0a0a0a;            /* text/icon colour on the white accent */
+  /* Monochrome LIGHT — white / black / grey (colour lives only in the photos) */
+  --bg:#ffffff; --bg2:#f7f7f7; --panel:#f0f0f0; --panel2:#e8e8e8;
+  --line:#e4e4e4; --line2:#d2d2d2;
+  --txt:#0e0e0e; --txt2:#595959; --txt3:#8c8c8c;
+  --accent:#141414; --accent2:#2c2c2c;   /* "accent" = the darkest neutral, for active/primary */
+  --pos:#141414; --neg:#9a9a9a;
+  --ink:#ffffff;            /* text/icon colour on the dark accent */
   /* radius scale */
   --r-lg:16px;             /* cards, sheets */
   --r-md:11px;             /* inputs, buttons, panels, controls */
@@ -55,9 +55,9 @@ header.top{
   padding-top:calc(var(--safe-t) + 14px);
   background:linear-gradient(180deg,var(--bg) 62%,rgba(0,0,0,0));
 }
-.brand{display:flex;align-items:center;gap:11px;margin-bottom:13px}
+.brand{display:block;margin-bottom:13px}
 /* Branding — "fotn" SVG wordmark on the dark header. */
-.logo{height:28px;width:auto;color:var(--accent);line-height:1;flex:none;display:block}
+.logo{width:100%;max-width:560px;height:auto;color:var(--accent);line-height:1;display:block}
 .brand h1{font-size:21px;font-weight:700;letter-spacing:-.01em;margin:0;line-height:1}
 .count{margin-left:auto;font-size:11px;color:var(--txt3);text-align:right;flex:none}
 .count b{color:var(--accent);font-weight:700}
@@ -136,7 +136,7 @@ header.top{
 .ed-head .hfav.on{color:var(--accent)}
 
 /* preview fills the space above the dock — the photo is the hero */
-.preview{position:relative;width:100%;background:#000;overflow:hidden;flex:1;min-height:0}
+.preview{position:relative;width:100%;background:var(--bg2);overflow:hidden;flex:1;min-height:0}
 .preview canvas{width:100%;height:100%;object-fit:contain;display:block}
 .pv-tools{position:absolute;left:10px;bottom:10px;display:flex;gap:8px;z-index:4}
 .pv-btn{font-size:12px;padding:7px 11px;border-radius:var(--r-md);background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
@@ -168,10 +168,10 @@ header.top{
 .crop-ratios::-webkit-scrollbar{display:none}
 .crop-rchip{flex:none;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;
   color:#fff;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2)}
-.crop-rchip.on{background:#fff;color:var(--ink);border-color:#fff}
+.crop-rchip.on{background:#fff;color:#111;border-color:#fff}
 .crop-ic{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;color:#fff;
   background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2)}
-.crop-ic.ok{background:#fff;color:var(--ink);border-color:#fff}
+.crop-ic.ok{background:#fff;color:#111;border-color:#fff}
 
 /* single-adjustment slider (reused by the tool-edit view) */
 .range{position:relative;height:26px;display:flex;align-items:center}
@@ -180,9 +180,9 @@ header.top{
 .range .fill{position:absolute;height:4px;border-radius:3px;background:var(--accent);opacity:.9}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;position:relative;z-index:2;margin:0;height:26px}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
-  background:#fff;border:2px solid #0a0a0a;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 2px 8px rgba(0,0,0,.5);cursor:grab}
+  background:var(--accent);border:2px solid var(--bg);box-shadow:0 0 0 1px var(--line2),0 2px 8px rgba(0,0,0,.25);cursor:grab}
 input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.12)}
-input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #0a0a0a}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
 
 /* header action buttons (reset / export) */
 .ed-head .hbtn{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:var(--panel2);
@@ -245,10 +245,10 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 
 .fabs{position:fixed;right:16px;bottom:calc(var(--safe-b) + 16px);z-index:30;display:flex;flex-direction:column;align-items:center;gap:10px}
 .fab{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--ink);
-  display:grid;place-items:center;box-shadow:0 8px 24px -6px rgba(0,0,0,.7);transition:transform .15s,filter .15s}
+  display:grid;place-items:center;box-shadow:0 8px 24px -6px rgba(0,0,0,.28);transition:transform .15s,filter .15s}
 .fab:hover{transform:translateY(-2px);filter:brightness(1.06)}
 .fab:active{transform:translateY(0)}
-.fab.sec{background:var(--panel2);color:var(--txt);border:1px solid var(--line2);box-shadow:0 6px 18px rgba(0,0,0,.4);width:46px;height:46px}
+.fab.sec{background:var(--panel2);color:var(--txt);border:1px solid var(--line2);box-shadow:0 6px 18px rgba(0,0,0,.14);width:46px;height:46px}
 .fab.sec:hover{background:var(--line2);filter:none}
 
 /* keyboard focus — one consistent ring everywhere */
@@ -1151,7 +1151,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(toolK)canc
         const sx=cx+x*f, sy=cy-(y-CAMY)*f;
         if(sx<-30||sx>w+30||sy<-30||sy>h+30)continue;
         let s=PSIZE*f; if(s<0.45)continue; if(s>9)s=9;
-        ctx.fillStyle='rgba(200,200,200,'+Math.min(0.7,0.12+s*0.07).toFixed(3)+')';
+        ctx.fillStyle='rgba(150,150,150,'+Math.min(0.5,0.08+s*0.05).toFixed(3)+')';
         ctx.fillRect(sx-s*0.5,sy-s*0.5,s,s);
       }
     }
