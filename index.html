@@ -74,8 +74,8 @@ header.top{
 @media(min-width:880px){.gallery{column-count:6}}
 .pcard{position:relative;display:block;width:100%;margin:0 0 8px;overflow:hidden;cursor:pointer;background:var(--panel);
   break-inside:avoid;-webkit-column-break-inside:avoid;-webkit-touch-callout:none;user-select:none;
-  outline:0 solid var(--line2);transition:opacity .15s,outline-width .12s}   /* no border-radius */
-.pcard:hover{outline-width:2px}
+  transition:opacity .15s,transform .15s}   /* no border, no radius */
+.pcard:hover{transform:translateY(-2px)}
 .pcard:active{opacity:.85}
 .pcard img{width:100%;height:auto;display:block;pointer-events:none}   /* natural ratio, no crop, no radius */
 /* long-press → black overlay + white trash to delete in place */
@@ -90,13 +90,13 @@ header.top{
 .cscrim{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:24px;
   background:rgba(0,0,0,.45);backdrop-filter:blur(3px);opacity:0;transition:opacity .2s}
 .cscrim.show{opacity:1}
-.cbox{width:100%;max-width:320px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
+.cbox{width:100%;max-width:320px;background:var(--bg);border-radius:var(--r-lg);
   padding:20px 18px 16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.4);transform:translateY(8px);transition:transform .2s}
 .cscrim.show .cbox{transform:none}
 .cmsg{margin:0 0 16px;font-size:15px;line-height:1.45;color:var(--txt);text-align:center}
 .crow{display:flex;gap:10px}
 .cbtn{flex:1;padding:12px;border-radius:var(--r-md);font-size:14px;font-weight:600;
-  background:var(--panel2);border:1px solid var(--line2);color:var(--txt);transition:filter .15s,background .15s}
+  background:var(--panel2);border:1px solid transparent;color:var(--txt);transition:filter .15s,background .15s}
 .cbtn:hover{background:var(--line2)}
 .cbtn.danger{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .cbtn.danger:hover{background:var(--accent);filter:brightness(1.1)}
@@ -190,8 +190,8 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 /* presets rail — thumbnail chips */
 .pchip{flex:none;display:flex;flex-direction:column;align-items:center;gap:7px;width:60px;cursor:pointer;background:none;padding:0}
 .pchip canvas{width:56px;height:56px;border-radius:var(--r-md);display:block;background:var(--panel);
-  border:2px solid var(--line);transition:border-color .15s,transform .15s}
-.pchip:hover canvas{transform:translateY(-2px);border-color:var(--line2)}
+  border:2px solid transparent;transition:border-color .15s,transform .15s}
+.pchip:hover canvas{transform:translateY(-2px)}
 .pchip.on canvas{border-color:var(--accent)}
 .pchip:active canvas{transform:translateY(0) scale(.96)}
 .pchip span{font-size:10px;line-height:1.2;color:var(--txt3);max-width:60px;text-align:center;
@@ -200,19 +200,19 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 /* tools rail — labelled chips (show the live value when active) */
 .tchip{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
   min-width:74px;height:60px;padding:0 13px;border-radius:var(--r-md);background:var(--panel);
-  border:1px solid var(--line);color:var(--txt2);cursor:pointer;transition:.15s}
-.tchip:hover{border-color:var(--line2);color:var(--txt)}
+  border:1px solid transparent;color:var(--txt2);cursor:pointer;transition:.15s}
+.tchip:hover{color:var(--txt)}
 /* dock ratio chips (crop) */
 .rchip{flex:none;align-self:center;padding:9px 14px;border-radius:999px;font-size:12.5px;font-weight:600;
-  white-space:nowrap;background:var(--panel);border:1px solid var(--line);color:var(--txt2);cursor:pointer;transition:.15s}
-.rchip:hover{border-color:var(--line2);color:var(--txt)}
+  white-space:nowrap;background:var(--panel);border:1px solid transparent;color:var(--txt2);cursor:pointer;transition:.15s}
+.rchip:hover{color:var(--txt)}
 .rchip.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
 /* crop dock: ratio chips row + straighten slider row */
 .ed-rail.cropedit{flex-direction:column;align-items:stretch;gap:9px;min-height:0;max-height:44vh;overflow-y:auto;padding:10px 14px}
 .crop-auto{display:flex;justify-content:center;padding-top:2px}
 .auto-btn{padding:8px 18px;border-radius:999px;font-size:12.5px;font-weight:600;
-  background:var(--panel);border:1px solid var(--line2);color:var(--txt);transition:.15s}
-.auto-btn:hover{border-color:var(--accent);color:var(--accent)}
+  background:var(--panel);border:1px solid transparent;color:var(--txt);transition:.15s}
+.auto-btn:hover{color:var(--accent)}
 .crop-chips{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
 .crop-chips::-webkit-scrollbar{display:none}
 .crop-straight{display:flex;align-items:center;gap:11px}
@@ -252,7 +252,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   display:grid;place-items:center;box-shadow:0 8px 24px -6px rgba(0,0,0,.28);transition:transform .15s,filter .15s}
 .fab:hover{transform:translateY(-2px);filter:brightness(1.06)}
 .fab:active{transform:translateY(0)}
-.fab.sec{background:var(--bg);color:var(--txt);border:1px solid var(--line2);box-shadow:0 6px 18px rgba(0,0,0,.14)}
+.fab.sec{background:var(--bg);color:var(--txt);box-shadow:0 6px 18px rgba(0,0,0,.18)}
 .fab.sec:hover{background:var(--line2);filter:none}
 
 /* keyboard focus — one consistent ring everywhere */
