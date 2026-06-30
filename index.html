@@ -166,8 +166,8 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
 .pchip.on span{color:var(--accent);font-weight:600}
 /* tools rail — labelled chips (show the live value when active) */
-.tchip{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  min-width:74px;height:66px;padding:0 13px;border-radius:var(--r-md);background:var(--panel);
+.tchip{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  min-width:74px;height:60px;padding:0 13px;border-radius:var(--r-md);background:var(--panel);
   border:1px solid var(--line);color:var(--txt2);cursor:pointer;transition:.15s}
 .tchip:hover{border-color:var(--line2);color:var(--txt)}
 /* dock ratio chips (crop) */
@@ -176,11 +176,10 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .rchip:hover{border-color:var(--line2);color:var(--txt)}
 .rchip.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
 .tchip .tico{display:grid;place-items:center;height:24px;color:var(--txt2);transition:color .15s}
-.tchip .tlabel{font-size:12px;font-weight:600;white-space:nowrap}
-.tchip .tval{font-size:11px;font-variant-numeric:tabular-nums;color:var(--txt3);min-height:13px;line-height:1}
+.tchip .tlabel{font-size:12px;font-weight:600;white-space:nowrap;line-height:1.1}
 .tchip.act{border-color:var(--accent)}
 .tchip.act .tico{color:var(--accent)}
-.tchip.act .tlabel{color:var(--accent)} .tchip.act .tval{color:var(--accent2)}
+.tchip.act .tlabel{color:var(--accent)}
 /* tool-edit — one full-width slider */
 .ed-rail.editing{flex-direction:column;align-items:stretch;gap:11px;padding:16px 20px}
 .tool-val{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--txt)}
@@ -772,23 +771,21 @@ function selectPreset(p){
   markPresetRail();paint();
 }
 
-// — réglages rail: a Crop entry + one chip per adjustment (value shown when active) —
+// — réglages rail: a Crop entry + one chip per adjustment (icon + name only) —
 const CROP_ICON='M7 17V1H5v4H1v2h4v10c0 1.1.9 2 2 2h10v4h2v-4h4v-2H7zm10-2h2V7c0-1.1-.9-2-2-2H9v2h8v8z';
 function buildToolChips(rail){
   const cb=el('button','tchip'+(cropN?' act':''));cb.setAttribute('aria-label','Recadrer');
   const ci=el('span','tico');ci.innerHTML=svgIcon(CROP_ICON,22);
   const cl=el('span','tlabel');cl.textContent='Recadrer';
-  const cvl=el('span','tval');cvl.textContent=cropN?'•':'';
-  cb.appendChild(ci);cb.appendChild(cl);cb.appendChild(cvl);
+  cb.appendChild(ci);cb.appendChild(cl);
   cb.onclick=enterCrop;
   rail.appendChild(cb);
   ADJ.forEach(a=>{
-    const v=vals[a.k], active=v!==adjDef(a);
+    const active=vals[a.k]!==adjDef(a);
     const b=el('button','tchip'+(active?' act':''));b.setAttribute('aria-label',a.label);
     const ico=el('span','tico');if(ADJ_ICON[a.k])ico.innerHTML=svgIcon(ADJ_ICON[a.k],22);
     const lab=el('span','tlabel');lab.textContent=a.label;
-    const val=el('span','tval');val.textContent=active?fmtAdj(a,v):'';
-    b.appendChild(ico);b.appendChild(lab);b.appendChild(val);
+    b.appendChild(ico);b.appendChild(lab);
     b.onclick=()=>openTool(a.k);
     rail.appendChild(b);
   });
