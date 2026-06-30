@@ -64,9 +64,7 @@ input{font-family:inherit}
 @media (prefers-reduced-motion: reduce){.splash-word{animation:none}}
 .app{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:0 16px}
 header.top{
-  position:sticky;top:0;z-index:40;
-  padding-top:calc(var(--safe-t) + 14px);
-  background:linear-gradient(180deg,var(--bg) 62%,rgba(0,0,0,0));
+  padding-top:calc(var(--safe-t) + 14px);   /* just top safe-area spacing; no background (let the backdrop show) */
 }
 .count{margin-left:auto;font-size:11px;color:var(--txt3);text-align:right;flex:none}
 .count b{color:var(--accent);font-weight:700}
