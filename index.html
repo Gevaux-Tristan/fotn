@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="fotn">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
   /* Monochrome LIGHT — white / black / grey (colour lives only in the photos) */
@@ -36,7 +36,7 @@
 html,body{margin:0;height:100%}
 body{
   background:var(--bg); color:var(--txt);
-  font-family:"Geist","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-family:"Funnel Display","Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size:15px; line-height:1.45; -webkit-font-smoothing:antialiased;
   overflow-x:hidden;
 }
@@ -56,10 +56,6 @@ header.top{
   padding-top:calc(var(--safe-t) + 14px);
   background:linear-gradient(180deg,var(--bg) 62%,rgba(0,0,0,0));
 }
-.brand{display:block;margin-bottom:13px}
-/* Branding — "fotn" SVG wordmark on the dark header. */
-.logo{width:100%;max-width:560px;height:auto;color:var(--accent);line-height:1;display:block}
-.brand h1{font-size:21px;font-weight:700;letter-spacing:-.01em;margin:0;line-height:1}
 .count{margin-left:auto;font-size:11px;color:var(--txt3);text-align:right;flex:none}
 .count b{color:var(--accent);font-weight:700}
 
@@ -266,11 +262,6 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
 <canvas id="bgfx" aria-hidden="true"></canvas>
 <div class="app">
   <header class="top">
-    <div class="brand">
-      <svg class="logo" viewBox="0 0 454 142" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="fotn">
-        <path d="M7.2002 141.6H0V0H7.2002V141.6ZM36 141.6H14.4004V0H36V141.6ZM64.7998 141.6H43.2002V0H64.7998V141.6ZM93.5996 141.6H86.4004V0H93.5996V141.6ZM108 141.6H100.8V0H108V141.6ZM136.912 141.6H115.312V0H136.912V141.6ZM151.312 141.6H144.112V0H151.312V141.6ZM180.112 141.6H158.513V0H180.112V141.6ZM194.513 141.6H187.312V0H194.513V141.6ZM223.312 141.6H216.112V0H223.312V141.6ZM237.825 141.6H230.625V0H237.825V141.6ZM252.225 141.6H245.025V0H252.225V141.6ZM281.025 141.6H259.425V0H281.025V141.6ZM309.825 141.6H288.225V0H309.825V141.6ZM338.625 141.6H331.425V0H338.625V141.6ZM353.138 141.6H345.938V0H353.138V141.6ZM367.537 141.6H360.338V0H367.537V141.6ZM396.338 141.6H374.737V0H396.338V141.6ZM410.737 141.6H403.537V0H410.737V141.6ZM453.938 141.6H432.338V0H453.938V141.6Z" fill="currentColor"/>
-      </svg>
-    </div>
     <div class="toolbar">
       <span class="lib-title">Mes photos</span>
       <div class="viewseg" id="viewToggle" role="radiogroup" aria-label="Affichage de la bibliothèque">
