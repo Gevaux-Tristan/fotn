@@ -85,17 +85,12 @@ header.top{
 .gallery{padding:6px 0 calc(var(--safe-b) + 96px);column-count:3;column-gap:8px}
 @media(min-width:560px){.gallery{column-count:4;column-gap:10px}}
 @media(min-width:880px){.gallery{column-count:6}}
-.lib-title{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--txt2)}
 .pcard{display:block;width:100%;margin:0 0 8px;overflow:hidden;cursor:pointer;background:var(--panel);
   break-inside:avoid;-webkit-column-break-inside:avoid;
   outline:0 solid var(--line2);transition:opacity .15s,outline-width .12s}   /* no border-radius */
 .pcard:hover{outline-width:2px}
 .pcard:active{opacity:.85}
 .pcard img{width:100%;height:auto;display:block}      /* natural ratio, no crop, no radius */
-
-.empty{text-align:center;color:var(--txt3);padding:64px 24px;column-span:all}
-.empty-h{font-size:16px;font-weight:700;color:var(--txt2);margin:0 0 8px}
-.empty-sub{font-size:13px;line-height:1.6;max-width:340px;margin:0 auto}
 
 /* ---------- DETAIL / EDITOR ---------- */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);opacity:0;
@@ -248,11 +243,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   <span class="splash-word">fotn</span>
 </div>
 <div class="app">
-  <header class="top">
-    <div class="toolbar">
-      <span class="lib-title">Mes photos</span>
-    </div>
-  </header>
+  <header class="top"></header>
 
   <main>
     <div id="gallery" class="gallery"></div>
@@ -605,10 +596,7 @@ function loadLibrary(){
 //// ---------- HOME = PHOTO LIBRARY ----------
 function renderLibrary(){
   const g=$('#gallery');g.innerHTML='';
-  if(!library.length){
-    g.innerHTML='<div class="empty"><p class="empty-h">Aucune photo</p><p class="empty-sub">Prends une photo ou importe-en une — elles s’affichent ici, et tu peux y revenir pour les retoucher.</p></div>';
-    return;
-  }
+  if(!library.length)return;          // empty → just the animated backdrop + the add FABs
   const frag=document.createDocumentFragment();
   library.forEach(it=>frag.appendChild(photoCard(it)));
   g.appendChild(frag);
