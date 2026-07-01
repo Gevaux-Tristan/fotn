@@ -658,8 +658,10 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 let _db=null;
 function idbOpen(){return new Promise((res,rej)=>{
   if(_db)return res(_db);
-  const r=indexedDB.open('fotn',1);
-  r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains('photos'))db.createObjectStore('photos',{keyPath:'id'});};
+  const r=indexedDB.open('fotn',2);
+  r.onupgradeneeded=()=>{const db=r.result;
+    if(!db.objectStoreNames.contains('photos'))db.createObjectStore('photos',{keyPath:'id'});
+    if(!db.objectStoreNames.contains('meta'))db.createObjectStore('meta');};   // out-of-line keys (FS handle, prefs)
   r.onsuccess=()=>{_db=r.result;res(_db);};
   r.onerror=()=>rej(r.error);
 });}
@@ -672,6 +674,44 @@ function idbDelete(id){return idbOpen().then(db=>new Promise((res,rej)=>{
 function idbGetAll(){return idbOpen().then(db=>new Promise((res,rej)=>{
   const r=db.transaction('photos','readonly').objectStore('photos').getAll();
   r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);}));}
+function idbMetaSet(k,v){return idbOpen().then(db=>new Promise((res,rej)=>{
+  const t=db.transaction('meta','readwrite');t.objectStore('meta').put(v,k);
+  t.oncomplete=()=>res();t.onerror=()=>rej(t.error);}));}
+function idbMetaGet(k){return idbOpen().then(db=>new Promise((res,rej)=>{
+  const r=db.transaction('meta','readonly').objectStore('meta').get(k);
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}));}
+function idbMetaDel(k){return idbOpen().then(db=>new Promise((res,rej)=>{
+  const t=db.transaction('meta','readwrite');t.objectStore('meta').delete(k);
+  t.oncomplete=()=>res();t.onerror=()=>rej(t.error);}));}
+
+// ---------- FOTN export folder (File System Access API — Android/desktop Chrome) ----------
+let _fotnDir=null;
+async function fsVerify(h){                       // ensure readwrite permission (may prompt once/session)
+  if(!h||!h.queryPermission)return true;
+  const opt={mode:'readwrite'};
+  if((await h.queryPermission(opt))==='granted')return true;
+  try{return (await h.requestPermission(opt))==='granted';}catch(e){return false;}
+}
+// Returns the persisted FOTN dir handle (writable), or null. `interactive` allows prompting
+// (must be called from a user gesture). On first use: pick a location → create/use a FOTN subfolder.
+async function getFotnDir(interactive){
+  if(!window.showDirectoryPicker)return null;      // unsupported (e.g. iOS Safari) → caller uses share/zip
+  if(_fotnDir&&await fsVerify(_fotnDir))return _fotnDir;
+  try{const saved=await idbMetaGet('fotnDir');
+    if(saved){if(await fsVerify(saved)){_fotnDir=saved;return saved;} }}catch(e){}
+  if(!interactive)return null;
+  let parent;
+  try{parent=await window.showDirectoryPicker({id:'fotnExport',mode:'readwrite',startIn:'pictures'});}
+  catch(e){return null;}                           // user cancelled the picker
+  let dir; try{dir=await parent.getDirectoryHandle('FOTN',{create:true});}catch(e){dir=parent;}
+  _fotnDir=dir; try{await idbMetaSet('fotnDir',dir);}catch(e){}
+  return dir;
+}
+function forgetFotnDir(){_fotnDir=null;return idbMetaDel('fotnDir').catch(()=>{});}
+async function writeToDir(dir,name,blob){
+  const fh=await dir.getFileHandle(name,{create:true});
+  const w=await fh.createWritable();await w.write(blob);await w.close();
+}
 
 //// ---------- LOAD ----------
 RECIPES=PRESETS.map((p,i)=>{p._i=i;return p;});
@@ -821,32 +861,43 @@ async function makeZip(entries){                 // entries: [{name, blob}]
   return new Blob([...parts,...central,end],{type:'application/zip'});
 }
 async function exportBatch(items){
+  // Acquire the FOTN folder FIRST (the picker/permission prompt needs the tap's activation, before any render).
+  const fsa=!!window.showDirectoryPicker;
+  let dir=null;
+  if(fsa){dir=await getFotnDir(true);if(!dir){toast('Export annulé');return;}}
   const ov=showBusy('Préparation…');
   try{
-    const entries=[]; let failed=0;
+    const rendered=[]; let failed=0;
     for(let i=0;i<items.length;i++){
       ov.set(`Rendu ${i+1}/${items.length}…`);await nextFrame();
       const r=await renderItemToBlob(items[i],3200,1000+i);
-      if(r&&r.blob)entries.push({name:'FOTN/'+r.name, blob:r.blob}); else failed++;
+      if(r&&r.blob)rendered.push(r); else failed++;
     }
-    if(!entries.length){toast('Export impossible');return;}
-    // Single photo → hand over the JPEG directly (no point zipping one file)
-    if(entries.length===1){
-      const f=new File([entries[0].blob],entries[0].name.replace('FOTN/',''),{type:'image/jpeg'});
+    if(!rendered.length){toast('Export impossible');return;}
+    // A) Android/desktop Chrome → write each JPEG straight into the FOTN folder.
+    if(dir){
+      let wrote=0;
+      for(let i=0;i<rendered.length;i++){ov.set(`Enregistrement ${i+1}/${rendered.length}…`);
+        try{await writeToDir(dir,rendered[i].name,rendered[i].blob);wrote++;}catch(e){failed++;}}
+      exitSelect();
+      toast((wrote>1?`${wrote} photos`:'Photo')+' → dossier FOTN'+(failed?` (${failed} échec)`:''));
+      return;
+    }
+    // B) iOS (no folder API): single photo → share/download the JPEG…
+    if(rendered.length===1){
+      const f=new File([rendered[0].blob],rendered[0].name,{type:'image/jpeg'});
       if(navigator.canShare&&navigator.canShare({files:[f]})){
         try{await navigator.share({files:[f],title:'FOTN'});exitSelect();return;}
         catch(e){if(e&&e.name==='AbortError')return;}
       }
-      downloadBlob(entries[0].blob,f.name);exitSelect();toast('Photo exportée');return;
+      downloadBlob(rendered[0].blob,f.name);exitSelect();toast('Photo exportée');return;
     }
-    // Multiple photos → ONE zip whose contents live in a FOTN/ folder.
-    // This guarantees everything leaves in a single artifact (no multi-download
-    // throttling / share-count limits), and unzips to a "FOTN" folder on the phone.
+    // …multiple photos → ONE zip whose contents live in a FOTN/ folder (unzips to a FOTN folder).
     ov.set('Compression…');await nextFrame();
+    const entries=rendered.map(r=>({name:'FOTN/'+r.name, blob:r.blob}));
     const zip=await makeZip(entries), zname='FOTN_'+stampCompact()+'.zip';
     const zfile=new File([zip],zname,{type:'application/zip'});
     const done=()=>{exitSelect();toast(entries.length+' photos → dossier FOTN'+(failed?` (${failed} échec)`:''));};
-    // Prefer the share sheet (iOS: "Save to Files" → tap the zip to get the FOTN folder)
     if(navigator.canShare&&navigator.canShare({files:[zfile]})){
       try{await navigator.share({files:[zfile],title:'FOTN'});done();return;}
       catch(e){if(e&&e.name==='AbortError')return;}
@@ -1402,6 +1453,10 @@ async function exportImage(){
   if(!userImg)return;
   const btn=$('#btnExport');btn.classList.add('busy');
   try{
+    // Acquire the FOTN folder first (picker/permission needs the tap's activation, before rendering)
+    const fsa=!!window.showDirectoryPicker;
+    let dir=null;
+    if(fsa){dir=await getFotnDir(true);if(!dir){toast('Export annulé');return;}}
     const gs=geoSource(cropN,3600), src=gs.src, IW=gs.IW, IH=gs.IH;
     const reg=cropN?cropRegion(cropN,IW,IH):{sx:0,sy:0,sw:IW,sh:IH};
     let w=reg.sw,h=reg.sh; const maxE=3200,m=Math.max(w,h);if(m>maxE){const s=maxE/m;w*=s;h*=s;}
@@ -1411,7 +1466,8 @@ async function exportImage(){
     const name=uniqueName();
     const blob=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.94));
     if(!blob){toast('Export impossible');return;}
-    // On mobile, prefer the share sheet so the photo can be saved to Files (→ FOTN) or Photos
+    if(dir){await writeToDir(dir,name,blob);toast('Photo → dossier FOTN');return;}   // Android/desktop
+    // iOS: share sheet so the photo can be saved to Files (→ FOTN) or Photos
     const f=new File([blob],name,{type:'image/jpeg'});
     if(navigator.canShare&&navigator.canShare({files:[f]})){
       try{await navigator.share({files:[f],title:'FOTN'});toast('Exporté');return;}
