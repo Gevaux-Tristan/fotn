@@ -92,24 +92,10 @@ header.top{
 .pcard.sel img{opacity:.8}
 .pcard.sel{outline:3px solid var(--accent);outline-offset:-3px}
 
-/* selection action bar (bottom) */
-.selbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:none;align-items:center;gap:10px;
-  padding:10px 14px calc(10px + var(--safe-b));background:var(--bg);
-  box-shadow:0 -12px 34px -14px rgba(0,0,0,.3)}
-.selbar.show{display:flex}
-body.selmode .fabs{display:none}
-.selbar .selx{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;
-  background:var(--panel2);color:var(--txt);border:none;cursor:pointer}
-.selbar .selx:active{transform:scale(.92)}
-.selbar .selspacer{flex:1}
-/* icon-only round action buttons (no labels, no count → never overflows) */
-.selbar .selact{width:48px;height:48px;flex:none;border-radius:50%;display:grid;place-items:center;
-  border:none;cursor:pointer;transition:filter .12s,opacity .12s}
-.selbar .selact:active{filter:brightness(.94);transform:scale(.94)}
-.selbar .selact svg{width:22px;height:22px}
-.selbar .selact.exp{background:var(--accent);color:var(--ink)}
-.selbar .selact.del{background:var(--panel2);color:var(--txt)}
-.selbar .selact:disabled{opacity:.4;pointer-events:none}
+/* while selecting, the two FABs swap their icon (Import→trash, Caméra→download) */
+.fab .ic-sel{display:none}
+body.selmode .fab .ic-def{display:none}
+body.selmode .fab .ic-sel{display:block}
 
 /* full-screen busy overlay (batch export progress) */
 .busyov{position:fixed;inset:0;z-index:320;display:grid;place-items:center;padding:24px;
@@ -315,25 +301,15 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   </main>
 </div>
 
+<!-- The two FABs double as the multi-select actions: while selecting, Import→Supprimer and Caméra→Télécharger -->
 <div class="fabs">
   <button class="fab sec" id="fabImport" title="Importer une photo" aria-label="Importer une photo">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
+    <svg class="ic-def" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
+    <svg class="ic-sel" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
   </button>
   <button class="fab" id="fabCam" title="Prendre une photo" aria-label="Prendre une photo">
-    <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path></svg>
-  </button>
-</div>
-<!-- multi-select action bar (shown after a long-press on the gallery) -->
-<div class="selbar" id="selbar" role="toolbar" aria-label="Sélection multiple">
-  <button class="selx" id="selCancel" aria-label="Annuler la sélection">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.3 5.71 12 12l6.3 6.29-1.42 1.42L12 14.41l-6.29 6.3-1.42-1.42L10.59 12 4.3 5.71 5.71 4.29 12 10.59l6.29-6.3z"></path></svg>
-  </button>
-  <span class="selspacer"></span>
-  <button class="selact del" id="selDelete" aria-label="Supprimer la sélection" title="Supprimer">
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
-  </button>
-  <button class="selact exp" id="selExport" aria-label="Exporter la sélection" title="Exporter">
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
+    <svg class="ic-def" width="25" height="25" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path></svg>
+    <svg class="ic-sel" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
   </button>
 </div>
 <!-- native system camera (capture) + library import file inputs -->
@@ -734,33 +710,32 @@ function renderLibrary(){
 const CHECK_ICON='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z';
 let lpTimer=0, lpX=0, lpY=0, lpSuppress=false;
 
-// ---- multi-select mode (long-press to enter; batch export / delete) ----
+// ---- multi-select mode (long-press to enter; the two FABs become Supprimer / Télécharger) ----
 let selectMode=false; const selected=new Set();
-function updateSelBar(){
-  const n=selected.size;
-  $('#selExport').disabled=!n;$('#selDelete').disabled=!n;
-}
 function syncSelCards(){document.querySelectorAll('.pcard').forEach(c=>c.classList.toggle('sel',selected.has(c.dataset.id)));}
+function setFabLabels(sel){
+  $('#fabImport').setAttribute('aria-label',sel?'Supprimer la sélection':'Importer une photo');
+  $('#fabImport').setAttribute('title',sel?'Supprimer':'Importer une photo');
+  $('#fabCam').setAttribute('aria-label',sel?'Télécharger la sélection':'Prendre une photo');
+  $('#fabCam').setAttribute('title',sel?'Télécharger':'Prendre une photo');
+}
 function enterSelect(seedId){
   selectMode=true;selected.clear();if(seedId!=null)selected.add(seedId);
   document.body.classList.add('selmode');
   $('#gallery').classList.add('selecting');
-  $('#selbar').classList.add('show');
-  syncSelCards();updateSelBar();
+  setFabLabels(true);syncSelCards();
 }
 function exitSelect(){
   if(!selectMode)return;
   selectMode=false;selected.clear();
   document.body.classList.remove('selmode');
   $('#gallery').classList.remove('selecting');
-  $('#selbar').classList.remove('show');
-  syncSelCards();
+  setFabLabels(false);syncSelCards();
 }
 function toggleSel(it,card){
   if(selected.has(it.id))selected.delete(it.id);else selected.add(it.id);
   card.classList.toggle('sel',selected.has(it.id));
-  if(!selected.size){exitSelect();return;}
-  updateSelBar();
+  if(!selected.size)exitSelect();
 }
 function photoCard(it){
   const c=el('div','pcard');c.tabIndex=0;c.dataset.id=it.id;c.setAttribute('role','button');c.setAttribute('aria-label','Ouvrir la photo');
@@ -791,9 +766,12 @@ function photoCard(it){
   return c;
 }
 // ---- batch export / delete of the current selection ----
-$('#selCancel').onclick=exitSelect;
-$('#selDelete').onclick=deleteSelected;
-$('#selExport').onclick=exportSelected;
+// Tap anywhere that isn't a photo or a FAB (background, header, gallery gaps) → leave selection.
+document.addEventListener('pointerdown',e=>{
+  if(!selectMode)return;
+  if(e.target.closest('.pcard')||e.target.closest('.fabs')||e.target.closest('.cscrim')||e.target.closest('.busyov'))return;
+  exitSelect();
+},true);
 async function deleteSelected(){
   const ids=[...selected];if(!ids.length)return;
   const ok=await appConfirm(ids.length>1?`Supprimer ${ids.length} photos ?`:'Supprimer cette photo ?');
@@ -1431,8 +1409,9 @@ window.addEventListener('resize',()=>{if(cropMode)layoutCropBox();});
 //// ---------- CAMERA / IMPORT (native system camera) ----------
 // The OS camera handles capture (best quality, native aspect, no custom UI);
 // the look is then applied & tweaked in the editor.
-$('#fabCam').onclick=()=>$('#camInput').click();
-$('#fabImport').onclick=()=>$('#upload').click();
+// FABs double as selection actions: Caméra→Télécharger, Import→Supprimer while selecting
+$('#fabCam').onclick=()=>{ if(selectMode)exportSelected(); else $('#camInput').click(); };
+$('#fabImport').onclick=()=>{ if(selectMode)deleteSelected(); else $('#upload').click(); };
 
 //// foot buttons
 $('#btnReset').onclick=()=>{if(cur){vals=neutralAdj();cropN=null;if(cropMode)exitCrop();toolK=null;renderDock();paint();}toast('Réglages réinitialisés');};
