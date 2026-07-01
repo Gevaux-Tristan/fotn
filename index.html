@@ -98,15 +98,15 @@ header.top{
   box-shadow:0 -12px 34px -14px rgba(0,0,0,.3)}
 .selbar.show{display:flex}
 body.selmode .fabs{display:none}
-.selbar .selx{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;
+.selbar .selx{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;
   background:var(--panel2);color:var(--txt);border:none;cursor:pointer}
 .selbar .selx:active{transform:scale(.92)}
-.selbar .selcount{font-weight:700;font-size:15px;color:var(--txt);white-space:nowrap}
 .selbar .selspacer{flex:1}
-.selbar .selact{display:inline-flex;align-items:center;gap:7px;padding:11px 15px;border-radius:999px;
-  font-size:14px;font-weight:600;border:none;cursor:pointer;transition:filter .12s,opacity .12s}
-.selbar .selact:active{filter:brightness(.94)}
-.selbar .selact svg{width:18px;height:18px}
+/* icon-only round action buttons (no labels, no count → never overflows) */
+.selbar .selact{width:48px;height:48px;flex:none;border-radius:50%;display:grid;place-items:center;
+  border:none;cursor:pointer;transition:filter .12s,opacity .12s}
+.selbar .selact:active{filter:brightness(.94);transform:scale(.94)}
+.selbar .selact svg{width:22px;height:22px}
 .selbar .selact.exp{background:var(--accent);color:var(--ink)}
 .selbar .selact.del{background:var(--panel2);color:var(--txt)}
 .selbar .selact:disabled{opacity:.4;pointer-events:none}
@@ -328,13 +328,12 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   <button class="selx" id="selCancel" aria-label="Annuler la sélection">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.3 5.71 12 12l6.3 6.29-1.42 1.42L12 14.41l-6.29 6.3-1.42-1.42L10.59 12 4.3 5.71 5.71 4.29 12 10.59l6.29-6.3z"></path></svg>
   </button>
-  <span class="selcount" id="selCount">0</span>
   <span class="selspacer"></span>
-  <button class="selact del" id="selDelete" aria-label="Supprimer la sélection">
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>Supprimer
+  <button class="selact del" id="selDelete" aria-label="Supprimer la sélection" title="Supprimer">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
   </button>
-  <button class="selact exp" id="selExport" aria-label="Exporter la sélection">
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>Exporter
+  <button class="selact exp" id="selExport" aria-label="Exporter la sélection" title="Exporter">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
   </button>
 </div>
 <!-- native system camera (capture) + library import file inputs -->
@@ -739,7 +738,6 @@ let lpTimer=0, lpX=0, lpY=0, lpSuppress=false;
 let selectMode=false; const selected=new Set();
 function updateSelBar(){
   const n=selected.size;
-  $('#selCount').textContent=n+(n>1?' sélectionnées':' sélectionnée');
   $('#selExport').disabled=!n;$('#selDelete').disabled=!n;
 }
 function syncSelCards(){document.querySelectorAll('.pcard').forEach(c=>c.classList.toggle('sel',selected.has(c.dataset.id)));}
