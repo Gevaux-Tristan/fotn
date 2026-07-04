@@ -1185,35 +1185,45 @@ function paintPreview(draft){
 // slider handlers call paintLook(); keep the name, route to the canvas render.
 const paintLook=paintPreview;
 
-// Render the untouched photo into a small thumbnail (no edit) for the library grid.
-function thumbFromImage(img){
+// Largest centred crop of aspect `ar` (=w/h) inside an iw×ih image → normalised {x,y,w,h}.
+function centeredCrop(iw,ih,ar){
+  let w,h;
+  if(iw/ih>=ar){h=1;w=(ar*ih)/iw;}   // image wider than target → full height, trim width
+  else{w=1;h=(iw/ar)/ih;}            // image taller → full width, trim height
+  return {x:(1-w)/2,y:(1-h)/2,w,h,rot:0,kv:0,kh:0};
+}
+// Render the untouched photo into a small thumbnail (optionally cropped) for the library grid.
+function thumbFromImage(img,crop){
   const IW=img.naturalWidth||img.width||3, IH=img.naturalHeight||img.height||2;
-  let w=IW,h=IH,m=Math.max(w,h),cap=560;if(m>cap){const s=cap/m;w*=s;h*=s;}
+  const reg=crop?cropRegion(crop,IW,IH):{sx:0,sy:0,sw:IW,sh:IH};
+  let w=reg.sw,h=reg.sh,m=Math.max(w,h),cap=560;if(m>cap){const s=cap/m;w*=s;h*=s;}
   const cv=document.createElement('canvas');
-  renderRecipe(img,ORIGINAL,NEUTRAL,cv,Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));
+  renderRecipe(img,ORIGINAL,NEUTRAL,cv,Math.max(1,Math.round(w)),Math.max(1,Math.round(h)),{crop:reg});
   try{return {data:cv.toDataURL('image/jpeg',0.82), w:cv.width, h:cv.height};}catch(e){return null;}
 }
 // Add one or many photos (camera or library) → store each, then open the editor
 // only when a single photo was added (multi-import just populates the library).
-async function addPhotos(files, openIfSingle){
+async function addPhotos(files, openIfSingle, fromCamera){
   const list=[...files].filter(Boolean);if(!list.length)return;
   const added=[];
   for(let i=0;i<list.length;i++){
     let r; try{r=await blobToImage(list[i]);}catch(e){continue;}
     const iw=r.img.naturalWidth||r.img.width, ih=r.img.naturalHeight||r.img.height;
-    const tb=thumbFromImage(r.img);
+    // Camera captures get a default 2:3 crop (non-destructive — original blob kept, editable later).
+    const crop=fromCamera?centeredCrop(iw,ih,2/3):null;
+    const tb=thumbFromImage(r.img,crop);
     const item={id:uid(), created:Date.now()+i, blob:list[i], w:iw, h:ih,
       tw:tb?tb.w:iw, th:tb?tb.h:ih,
-      edit:{presetName:'',vals:neutralAdj(),crop:null}, thumb:tb?tb.data:null};
+      edit:{presetName:'',vals:neutralAdj(),crop:crop}, thumb:tb?tb.data:null};
     library.unshift(item);
     try{await idbPut(item);}catch(e){}
-    added.push({item,r});
+    added.push({item,r,crop});
   }
   if(!added.length){toast('Import impossible');return;}
   renderLibrary();
   if(added.length===1 && openIfSingle){
-    const {item,r}=added[0];
-    currentItem=item;setUserImg(r.img,r.url);cur=ORIGINAL;vals=neutralAdj();cropN=null;
+    const {item,r,crop}=added[0];
+    currentItem=item;setUserImg(r.img,r.url);cur=ORIGINAL;vals=neutralAdj();cropN=crop?{...crop}:null;
     openEditorUI();
   }else{
     added.forEach(x=>{if(x.r&&x.r.url)URL.revokeObjectURL(x.r.url);});
@@ -1221,8 +1231,8 @@ async function addPhotos(files, openIfSingle){
   }
 }
 // reset value so re-picking the same file still fires "change"
-$('#upload').addEventListener('change',e=>{addPhotos(e.target.files,true);e.target.value='';});
-$('#camInput').addEventListener('change',e=>{addPhotos(e.target.files,true);e.target.value='';});
+$('#upload').addEventListener('change',e=>{addPhotos(e.target.files,true,false);e.target.value='';});          // import → no default crop
+$('#camInput').addEventListener('change',e=>{addPhotos(e.target.files,true,true);e.target.value='';});        // camera → default 2:3 crop
 
 //// ---------- CROP (ratio chips + adjustable box) ----------
 const CROP_RATIOS=[
