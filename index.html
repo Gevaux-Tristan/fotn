@@ -273,6 +273,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   display:grid;place-items:center;box-shadow:0 8px 24px -6px rgba(0,0,0,.28);transition:transform .15s,filter .15s}
 .fab:hover{transform:translateY(-2px);filter:brightness(1.06)}
 .fab:active{transform:translateY(0)}
+.fab[hidden]{display:none}
 .fab.sec{background:var(--bg);color:var(--txt);box-shadow:0 6px 18px rgba(0,0,0,.18)}
 .fab.sec:hover{background:var(--line2);filter:none}
 
@@ -307,6 +308,9 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
 
 <!-- The two FABs double as the multi-select actions: while selecting, Import→Supprimer and Caméra→Télécharger -->
 <div class="fabs">
+  <button class="fab sec" id="fabPaste" title="Coller les réglages" aria-label="Coller les réglages sur la sélection" hidden>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"></path></svg>
+  </button>
   <button class="fab sec" id="fabImport" title="Importer une photo" aria-label="Importer une photo">
     <svg class="ic-def" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
     <svg class="ic-sel" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
@@ -333,6 +337,9 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
     </button>
     <button class="hbtn" id="btnDelete" aria-label="Supprimer" title="Supprimer">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
+    </button>
+    <button class="hbtn" id="btnCopy" aria-label="Copier les réglages" title="Copier les réglages">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
     </button>
     <button class="hbtn exp" id="btnExport" aria-label="Exporter" title="Exporter" hidden>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
@@ -729,6 +736,7 @@ function enterSelect(seedId){
   selectMode=true;selected.clear();if(seedId!=null)selected.add(seedId);
   document.body.classList.add('selmode');
   $('#gallery').classList.add('selecting');
+  $('#fabPaste').hidden=!lookClip;                 // paste appears only if a look was copied
   setFabLabels(true);syncSelCards();
 }
 function exitSelect(){
@@ -736,6 +744,7 @@ function exitSelect(){
   selectMode=false;selected.clear();
   document.body.classList.remove('selmode');
   $('#gallery').classList.remove('selecting');
+  $('#fabPaste').hidden=true;
   setFabLabels(false);syncSelCards();
 }
 function toggleSel(it,card){
@@ -791,6 +800,45 @@ async function exportSelected(){
   const items=library.filter(x=>selected.has(x.id));
   if(!items.length)return;
   await exportBatch(items);
+}
+// ---- copy / paste a look (preset + adjustments; each photo keeps its own crop) ----
+let lookClip=null;
+$('#btnCopy').onclick=()=>{
+  if(!cur)return;
+  lookClip={presetName:(cur&&cur._i>=0)?cur.name:'', vals:{...vals}};
+  toast('Réglages copiés — appui long sur l’accueil pour coller');
+};
+$('#fabPaste').onclick=()=>{ if(selectMode)pasteLook(); };
+async function pasteLook(){
+  if(!lookClip||!selected.size)return;
+  const ids=[...selected];
+  const P=lookClip.presetName?(RECIPES.find(p=>p.name===lookClip.presetName)||ORIGINAL):ORIGINAL;
+  const ov=showBusy('Application…');
+  try{
+    let n=0;
+    for(let i=0;i<ids.length;i++){
+      ov.set(`Application ${i+1}/${ids.length}…`);await nextFrame();
+      const it=library.find(x=>x.id===ids[i]);if(!it)continue;
+      let r;try{r=await blobToImage(it.blob);}catch(e){continue;}
+      try{
+        it.edit=it.edit||{};
+        it.edit.presetName=lookClip.presetName;
+        it.edit.vals=Object.assign(neutralAdj(),lookClip.vals);
+        const A=it.edit.vals, g=it.edit.crop||null, base=r.img;
+        let src=base,IW=base.naturalWidth||base.width||3,IH=base.naturalHeight||base.height||2;
+        if(g&&(g.kv||g.kh)){const wI=warpKeystone(base,g.kv,g.kh,720);src=wI;IW=wI.width;IH=wI.height;}
+        const reg=g?cropRegion(g,IW,IH):{sx:0,sy:0,sw:IW,sh:IH};
+        let w=reg.sw,h=reg.sh,m=Math.max(w,h),cap=480;if(m>cap){const s=cap/m;w*=s;h*=s;}
+        const cv=document.createElement('canvas');
+        renderRecipe(src,P,A,cv,Math.max(1,Math.round(w)),Math.max(1,Math.round(h)),{crop:reg});
+        try{it.thumb=cv.toDataURL('image/jpeg',0.82);it.tw=cv.width;it.th=cv.height;}catch(e){}
+        try{await idbPut(it);n++;}catch(e){}
+      }finally{if(r&&r.url)URL.revokeObjectURL(r.url);}
+    }
+    exitSelect();renderLibrary();
+    toast(n>1?`Réglages appliqués à ${n} photos`:'Réglages appliqués');
+  }catch(e){toast('Collage impossible');}
+  finally{hideBusy(ov);}
 }
 function nextFrame(){return new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));}
 // render one library item (its saved look + adjustments + crop) to a JPEG blob, headless
@@ -983,7 +1031,7 @@ function teardownEditor(){
 }
 function closeEditor(){if(currentItem)saveItem(true);teardownEditor();}   // closing auto-saves
 $('#edClose').onclick=closeEditor;$('#scrim').onclick=closeEditor;
-$('#btnSave').onclick=()=>{saveItem(false);teardownEditor();};   // save → back to the gallery
+$('#btnSave').onclick=()=>{if(cropMode)applyCrop();saveItem(false);teardownEditor();};   // in crop mode: validate the crop too, then save → gallery
 $('#btnDelete').onclick=deleteCurrent;
 
 //// ---------- EDITOR DOCK (VSCO-style: Préréglages / Réglages / single tool) ----------
