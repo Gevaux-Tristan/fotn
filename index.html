@@ -230,7 +230,8 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .rchip.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
 /* crop dock: ratio chips row + straighten slider row */
 .ed-rail.cropedit{flex-direction:column;align-items:stretch;gap:9px;min-height:0;max-height:44vh;overflow-y:auto;padding:10px 14px}
-.crop-auto{display:flex;justify-content:center;padding-top:2px}
+.crop-auto{display:flex;justify-content:center;gap:10px;padding-top:2px}
+.auto-btn svg{vertical-align:-3px;margin-right:5px}
 .auto-btn{padding:8px 18px;border-radius:999px;font-size:12.5px;font-weight:600;
   background:var(--panel);border:1px solid transparent;color:var(--txt);transition:.15s}
 .auto-btn:hover{color:var(--accent)}
@@ -823,7 +824,8 @@ async function pasteLook(){
         it.edit=it.edit||{};
         it.edit.presetName=lookClip.presetName;
         it.edit.vals=Object.assign(neutralAdj(),lookClip.vals);
-        const A=it.edit.vals, g=it.edit.crop||null, base=r.img;
+        const A=it.edit.vals, g=it.edit.crop||null;
+        let base=r.img; if(g&&g.o)base=orientImage(base,g.o);
         let src=base,IW=base.naturalWidth||base.width||3,IH=base.naturalHeight||base.height||2;
         if(g&&(g.kv||g.kh)){const wI=warpKeystone(base,g.kv,g.kh,720);src=wI;IW=wI.width;IH=wI.height;}
         const reg=g?cropRegion(g,IW,IH):{sx:0,sy:0,sw:IW,sh:IH};
@@ -847,7 +849,8 @@ async function renderItemToBlob(it,maxE,nonce){
     const ed=it.edit||{};
     const P=ed.presetName?(RECIPES.find(p=>p.name===ed.presetName)||ORIGINAL):ORIGINAL;
     const A=Object.assign(neutralAdj(),ed.vals||{});
-    const g=ed.crop||null, base=r.img;
+    const g=ed.crop||null;
+    let base=r.img; if(g&&g.o)base=orientImage(base,g.o);
     let src=base,IW=base.naturalWidth||base.width||3,IH=base.naturalHeight||base.height||2;
     if(g&&(g.kv||g.kh)){const wI=warpKeystone(base,g.kv,g.kh,3600);src=wI;IW=wI.width;IH=wI.height;}
     const reg=g?cropRegion(g,IW,IH):{sx:0,sy:0,sw:IW,sh:IH};
@@ -1216,8 +1219,8 @@ function paintPreview(draft){
     // outside crop mode: the applied crop+transform.
     const geo = cropMode ? cropDraft : cropN;
     let src, IW, IH, reg;
-    if(cropMode && !geoActive(geo)){           // framing only → full image with the box overlay
-      src=userImg||baseImg; IW=src.naturalWidth||src.width||3; IH=src.naturalHeight||src.height||2;
+    if(cropMode && !geoActive(geo)){           // framing only → full (oriented) image with the box overlay
+      const gs=geoSource({o:geo&&geo.o},1500); src=gs.src; IW=gs.IW; IH=gs.IH;
       reg={sx:0,sy:0,sw:IW,sh:IH};
     } else if(geo){                            // straighten / perspective / applied crop → WYSIWYG
       const gs=geoSource(geo,1500); src=gs.src; IW=gs.IW; IH=gs.IH; reg=cropRegion(geo,IW,IH);
@@ -1256,8 +1259,9 @@ async function addPhotos(files, openIfSingle, fromCamera){
   for(let i=0;i<list.length;i++){
     let r; try{r=await blobToImage(list[i]);}catch(e){continue;}
     const iw=r.img.naturalWidth||r.img.width, ih=r.img.naturalHeight||r.img.height;
-    // Camera captures get a default 2:3 crop (non-destructive — original blob kept, editable later).
-    const crop=fromCamera?centeredCrop(iw,ih,2/3):null;
+    // Camera captures get a default 2:3-family crop IN THE CAPTURE ORIENTATION (non-destructive):
+    // portrait shot → 2:3 portrait, landscape shot → 3:2 landscape. Original blob kept, editable later.
+    const crop=fromCamera?centeredCrop(iw,ih, iw>=ih?3/2:2/3):null;
     const tb=thumbFromImage(r.img,crop);
     const item={id:uid(), created:Date.now()+i, blob:list[i], w:iw, h:ih,
       tw:tb?tb.w:iw, th:tb?tb.h:ih,
@@ -1293,7 +1297,11 @@ const CROP_RATIOS=[
   {k:'16:9',label:'16:9',   r:16/9},
   {k:'9:16',label:'9:16',   r:9/16},
 ];
-function cropSrcWH(){const s=userImg||baseImg;return [s.naturalWidth||s.width||3, s.naturalHeight||s.height||2];}
+function cropSrcWH(){
+  const s=userImg||baseImg;let W=s.naturalWidth||s.width||3,H=s.naturalHeight||s.height||2;
+  const g=cropMode?cropDraft:cropN;                 // 90°-rotated → swapped dims
+  return ((g&&g.o)%2)?[H,W]:[W,H];
+}
 // Perspective correction strength from a -100..100 slider value
 const KMAX=0.5;
 function geoActive(g){return !!(g&&((g.rot)||(g.kv)||(g.kh)));}
@@ -1324,8 +1332,21 @@ function warpKeystone(img, kvv, khh, cap){
   return cur;
 }
 // Source for a geometry: applies the keystone warp if any, returns {src,IW,IH}.
+// Rotate an image by q quarter-turns (clockwise) → canvas. Cached per image+q (full-res, done once).
+function orientImage(img,q){
+  q=((q||0)%4+4)%4; if(!q)return img;
+  if(img.__orient&&img.__orient.q===q)return img.__orient.cv;
+  const IW=img.naturalWidth||img.width||3, IH=img.naturalHeight||img.height||2;
+  const cv=document.createElement('canvas');
+  if(q%2){cv.width=IH;cv.height=IW;}else{cv.width=IW;cv.height=IH;}
+  const x=cv.getContext('2d');
+  x.translate(cv.width/2,cv.height/2);x.rotate(q*Math.PI/2);x.drawImage(img,-IW/2,-IH/2);
+  try{img.__orient={q,cv};}catch(e){}
+  return cv;
+}
 function geoSource(g, cap){
-  const base=userImg||baseImg;
+  let base=userImg||baseImg;
+  if(g&&g.o)base=orientImage(base,g.o);              // 90° orientation first
   if(g&&(g.kv||g.kh)){const w=warpKeystone(base,g.kv,g.kh,cap||1500);return {src:w,IW:w.width,IH:w.height};}
   return {src:base,IW:base.naturalWidth||base.width||3,IH:base.naturalHeight||base.height||2};
 }
@@ -1390,11 +1411,21 @@ function buildCropControls(rail){
   rail.appendChild(geoSlider('Redresser','rot',-45,45,'°'));
   rail.appendChild(geoSlider('Vertical','kv',-100,100,''));
   rail.appendChild(geoSlider('Horizontal','kh',-100,100,''));
-  // Auto-level
+  // Auto-level + 90° rotation
   const ar=el('div','crop-auto');
   const ab=el('button','auto-btn');ab.textContent='Auto · niveau';ab.onclick=autoLevel;
-  ar.appendChild(ab);rail.appendChild(ar);
+  const rb=el('button','auto-btn');rb.innerHTML=svgIcon('M15.55 5.55 11 1v3.07C7.06 4.56 4 7.92 4 12s3.05 7.44 7 7.93v-2.02c-2.84-.48-5-2.94-5-5.91s2.16-5.43 5-5.91V10l4.55-4.45zM19.93 11c-.17-1.39-.72-2.73-1.62-3.89l-1.42 1.42c.54.75.88 1.6 1.02 2.47h2.02zM13 17.9v2.02c1.39-.17 2.74-.71 3.9-1.61l-1.44-1.44c-.75.54-1.59.89-2.46 1.03zm3.89-2.42 1.42 1.41c.9-1.16 1.45-2.5 1.62-3.89h-2.02c-.14.87-.48 1.72-1.02 2.48z',16)+'<span>Pivoter</span>';
+  rb.setAttribute('aria-label','Pivoter de 90°');rb.onclick=rotate90;
+  ar.appendChild(ab);ar.appendChild(rb);rail.appendChild(ar);
   markCropRatios();
+}
+// 90° clockwise orientation step; box resets to full frame in the new orientation.
+function rotate90(){
+  cropDraft.o=((cropDraft.o||0)+1)%4;
+  cropDraft.x=0;cropDraft.y=0;cropDraft.w=1;cropDraft.h=1;
+  paintPreview();
+  // re-lock the ratio + relayout the box once the preview canvas has its new dimensions
+  requestAnimationFrame(()=>requestAnimationFrame(()=>setCropRatio(cropARkey)));
 }
 function geoSlider(label,key,min,max,unit){
   const row=el('div','crop-straight');row.dataset.key=key;
@@ -1420,7 +1451,7 @@ function syncTransform(){
   if(!geoActive(cropDraft))requestAnimationFrame(layoutCropBox);   // box returns when fully neutral
 }
 function autoLevel(){
-  cropDraft.rot=Math.max(-45,Math.min(45,Math.round(autoDeskew(userImg||baseImg))));
+  cropDraft.rot=Math.max(-45,Math.min(45,Math.round(autoDeskew(orientImage(userImg||baseImg,cropDraft.o)))));
   document.querySelectorAll('#edRail .crop-straight').forEach(r=>r._upd&&r._upd());
   syncTransform();toast('Niveau automatique');
 }
@@ -1487,8 +1518,8 @@ function resizeCropCorner(corner,s,dnx,dny){
 })();
 function enterCrop(){
   if(!cur)return;
-  cropMode=true;toolK=null;cropDraft=cropN?{...cropN}:{x:0,y:0,w:1,h:1,rot:0,kv:0,kh:0};
-  cropDraft.rot=cropDraft.rot||0;cropDraft.kv=cropDraft.kv||0;cropDraft.kh=cropDraft.kh||0;
+  cropMode=true;toolK=null;cropDraft=cropN?{...cropN}:{x:0,y:0,w:1,h:1,rot:0,kv:0,kh:0,o:0};
+  cropDraft.rot=cropDraft.rot||0;cropDraft.kv=cropDraft.kv||0;cropDraft.kh=cropDraft.kh||0;cropDraft.o=cropDraft.o||0;
   cropARkey='free';cropARn=null;
   $('#crop').hidden=false;$('#crop').classList.toggle('tilt',geoActive(cropDraft));
   renderDock();paintPreview();                   // ratio chips + straighten + ✕/✓ in the dock
@@ -1498,8 +1529,8 @@ function exitCrop(){cropMode=false;$('#crop').hidden=true;$('#crop').classList.r
 function cancelCrop(){exitCrop();renderDock();paintPreview();}
 function applyCrop(){
   const c=cropDraft;
-  const full=c.w>=0.999&&c.h>=0.999&&c.x<=0.001&&c.y<=0.001&&!c.rot&&!c.kv&&!c.kh;
-  cropN=full?null:{...c};                          // full, level & no perspective = no crop
+  const full=c.w>=0.999&&c.h>=0.999&&c.x<=0.001&&c.y<=0.001&&!c.rot&&!c.kv&&!c.kh&&!(c.o%4);
+  cropN=full?null:{...c};                          // full, level, unrotated & no perspective = no crop
   exitCrop();renderDock();paint();
 }
 window.addEventListener('resize',()=>{if(cropMode)layoutCropBox();});
