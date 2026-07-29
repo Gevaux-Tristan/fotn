@@ -36,7 +36,7 @@ mono-fichier (`index.html`, sans dépendance, sans build).
 
 ## Lancer en local
 ```bash
-cd fuji-recipes && python3 -m http.server 8765   # puis http://localhost:8765/
+python3 -m http.server 8791   # à la racine du repo, puis http://localhost:8791/
 ```
 La caméra exige un contexte sécurisé (**HTTPS** ou `localhost`).
 

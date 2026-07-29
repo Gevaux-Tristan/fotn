@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fotn",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8791", "--directory", "/Users/tristangevaux/Documents/GitHub/Fudge"],
+      "port": 8791
+    }
+  ]
+}
