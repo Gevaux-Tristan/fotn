@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "fotn",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8791", "--directory", "/Users/tristangevaux/Documents/GitHub/Fudge"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "-l", "8791", "/Users/tristangevaux/Documents/GitHub/Fudge"],
       "port": 8791
     }
   ]
