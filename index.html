@@ -58,6 +58,25 @@ header.top{
 .count{margin-left:auto;font-size:11px;color:var(--txt3);text-align:right;flex:none}
 .count b{color:var(--accent);font-weight:700}
 
+/* selection bar — takes the brandmark's place while selecting (same 61px height, no layout jump) */
+.selbar{min-height:61px;display:flex;align-items:center;gap:10px;animation:selbarIn .16s ease}
+.selbar[hidden]{display:none}   /* class rule would otherwise beat the UA [hidden] */
+@keyframes selbarIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+body.selmode .brandmark{display:none}
+.sbtn{flex:none;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;
+  background:var(--panel);border:1px solid var(--line);color:var(--txt);transition:.15s}
+.sbtn:hover{border-color:var(--line2)}
+.sbtn.ico{padding:0;width:38px;height:38px;display:grid;place-items:center;border-radius:50%}
+.sbtn.danger{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.sbtn.danger:hover{filter:brightness(1.15)}
+.sbtn[aria-disabled="true"]{opacity:.4;pointer-events:none}
+.sbtn[hidden]{display:none}
+/* the count sits on the dithered backdrop → give it a cream pill so it stays readable */
+.selcount{flex:0 1 auto;min-width:0;margin-right:auto;padding:7px 12px;border-radius:999px;
+  background:rgba(249,244,238,.88);font-size:13px;font-weight:600;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:420px){.sbtn{padding:8px 11px;font-size:12px}.selcount{font-size:12px;padding:7px 10px}}
+
 .toolbar{display:flex;align-items:center;gap:10px;padding-bottom:12px}
 .filters{display:flex;gap:8px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;-ms-overflow-style:none}
 .filters::-webkit-scrollbar{display:none}
@@ -96,6 +115,7 @@ header.top{
 .fab .ic-sel{display:none}
 body.selmode .fab .ic-def{display:none}
 body.selmode .fab .ic-sel{display:block}
+body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → nothing to act on */
 
 /* full-screen busy overlay (batch export progress) */
 .busyov{position:fixed;inset:0;z-index:320;display:grid;place-items:center;padding:24px;
@@ -300,6 +320,15 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
       <path d="M93.606 17.6145C93.8437 17.6145 94.0486 17.7819 94.0959 18.0148L95.0257 22.5862C95.1095 22.998 94.6749 23.33 94.2885 23.1648C93.6604 22.8965 93.0101 22.6726 92.3375 22.4932C91.3549 22.1883 90.22 21.985 88.9325 21.8834C87.6451 21.7479 86.0697 21.6801 84.2063 21.6801H77.5915C77.3153 21.6801 77.0915 21.904 77.0915 22.1801V34.8507C77.0915 35.1268 77.3153 35.3507 77.5915 35.3507H81.4112C83.3084 35.3507 85.2057 35.3168 87.103 35.249C88.7869 35.1588 90.4441 34.9352 92.0747 34.5781C92.3907 34.5089 92.6932 34.7471 92.6932 35.0706V39.6964C92.6932 40.0199 92.3907 40.2581 92.0745 40.1895C90.444 39.8358 88.7869 39.6289 87.103 39.5687C85.2057 39.4671 83.3084 39.4163 81.4112 39.4163H77.5915C77.3153 39.4163 77.0915 39.6401 77.0915 39.9163V45.718C77.0915 47.6152 77.1253 49.5125 77.1931 51.4098C77.2833 53.0937 77.507 54.7509 77.864 56.3815C77.9333 56.6975 77.695 57 77.3716 57H71.7294C71.4059 57 71.1677 56.6975 71.2363 56.3813C71.5899 54.7509 71.7969 53.0937 71.857 51.4098C71.9586 49.5125 72.0095 47.6152 72.0095 45.718V28.8965C72.0095 26.9993 71.9586 25.102 71.857 23.2047C71.7969 21.5208 71.5899 19.8637 71.2362 18.2332C71.1677 17.917 71.4059 17.6145 71.7294 17.6145H93.606Z" fill="#F9F4EE"/>
       <path d="M61.126 34.7998C62.5034 35.8133 62.504 38.154 61.1267 39.1675C59.6981 40.2186 57.915 42.3791 57.915 42.3791L45.069 55.2251C45.0427 55.2468 42.9028 57.0164 41.858 58.4361C40.8445 59.8135 38.5032 59.8135 37.4897 58.4361C36.4449 57.0164 34.305 55.2468 34.2787 55.2251L21.4327 42.3791C21.4327 42.3791 19.6496 40.2186 18.221 39.1675C16.8437 38.154 16.8444 35.8133 18.2217 34.7998C19.6408 33.7556 21.4093 31.6172 21.4327 31.5888L34.2787 18.7428C34.2787 18.7428 36.4392 16.9598 37.4904 15.5312C38.5039 14.1538 40.8438 14.1538 41.8573 15.5312C42.9085 16.9598 45.069 18.7428 45.069 18.7428L57.915 31.5888C57.9384 31.6172 59.7069 33.7556 61.126 34.7998ZM57.471 38.0571C58.2665 37.6209 58.2661 36.346 57.4703 35.9102C57.1024 35.7087 56.746 35.4933 56.4511 35.2763C55.3432 34.4611 53.9628 32.7929 53.9396 32.7648L43.893 22.7182C43.893 22.7182 42.2037 21.324 41.3815 20.2068C41.1645 19.9118 40.9485 19.5549 40.7469 19.1869C40.3109 18.3914 39.0368 18.3914 38.6008 19.1869C38.3992 19.5549 38.1832 19.9118 37.9662 20.2068C37.144 21.324 35.4547 22.7182 35.4547 22.7182L25.4081 32.7648C25.385 32.7929 24.0045 34.4611 22.8966 35.2763C22.6018 35.4933 22.2454 35.7087 21.8774 35.9102C21.0816 36.346 21.0812 37.6209 21.8767 38.0571C22.2448 38.2586 22.6017 38.4747 22.8966 38.6917C24.0139 39.5138 25.4081 41.2032 25.4081 41.2032L35.4547 51.2497C35.4813 51.2717 37.1507 52.6529 37.9662 53.7612C38.1831 54.0561 38.3986 54.4125 38.6001 54.7804C39.036 55.5763 40.3117 55.5763 40.7476 54.7804C40.9492 54.4125 41.1646 54.0561 41.3815 53.7612C42.1971 52.6529 43.8664 51.2717 43.893 51.2497L53.9396 41.2032C53.9396 41.2032 55.3338 39.5138 56.4511 38.6917C56.746 38.4747 57.103 38.2586 57.471 38.0571ZM52.6027 36.8279C53.01 37.0279 53.0117 37.6616 52.6055 37.8637C52.201 38.065 51.7665 38.3043 51.4399 38.546C50.6634 39.1205 49.697 40.2957 49.6838 40.3117L47.9278 42.0774L46.1711 43.8424L44.4144 45.6088L42.6583 47.3745C42.6406 47.3892 41.4716 48.3606 40.9016 49.1395C40.6617 49.4673 40.4247 49.9031 40.2256 50.3085C40.0256 50.7158 39.3919 50.7175 39.1898 50.3113C38.9885 49.9068 38.7492 49.4723 38.5075 49.1457C37.9336 48.3698 36.7599 47.4044 36.7419 47.3896L34.9762 45.6336L33.2105 43.8762L29.6791 40.3642C29.666 40.3484 28.6936 39.1779 27.9141 38.6074C27.5861 38.3674 27.1499 38.1299 26.7443 37.9307C26.3374 37.7305 26.3361 37.0977 26.7422 36.8956C27.1467 36.6943 27.5812 36.455 27.9079 36.2134C28.6836 35.6394 29.6489 34.4659 29.6639 34.4477L31.4199 32.682L33.1773 30.9163L36.6894 27.3849C36.7052 27.3717 37.8757 26.3994 38.4461 25.6199C38.6861 25.2919 38.9236 24.8557 39.1228 24.4501C39.323 24.0432 39.9559 24.0419 40.1579 24.448C40.3592 24.8524 40.5993 25.2864 40.8409 25.613C41.4153 26.3894 42.5896 27.3563 42.6059 27.3697L44.3716 29.1257L46.1366 30.8824L47.903 32.6392L49.6686 34.3952C49.6835 34.4131 50.6548 35.582 51.4337 36.1519C51.7615 36.3918 52.1973 36.6288 52.6027 36.8279Z" fill="#F9F4EE"/>
     </svg>
+    <!-- selection bar: replaces the brandmark while a multi-selection is active -->
+    <div class="selbar" id="selbar" role="toolbar" aria-label="Actions de sélection" hidden>
+      <button class="sbtn ico" id="selClose" title="Quitter la sélection" aria-label="Quitter la sélection">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+      </button>
+      <span class="selcount" id="selCount" role="status" aria-live="polite">0 sélectionnée</span>
+      <button class="sbtn" id="selAll">Tout sélectionner</button>
+      <button class="sbtn danger" id="selDelete">Supprimer</button>
+    </div>
   </header>
 
   <main>
@@ -732,25 +761,52 @@ function setFabLabels(sel){
   $('#fabCam').setAttribute('aria-label',sel?'Télécharger la sélection':'Prendre une photo');
   $('#fabCam').setAttribute('title',sel?'Télécharger':'Prendre une photo');
 }
+// selection bar: live count + "Tout sélectionner / Tout désélectionner" + Supprimer
+function syncSelBar(){
+  const n=selected.size, all=library.length && n===library.length;
+  const c=$('#selCount');
+  c.textContent=n?`${n} photo${n>1?'s':''}`:'Aucune sélection';         // short: the bar is tight on mobile
+  c.setAttribute('aria-label',n?`${n} photo${n>1?'s':''} sélectionnée${n>1?'s':''}`:'Aucune photo sélectionnée');
+  const btn=$('#selAll');
+  btn.textContent=all?'Tout désélectionner':'Tout sélectionner';
+  btn.setAttribute('aria-label',all?'Tout désélectionner':`Tout sélectionner (${library.length} photos)`);
+  btn.setAttribute('aria-disabled',library.length?'false':'true');
+  $('#selDelete').hidden=!n;                                            // nothing to delete → hide, don't tease
+  // the FABs act on the selection too — dim them when there is nothing to act on
+  ['#fabCam','#fabImport','#fabPaste'].forEach(s=>$(s).classList.toggle('dim',!n));
+}
 function enterSelect(seedId){
   selectMode=true;selected.clear();if(seedId!=null)selected.add(seedId);
   document.body.classList.add('selmode');
   $('#gallery').classList.add('selecting');
+  $('#selbar').hidden=false;
   $('#fabPaste').hidden=!lookClip;                 // paste appears only if a look was copied
-  setFabLabels(true);syncSelCards();
+  setFabLabels(true);syncSelCards();syncSelBar();
 }
 function exitSelect(){
   if(!selectMode)return;
   selectMode=false;selected.clear();
   document.body.classList.remove('selmode');
   $('#gallery').classList.remove('selecting');
+  $('#selbar').hidden=true;
   $('#fabPaste').hidden=true;
+  ['#fabCam','#fabImport','#fabPaste'].forEach(s=>$(s).classList.remove('dim'));
   setFabLabels(false);syncSelCards();
 }
 function toggleSel(it,card){
   if(selected.has(it.id))selected.delete(it.id);else selected.add(it.id);
   card.classList.toggle('sel',selected.has(it.id));
-  if(!selected.size)exitSelect();
+  if(!selected.size)exitSelect();else syncSelBar();
+}
+function selectAll(){
+  if(!selectMode||!library.length)return;
+  library.forEach(x=>selected.add(x.id));
+  syncSelCards();syncSelBar();
+}
+function deselectAll(){
+  if(!selectMode)return;
+  selected.clear();
+  syncSelCards();syncSelBar();      // stay in select mode: the bar is still there to pick again
 }
 function photoCard(it){
   const c=el('div','pcard');c.tabIndex=0;c.dataset.id=it.id;c.setAttribute('role','button');c.setAttribute('aria-label','Ouvrir la photo');
@@ -784,12 +840,20 @@ function photoCard(it){
 // Tap anywhere that isn't a photo or a FAB (background, header, gallery gaps) → leave selection.
 document.addEventListener('pointerdown',e=>{
   if(!selectMode)return;
-  if(e.target.closest('.pcard')||e.target.closest('.fabs')||e.target.closest('.cscrim')||e.target.closest('.busyov'))return;
+  if(e.target.closest('.pcard')||e.target.closest('.fabs')||e.target.closest('.selbar')||
+     e.target.closest('.cscrim')||e.target.closest('.busyov'))return;
   exitSelect();
 },true);
+// selection-bar actions
+$('#selClose').onclick=()=>exitSelect();
+$('#selAll').onclick=()=>{ if(library.length && selected.size===library.length)deselectAll(); else selectAll(); };
+$('#selDelete').onclick=()=>deleteSelected();
 async function deleteSelected(){
   const ids=[...selected];if(!ids.length)return;
-  const ok=await appConfirm(ids.length>1?`Supprimer ${ids.length} photos ?`:'Supprimer cette photo ?');
+  const msg = ids.length===1 ? 'Supprimer cette photo ?'
+            : ids.length===library.length ? `Supprimer toutes les photos (${ids.length}) ?`
+            : `Supprimer ${ids.length} photos ?`;
+  const ok=await appConfirm(msg);
   if(!ok)return;
   for(const id of ids){try{await idbDelete(id);}catch(e){}}
   const gone=new Set(ids);library=library.filter(x=>!gone.has(x.id));
@@ -1609,6 +1673,18 @@ function appConfirm(message,okLabel){
 
 // close on Esc (crop overlay first, then the editor)
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(toolK)cancelTool();else if(cropMode)cancelCrop();else if(cur)closeEditor();else if(selectMode)exitSelect();});
+
+// while selecting: Ctrl/Cmd+A = tout sélectionner (again = tout désélectionner), Suppr = supprimer la sélection
+document.addEventListener('keydown',e=>{
+  if(!selectMode||cur)return;
+  const t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable))return;
+  if((e.ctrlKey||e.metaKey)&&(e.key==='a'||e.key==='A')){
+    e.preventDefault();
+    if(library.length&&selected.size===library.length)deselectAll();else selectAll();
+  }else if((e.key==='Delete'||e.key==='Backspace')&&selected.size){
+    e.preventDefault();deleteSelected();
+  }
+});
 
 //// ---------- DITHERED WAVE (ordered 8×8 Bayer, à la wave-1 shader) — reusable ----------
 function ditherFx(cv){
