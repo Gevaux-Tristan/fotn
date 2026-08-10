@@ -67,10 +67,19 @@ body.selmode .brandmark{display:none}
   background:var(--panel);border:1px solid var(--line);color:var(--txt);transition:.15s}
 .sbtn:hover{border-color:var(--line2)}
 .sbtn.ico{padding:0;width:38px;height:38px;display:grid;place-items:center;border-radius:50%}
-.sbtn.danger{background:var(--accent);border-color:var(--accent);color:var(--ink)}
-.sbtn.danger:hover{filter:brightness(1.15)}
+/* primary = the dark accent, matching the dark FAB that carries the same action */
+.sbtn.prim{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.sbtn.prim:hover{filter:brightness(1.15)}
 .sbtn[aria-disabled="true"]{opacity:.4;pointer-events:none}
 .sbtn[hidden]{display:none}
+.sbtn.act{display:inline-flex;align-items:center;gap:7px}
+.selcount b{font-weight:700;font-variant-numeric:tabular-nums}
+/* On a phone the bar is tight: the actions collapse to their icon (aria-label carries the
+   name) and the count keeps only its number. Everything spells itself out from 560px up. */
+@media(max-width:559px){
+  .sbtn.act .lbl,.selcount .lbl{display:none}
+  .sbtn.act{padding:0;width:38px;height:38px;justify-content:center;border-radius:50%}
+}
 /* the count sits on the dithered backdrop → give it a cream pill so it stays readable */
 .selcount{flex:0 1 auto;min-width:0;margin-right:auto;padding:7px 12px;border-radius:999px;
   background:rgba(249,244,238,.88);font-size:13px;font-weight:600;color:var(--txt);
@@ -335,9 +344,16 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
       <button class="sbtn ico" id="selClose" title="Quitter la sélection" aria-label="Quitter la sélection">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
       </button>
-      <span class="selcount" id="selCount" role="status" aria-live="polite">0 sélectionnée</span>
+      <span class="selcount" id="selCount" role="status" aria-live="polite"><b id="selNum">0</b><span class="lbl" id="selWord">&nbsp;photo</span></span>
       <button class="sbtn" id="selAll">Tout sélectionner</button>
-      <button class="sbtn danger" id="selDelete">Supprimer</button>
+      <button class="sbtn act prim" id="selExport" title="Télécharger la sélection" aria-label="Télécharger la sélection">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
+        <span class="lbl">Télécharger</span>
+      </button>
+      <button class="sbtn act" id="selDelete" title="Supprimer la sélection" aria-label="Supprimer la sélection">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
+        <span class="lbl">Supprimer</span>
+      </button>
     </div>
   </header>
 
@@ -782,14 +798,16 @@ function setFabLabels(sel){
 // selection bar: live count + "Tout sélectionner / Tout désélectionner" + Supprimer
 function syncSelBar(){
   const n=selected.size, all=library.length && n===library.length;
-  const c=$('#selCount');
-  c.textContent=n?`${n} photo${n>1?'s':''}`:'Aucune sélection';         // short: the bar is tight on mobile
-  c.setAttribute('aria-label',n?`${n} photo${n>1?'s':''} sélectionnée${n>1?'s':''}`:'Aucune photo sélectionnée');
+  $('#selNum').textContent=n;
+  $('#selWord').innerHTML='&nbsp;photo'+(n>1?'s':'');
+  $('#selCount').setAttribute('aria-label',
+    n?`${n} photo${n>1?'s':''} sélectionnée${n>1?'s':''}`:'Aucune photo sélectionnée');
   const btn=$('#selAll');
   btn.textContent=all?'Tout désélectionner':'Tout sélectionner';
   btn.setAttribute('aria-label',all?'Tout désélectionner':`Tout sélectionner (${library.length} photos)`);
   btn.setAttribute('aria-disabled',library.length?'false':'true');
-  $('#selDelete').hidden=!n;                                            // nothing to delete → hide, don't tease
+  $('#selDelete').hidden=!n;                                            // nothing to act on → hide, don't tease
+  $('#selExport').hidden=!n;
   // the FABs act on the selection too — dim them when there is nothing to act on
   ['#fabCam','#fabImport','#fabPaste'].forEach(s=>$(s).classList.toggle('dim',!n));
 }
@@ -974,6 +992,7 @@ document.addEventListener('pointerdown',e=>{
 $('#selClose').onclick=()=>exitSelect();
 $('#selAll').onclick=()=>{ if(library.length && selected.size===library.length)deselectAll(); else selectAll(); };
 $('#selDelete').onclick=()=>deleteSelected();
+$('#selExport').onclick=()=>exportSelected();   // called straight from the tap: the folder picker needs that activation
 async function deleteSelected(){
   const ids=[...selected];if(!ids.length)return;
   const msg = ids.length===1 ? 'Supprimer cette photo ?'
