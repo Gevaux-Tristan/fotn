@@ -111,6 +111,16 @@ body.selmode .brandmark{display:none}
 .pcard.sel img{opacity:.8}
 .pcard.sel{outline:3px solid var(--accent);outline-offset:-3px}
 
+/* drag to reorder — the lifted copy follows the finger, the slot stays visible in the flow */
+.pghost{position:fixed;left:0;top:0;z-index:200;pointer-events:none;will-change:transform;
+  box-shadow:0 14px 34px rgba(0,0,0,.38);opacity:.96}
+.pghost img{width:100%;height:100%;display:block;object-fit:cover}
+.pcard.ghosted{opacity:.22;outline:2px dashed var(--line2);outline-offset:-2px}
+.pcard.ghosted img{filter:grayscale(1)}
+body.reordering{cursor:grabbing}
+body.reordering .pcard{cursor:grabbing}
+body.reordering .pcard:hover{transform:none}    /* no hover lift while rearranging */
+
 /* while selecting, the two FABs swap their icon (Import→trash, Caméra→download) */
 .fab .ic-sel{display:none}
 body.selmode .fab .ic-def{display:none}
@@ -737,8 +747,16 @@ RECIPES.forEach(p=>{if(p.lut)loadLUT(p.lut);});    // warm the LUT cache (small 
 loadLibrary();
 
 function loadLibrary(){
-  idbGetAll().then(items=>{library=items.sort((a,b)=>(b.created||0)-(a.created||0));renderLibrary();})
+  idbGetAll().then(items=>{library=items.sort(orderCmp);renderLibrary();})
              .catch(()=>{library=[];renderLibrary();});
+}
+// Manual order (`ord`, set by dragging) wins; anything never reordered falls back to newest-first.
+function orderCmp(a,b){
+  const ao=(a.ord==null?null:a.ord), bo=(b.ord==null?null:b.ord);
+  if(ao!=null&&bo!=null)return ao-bo;
+  if(ao!=null)return -1;
+  if(bo!=null)return 1;
+  return (b.created||0)-(a.created||0);
 }
 
 //// ---------- HOME = PHOTO LIBRARY ----------
@@ -750,7 +768,7 @@ function renderLibrary(){
   g.appendChild(frag);
 }
 const CHECK_ICON='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z';
-let lpTimer=0, lpX=0, lpY=0, lpSuppress=false;
+let lpTimer=0, lpX=0, lpY=0, lpSuppress=false, lpDown=false, lpMouse=false, lpIt=null, lpCard=null;
 
 // ---- multi-select mode (long-press to enter; the two FABs become Supprimer / Télécharger) ----
 let selectMode=false; const selected=new Set();
@@ -818,24 +836,132 @@ function photoCard(it){
   // selection checkbox (only visible while a selection is active)
   const chk=el('div','pcheck');chk.innerHTML=svgIcon(CHECK_ICON,18);c.appendChild(chk);
   if(selected.has(it.id))c.classList.add('sel');
-  // long-press (hold ~500ms without moving) → enter multi-select mode
+  // Press and hold ~500ms → the card lifts. Move it = reorder; release it = multi-select.
   c.addEventListener('pointerdown',e=>{
     if(e.button&&e.button!==0)return;
-    lpX=e.clientX;lpY=e.clientY;clearTimeout(lpTimer);
-    lpTimer=setTimeout(()=>{if(!selectMode){enterSelect(it.id);lpSuppress=true;}},500);
+    // a drag that ends over another card lets its click bubble to the gallery, so the flag can
+    // survive unread — clear it as each new gesture starts, never leave a tap swallowed
+    lpSuppress=false;
+    if(selectMode)return;                       // while selecting, a tap just toggles the card
+    lpX=e.clientX;lpY=e.clientY;lpIt=it;lpCard=c;lpDown=true;lpMouse=(e.pointerType==='mouse');
+    clearTimeout(lpTimer);
+    lpTimer=setTimeout(()=>{if(lpDown&&!selectMode)liftCard(it,c,lpX,lpY);},500);
   });
-  c.addEventListener('pointermove',e=>{if(Math.abs(e.clientX-lpX)>10||Math.abs(e.clientY-lpY)>10)clearTimeout(lpTimer);});
+  // moving before the hold completes = the user is scrolling (touch) → drop the timer
+  c.addEventListener('pointermove',e=>{
+    if(dragLift)return;
+    if(Math.abs(e.clientX-lpX)>10||Math.abs(e.clientY-lpY)>10)clearTimeout(lpTimer);
+  });
   c.addEventListener('pointerup',()=>clearTimeout(lpTimer));
   c.addEventListener('pointercancel',()=>clearTimeout(lpTimer));
   c.addEventListener('contextmenu',e=>e.preventDefault());
+  c.addEventListener('dragstart',e=>e.preventDefault());   // no native image drag
   c.onclick=e=>{
-    if(lpSuppress){lpSuppress=false;e.preventDefault();return;}   // ignore the release-click after long-press
+    if(lpSuppress){lpSuppress=false;e.preventDefault();return;}   // ignore the release-click after a hold
     if(selectMode){e.preventDefault();toggleSel(it,c);return;}     // in select mode → toggle
     openItem(it);
   };
-  c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();if(selectMode)toggleSel(it,c);else openItem(it);}};
+  c.onkeydown=e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();if(selectMode)toggleSel(it,c);else openItem(it);return;}
+    // keyboard reordering: Ctrl/Cmd + ← / → moves the focused photo one slot in the sequence
+    if((e.ctrlKey||e.metaKey)&&(e.key==='ArrowLeft'||e.key==='ArrowRight')&&!selectMode){
+      e.preventDefault();moveCard(it,e.key==='ArrowRight'?1:-1);
+    }
+  };
   return c;
 }
+
+// ---- drag to reorder (the gallery order IS the feed sequence, so it is persisted) ----
+let dragIt=null, dragEl=null, dragGhost=null, dragLift=false, dragMoved=false,
+    dragDX=0, dragDY=0, dragX=0, dragY=0, asRaf=0, asV=0;
+
+function liftCard(it,card,x,y){
+  const r=card.getBoundingClientRect();
+  dragIt=it;dragEl=card;dragLift=true;dragMoved=false;dragDX=x-r.left;dragDY=y-r.top;
+  const g=el('div','pghost');
+  g.style.width=r.width+'px';g.style.height=r.height+'px';
+  const im=el('img');im.alt='';if(it.thumb)im.src=it.thumb;g.appendChild(im);
+  document.body.appendChild(g);dragGhost=g;moveGhost(x,y);
+  card.classList.add('ghosted');
+  document.body.classList.add('reordering');
+  try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}   // "you picked it up"
+}
+function moveGhost(x,y){
+  if(dragGhost)dragGhost.style.transform=`translate(${x-dragDX}px,${y-dragDY}px) scale(1.04)`;
+}
+// Drop target = the card under the finger; above its middle → before, below → after.
+// Moving the node live means the masonry reflows as you drag: what you see is the real result.
+function dragOver(x,y){
+  const under=document.elementFromPoint(x,y);          // the ghost is pointer-events:none
+  const card=under&&under.closest?under.closest('.pcard'):null;
+  if(!card||card===dragEl)return;
+  const r=card.getBoundingClientRect();
+  if(y>r.top+r.height/2)card.after(dragEl);else card.before(dragEl);
+}
+function endDrag(commit){
+  if(dragGhost){dragGhost.remove();dragGhost=null;}
+  if(dragEl)dragEl.classList.remove('ghosted');
+  document.body.classList.remove('reordering');
+  stopAutoScroll();
+  const moved=dragMoved;
+  dragIt=null;dragEl=null;dragLift=false;dragMoved=false;
+  if(!moved)return;
+  if(commit)commitOrder();else renderLibrary();        // cancelled mid-drag → back to the stored order
+}
+function commitOrder(){
+  const ids=[...document.querySelectorAll('.pcard')].map(c=>c.dataset.id);
+  const by=new Map(library.map(x=>[x.id,x]));
+  const next=ids.map(id=>by.get(id)).filter(Boolean);
+  if(next.length!==library.length){renderLibrary();return;}   // safety: never drop a photo
+  library=next;persistOrder();
+}
+function persistOrder(){
+  library.forEach((it,i)=>{if(it.ord!==i){it.ord=i;idbPut(it).catch(()=>{});}});
+}
+function moveCard(it,dir){
+  const i=library.findIndex(x=>x.id===it.id);if(i<0)return;
+  const j=i+dir;if(j<0||j>=library.length)return;
+  library.splice(j,0,library.splice(i,1)[0]);
+  persistOrder();renderLibrary();
+  const c=document.querySelector('.pcard[data-id="'+it.id+'"]');if(c)c.focus();
+  toast(`Position ${j+1} sur ${library.length}`);
+}
+// autoscroll when the finger reaches the top/bottom edge while dragging
+function autoScroll(y){
+  const edge=90,h=window.innerHeight;
+  asV = y<edge ? -(edge-y)/edge*16 : y>h-edge ? (y-(h-edge))/edge*16 : 0;
+  if(asV&&!asRaf)asRaf=requestAnimationFrame(asStep);
+}
+function asStep(){
+  asRaf=0;if(!dragLift||!asV)return;
+  window.scrollBy(0,asV);dragOver(dragX,dragY);
+  asRaf=requestAnimationFrame(asStep);
+}
+function stopAutoScroll(){asV=0;if(asRaf)cancelAnimationFrame(asRaf);asRaf=0;}
+
+document.addEventListener('pointermove',e=>{
+  if(!dragLift){
+    // a mouse cannot pan the page, so it starts dragging as soon as it passes the threshold
+    if(!lpDown||!lpMouse||selectMode||!lpCard)return;
+    if(Math.abs(e.clientX-lpX)<=10&&Math.abs(e.clientY-lpY)<=10)return;
+    clearTimeout(lpTimer);liftCard(lpIt,lpCard,lpX,lpY);
+  }
+  dragX=e.clientX;dragY=e.clientY;
+  if(!dragMoved&&(Math.abs(dragX-lpX)>8||Math.abs(dragY-lpY)>8))dragMoved=true;
+  moveGhost(dragX,dragY);
+  if(dragMoved){dragOver(dragX,dragY);autoScroll(dragY);}
+});
+document.addEventListener('pointerup',()=>{
+  lpDown=false;clearTimeout(lpTimer);
+  if(!dragLift)return;
+  const it=dragIt, moved=dragMoved;
+  endDrag(true);
+  lpSuppress=true;                                   // swallow the click that follows the release
+  if(!moved&&it&&!selectMode)enterSelect(it.id);      // held without moving → selection, as before
+});
+document.addEventListener('pointercancel',()=>{lpDown=false;clearTimeout(lpTimer);if(dragLift)endDrag(false);});
+// keep the page still under the finger while a card is being dragged
+document.addEventListener('touchmove',e=>{if(dragLift)e.preventDefault();},{passive:false});
 // ---- batch export / delete of the current selection ----
 // Tap anywhere that isn't a photo or a FAB (background, header, gallery gaps) → leave selection.
 document.addEventListener('pointerdown',e=>{
@@ -1330,6 +1456,9 @@ async function addPhotos(files, openIfSingle, fromCamera){
     const item={id:uid(), created:Date.now()+i, blob:list[i], w:iw, h:ih,
       tw:tb?tb.w:iw, th:tb?tb.h:ih,
       edit:{presetName:'',vals:neutralAdj(),crop:crop}, thumb:tb?tb.data:null};
+    // once a manual order exists, a new photo still lands first (ahead of the lowest `ord`)
+    let min=null;library.forEach(x=>{if(x.ord!=null&&(min==null||x.ord<min))min=x.ord;});
+    if(min!=null)item.ord=min-1;
     library.unshift(item);
     try{await idbPut(item);}catch(e){}
     added.push({item,r,crop});
