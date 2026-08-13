@@ -161,6 +161,23 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .cbtn.danger{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .cbtn.danger:hover{background:var(--accent);filter:brightness(1.1)}
 
+/* surimpression — aperçu de l'empilement entre deux prises */
+.mxov{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:20px;
+  background:rgba(0,0,0,.62);backdrop-filter:blur(3px);opacity:0;transition:opacity .2s}
+.mxov.show{opacity:1}
+.mxov[hidden]{display:none}
+.mxbox{width:100%;max-width:380px;max-height:100%;overflow:auto;background:var(--bg);border-radius:var(--r-lg);
+  padding:14px;box-shadow:0 24px 60px -20px rgba(0,0,0,.4);transform:translateY(8px);transition:transform .2s}
+.mxov.show .mxbox{transform:none}
+.mxprev{display:block;width:100%;height:auto;max-height:46vh;object-fit:contain;background:#000;border-radius:var(--r-md)}
+.mxstep{margin:12px 0 10px;font-size:13px;font-weight:600;color:var(--txt2);text-align:center}
+.mxmodes{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.mxmodes[hidden]{display:none}   /* class rule would otherwise beat the UA [hidden] */
+.mxmodes::-webkit-scrollbar{display:none}
+.mxrow{display:flex;flex-wrap:wrap;gap:8px}
+.mxrow .cbtn{flex:1 1 calc(50% - 4px);min-width:0}
+body.selmode #fabMulti{display:none}   /* the FABs belong to the selection while it is active */
+
 /* ---------- DETAIL / EDITOR ---------- */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);opacity:0;
   pointer-events:none;transition:.25s;z-index:50}
@@ -367,6 +384,9 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   <button class="fab sec" id="fabPaste" title="Coller les réglages" aria-label="Coller les réglages sur la sélection" hidden>
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"></path></svg>
   </button>
+  <button class="fab sec" id="fabMulti" title="Surimpression" aria-label="Surimpression : superposer jusqu'à 3 poses">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"></path></svg>
+  </button>
   <button class="fab sec" id="fabImport" title="Importer une photo" aria-label="Importer une photo">
     <svg class="ic-def" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
     <svg class="ic-sel" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
@@ -379,6 +399,22 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
 <!-- native system camera (capture) + library import file inputs -->
 <input id="camInput" type="file" accept="image/*" capture="environment" hidden>
 <input id="upload" type="file" accept="image/*" multiple hidden>
+<input id="mxInput" type="file" accept="image/*" capture="environment" hidden>
+
+<!-- SURIMPRESSION — empile jusqu'à 3 prises natives, les fusionne, puis passe le résultat à l'éditeur -->
+<div class="mxov" id="mxov" hidden role="dialog" aria-modal="true" aria-labelledby="mxStep">
+  <div class="mxbox">
+    <canvas id="mxPrev" class="mxprev" aria-label="Aperçu de la surimpression" role="img"></canvas>
+    <div class="mxstep" id="mxStep" role="status" aria-live="polite">Pose 1</div>
+    <div class="mxmodes" id="mxModes" role="group" aria-label="Mode de fusion"></div>
+    <div class="mxrow">
+      <button class="cbtn" id="mxCancel">Annuler</button>
+      <button class="cbtn" id="mxUndo">Refaire</button>
+      <button class="cbtn" id="mxAdd">Ajouter une pose</button>
+      <button class="cbtn danger" id="mxOk">Valider</button>
+    </div>
+  </div>
+</div>
 
 <!-- EDITOR -->
 <div class="scrim" id="scrim"></div>
@@ -1497,6 +1533,108 @@ async function addPhotos(files, openIfSingle, fromCamera){
 $('#upload').addEventListener('change',e=>{addPhotos(e.target.files,true,false);e.target.value='';});          // import → no default crop
 $('#camInput').addEventListener('change',e=>{addPhotos(e.target.files,true,true);e.target.value='';});        // camera → default 2:3 crop
 
+//// ---------- SURIMPRESSION (double / triple exposition) ----------
+// Up to 3 shots taken one after another with the NATIVE camera, blended into a single JPEG.
+// That JPEG becomes an ordinary library photo, so presets, adjustments and crop all apply to it.
+const MX_MODES=[{k:'screen',n:'Écran'},{k:'lighten',n:'Éclaircir'},{k:'multiply',n:'Multiplier'},{k:'avg',n:'Moyenne'}];
+const MX_MAX=3;
+let mxShots=[], mxMode='screen', mxBusy=false, mxReplace=false;
+
+function mxRelease(){mxShots.forEach(s=>{if(s.url)URL.revokeObjectURL(s.url);});mxShots=[];}
+function mxStart(){mxRelease();mxMode='screen';mxReplace=false;$('#mxInput').click();}   // straight from the tap → keeps the activation
+function mxShoot(replace){mxReplace=!!replace;$('#mxInput').click();}
+function mxClose(){
+  $('#mxov').classList.remove('show');
+  setTimeout(()=>{$('#mxov').hidden=true;},200);
+  bgInert(false);document.body.style.overflow='';
+}
+function mxCancel(){mxRelease();mxClose();}
+
+// Cover-fit each shot onto the frame of the first one: different ratios still fill the canvas.
+function mxDrawCover(x,img,W,H){
+  const iw=img.naturalWidth||img.width||1, ih=img.naturalHeight||img.height||1;
+  const s=Math.max(W/iw,H/ih), w=iw*s, h=ih*s;
+  x.drawImage(img,(W-w)/2,(H-h)/2,w,h);
+}
+// Blend the stack into `cv`. Screen/Lighten pile up over black (film adds light), Multiply over
+// white (it only ever darkens), and Moyenne is a running mean via decreasing alpha.
+function mxComposite(cv,maxEdge){
+  if(!mxShots.length)return false;
+  const b=mxShots[0].img;
+  let W=b.naturalWidth||b.width||1, H=b.naturalHeight||b.height||1;
+  const m=Math.max(W,H);if(m>maxEdge){const s=maxEdge/m;W=Math.max(1,Math.round(W*s));H=Math.max(1,Math.round(H*s));}
+  cv.width=W;cv.height=H;
+  const x=cv.getContext('2d');
+  x.globalCompositeOperation='source-over';x.globalAlpha=1;
+  x.fillStyle=(mxMode==='multiply')?'#fff':'#000';x.fillRect(0,0,W,H);
+  mxShots.forEach((s,i)=>{
+    if(mxMode==='avg'){x.globalCompositeOperation='source-over';x.globalAlpha=1/(i+1);}
+    else{x.globalCompositeOperation=i?mxMode:'source-over';x.globalAlpha=1;}
+    mxDrawCover(x,s.img,W,H);
+  });
+  x.globalCompositeOperation='source-over';x.globalAlpha=1;
+  return true;
+}
+function mxRenderModes(){
+  const box=$('#mxModes');box.innerHTML='';
+  box.hidden=mxShots.length<2;                      // a single shot has nothing to blend with
+  if(box.hidden)return;
+  MX_MODES.forEach(m=>{
+    const b=el('button','chip'+(m.k===mxMode?' on':''));
+    b.type='button';b.textContent=m.n;
+    b.setAttribute('aria-pressed',m.k===mxMode?'true':'false');
+    b.onclick=()=>{mxMode=m.k;mxRenderModes();mxPaint();};
+    box.appendChild(b);
+  });
+}
+function mxPaint(){mxComposite($('#mxPrev'),1200);}
+function mxOpen(){
+  const n=mxShots.length;
+  if(!n){mxCancel();return;}
+  mxPaint();mxRenderModes();
+  $('#mxStep').textContent = n===1 ? 'Pose 1 — ajoute une pose pour superposer'
+                                   : `${n} poses superposées`+(n>=MX_MAX?' (maximum)':'');
+  $('#mxUndo').textContent = n>1?'Refaire la dernière':'Refaire la pose';
+  $('#mxAdd').hidden = n>=MX_MAX;
+  $('#mxOk').textContent = n>1?'Valider':'Garder cette photo';
+  if($('#mxov').hidden){
+    $('#mxov').hidden=false;bgInert(true);document.body.style.overflow='hidden';
+    requestAnimationFrame(()=>$('#mxov').classList.add('show'));
+  }
+  $('#mxOk').focus();
+}
+$('#mxInput').addEventListener('change',async e=>{
+  const f=e.target.files&&e.target.files[0];e.target.value='';
+  const rep=mxReplace;mxReplace=false;
+  // Backing out of the native camera fires this with no file on some platforms, and fires
+  // nothing at all on others — either way the stack must survive untouched.
+  if(!f){if(mxShots.length)mxOpen();else mxCancel();return;}
+  let r;try{r=await blobToImage(f);}catch(err){toast('Photo illisible');if(mxShots.length)mxOpen();return;}
+  if(rep&&mxShots.length){const old=mxShots.pop();if(old&&old.url)URL.revokeObjectURL(old.url);}
+  mxShots.push({blob:f,img:r.img,url:r.url});
+  mxOpen();
+});
+$('#fabMulti').onclick=()=>{if(!selectMode)mxStart();};
+$('#mxCancel').onclick=()=>mxCancel();
+$('#mxAdd').onclick=()=>{if(mxShots.length<MX_MAX)mxShoot(false);};
+// retake = shoot first, swap second: cancelling the camera must not cost the pose you had
+$('#mxUndo').onclick=()=>mxShoot(true);
+$('#mxOk').onclick=async()=>{
+  if(mxBusy||!mxShots.length)return;
+  mxBusy=true;
+  const ov=showBusy(mxShots.length>1?'Fusion…':'Enregistrement…');
+  try{
+    await nextFrame();
+    const cv=document.createElement('canvas');
+    if(!mxComposite(cv,3200))throw new Error('empty');
+    const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.92));
+    if(!blob)throw new Error('encode');
+    mxRelease();mxClose();
+    await addPhotos([blob],true,true);        // same path as a camera shot → item, thumb, editor
+  }catch(err){toast('Fusion impossible');}
+  finally{hideBusy(ov);mxBusy=false;}
+};
+
 //// ---------- CROP (ratio chips + adjustable box) ----------
 const CROP_RATIOS=[
   {k:'free',label:'Libre',  r:null},
@@ -1820,7 +1958,7 @@ function appConfirm(message,okLabel){
 }
 
 // close on Esc (crop overlay first, then the editor)
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(toolK)cancelTool();else if(cropMode)cancelCrop();else if(cur)closeEditor();else if(selectMode)exitSelect();});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('#mxov').hidden)mxCancel();else if(toolK)cancelTool();else if(cropMode)cancelCrop();else if(cur)closeEditor();else if(selectMode)exitSelect();});
 
 // while selecting: Ctrl/Cmd+A = tout sélectionner (again = tout désélectionner), Suppr = supprimer la sélection
 document.addEventListener('keydown',e=>{
