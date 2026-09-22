@@ -26,7 +26,7 @@ mono-fichier (`index.html`, sans dépendance, sans build).
   1:1, 4:5, 5:4, 3:2, 2:3, 16:9, 9:16, grille des tiers), **curseur d'intensité** du look, et
   **réglages universels** en onglets (Lumière :
   exposition, contraste, hautes lumières, ombres ; Couleur : saturation, température, teinte ;
-  Rendu : intensité, grain, vignettage, estompé). Export → `fotn_<preset>_<horodatage>-<id>.jpg`.
+  Rendu : intensité, grain, taille du grain, halation, bloom, vignettage, estompé). Export → `fotn_<preset>_<horodatage>-<id>.jpg`.
 
 ## Fichiers
 - `index.html` — toute l'app. `generic.jpg` — image de référence des cartes.
@@ -42,3 +42,19 @@ La caméra exige un contexte sécurisé (**HTTPS** ou `localhost`).
 
 ## Déployer
 Hébergement statique. Déployé sur GitHub Pages : https://gevaux-tristan.github.io/fotn/
+
+## Effets optiques (post-passe spatiale)
+- **Halation** : halo rouge-orangé autour des hautes lumières (lumière réfléchie par la base du film).
+- **Bloom** : diffusion douce des hautes lumières.
+- Les deux sont calculés sur un tampon ~128 px flouté puis remis à l'échelle → même rendu en
+  vignette, en aperçu et à l'export. Fusion en *screen*.
+- **Grain** : bruit de valeur à graine fixe (stable entre deux rendus), taille relative au cadre,
+  plus fort dans les tons moyens, légère composante chromatique sur les pellicules couleur.
+
+## Importer un look depuis un outil web (ex. Dehancer Online), usage perso
+1. Charger `luts/lut-identity-1000.png` (1000×1000, bloc 8×8 par nœud, résiste à la recompression).
+2. Appliquer le preset en **désactivant grain, halation, bloom, vignettage, netteté** : un effet
+   spatial casserait la LUT (on les refait dans fotn).
+3. Exporter sans redimensionner (PNG/TIFF de préférence, sinon JPEG qualité max), en PNG dans `luts/<nom>.png`.
+4. Ajouter une ligne dans `PRESETS` (`{name, film, cat, lut:'luts/<nom>.png'}`). Le loader accepte
+   125×125 ou tout multiple (lecture au centre de chaque bloc).
