@@ -614,6 +614,12 @@ const PRESETS=[
  {name:'Instax',        film:'Instantané · Fuji',            cat:'Instant', lut:'luts/fujiinstax.png'},
  // — Noir & blanc —
  {name:'HP5+',          film:'N&B classique · Frontier',     cat:'N&B', mono:1, lut:'luts/hp5.png'},
+ // — Dehancer (LUTs cuites sur lut-identity-1000.png, usage perso) —
+ {name:'DH N&B',        film:'N&B neutre · Dehancer',        cat:'N&B', mono:1, lut:'luts/dehancer1.png'},
+ {name:'DH Cross',      film:'Crossprocess rosé · Dehancer', cat:'Vintage', lut:'luts/dehancer2.png'},
+ {name:'DH N&B chaud',  film:'N&B légèrement viré · Dehancer',cat:'N&B', mono:1, lut:'luts/dehancer3.png'},
+ {name:'DH Sépia',      film:'N&B sépia · Dehancer',         cat:'N&B', mono:1, lut:'luts/dehancer4.png'},
+ {name:'DH Couleur',    film:'Négatif contrasté · Dehancer', cat:'Négatif', lut:'luts/dehancer5.png'},
 ];
 PRESETS.forEach(p=>{p.mono=!!p.mono;});
 // neutral user adjustments (cards render presets at their default look)
