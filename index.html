@@ -201,6 +201,10 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .camov.show{opacity:1;pointer-events:auto}
 .camov[hidden]{display:none}
 #camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.camMask{position:absolute;left:0;width:100%;height:0;background:rgba(0,0,0,.55);pointer-events:none;
+  transition:height .15s}
+#camMaskTop{top:0;border-bottom:1px solid rgba(255,255,255,.5)}
+#camMaskBot{bottom:0;border-top:1px solid rgba(255,255,255,.5)}
 .camClose,.camLock{position:absolute;top:calc(var(--safe-t) + 14px);color:#fff;background:rgba(0,0,0,.4);
   border:1px solid rgba(255,255,255,.25);transition:.15s}
 .camClose{left:14px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center}
@@ -436,6 +440,9 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
 <div class="camov" id="camOv" hidden>
   <video id="camVideo" playsinline autoplay muted></video>
   <canvas id="camCanvas" hidden></canvas>
+  <!-- letterbox guide: shows the 2:3 frame that will actually be kept, so shooting is WYSIWYG -->
+  <div class="camMask" id="camMaskTop"></div>
+  <div class="camMask" id="camMaskBot"></div>
   <div class="camFocus" id="camFocus"></div>
   <button class="camClose" id="camClose" aria-label="Fermer l'appareil photo" title="Fermer">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
@@ -1738,10 +1745,21 @@ $('#camInput').addEventListener('change',e=>{addPhotos(e.target.files,true,true)
 // it needs — isn't available, so the shutter never dead-ends on an unsupported browser.
 let camStream=null, camTrack=null, camCaps=null, camFocusLocked=false, camBrightVal=0;
 const camSupported=()=>!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+// default capture format: 2:3 (portrait) — matches the app's mobile-only, portrait-held use.
+// The viewfinder masks down to this frame live, and the shutter crops the sensor to match,
+// so what's on screen while shooting IS what gets saved (no surprise post-hoc crop).
+const CAM_AR=2/3;
+function updateCamMask(){
+  const video=$('#camVideo'), bw=video.clientWidth, bh=video.clientHeight;
+  if(!bw||!bh)return;
+  const bar=bw/bh<CAM_AR?Math.max(0,(bh-bw/CAM_AR)/2):0;   // portrait screens only: letterbox top/bottom
+  $('#camMaskTop').style.height=bar+'px';
+  $('#camMaskBot').style.height=bar+'px';
+}
 async function openCamera(){
   if(!camSupported()){$('#camInput').click();return;}
   const ov=$('#camOv');
-  ov.hidden=false; requestAnimationFrame(()=>ov.classList.add('show'));
+  ov.hidden=false; requestAnimationFrame(()=>{ov.classList.add('show');updateCamMask();});
   camFocusLocked=false; camBrightVal=0;
   $('#camBrightRange').value=0; $('#camVideo').style.filter='';
   updateCamLockUI();
@@ -1807,8 +1825,11 @@ function capturePhoto(){
   if(!camTrack)return;
   const video=$('#camVideo'), c=$('#camCanvas');
   const vw=video.videoWidth||1280, vh=video.videoHeight||720;
-  c.width=vw;c.height=vh;
-  c.getContext('2d').drawImage(video,0,0,vw,vh);
+  // crop the raw sensor frame to the 2:3 guide shown live in the mask — WYSIWYG capture
+  let sx=0,sy=0,sw=vw,sh=vh;
+  if(vw/vh>CAM_AR){sw=vh*CAM_AR;sx=(vw-sw)/2;} else {sh=vw/CAM_AR;sy=(vh-sh)/2;}
+  c.width=Math.round(sw);c.height=Math.round(sh);
+  c.getContext('2d').drawImage(video,sx,sy,sw,sh,0,0,c.width,c.height);
   const bv=camBrightVal;
   c.toBlob(blob=>{
     if(!blob){toast('Capture impossible');return;}
@@ -1823,6 +1844,7 @@ $('#camShutter').onclick=capturePhoto;
 $('#camBrightRange').addEventListener('input',camBrightInput);
 $('#camVideo').addEventListener('click',camTapFocus);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&camStream)closeCamera();});
+window.addEventListener('resize',()=>{if(!$('#camOv').hidden)updateCamMask();});
 
 //// ---------- SURIMPRESSION (double / triple exposition) ----------
 // An EDIT SETTING, not a capture mode: 1 or 2 library photos are stacked onto the photo being
