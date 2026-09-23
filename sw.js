@@ -1,5 +1,5 @@
 // fotn service worker — offline app shell + asset cache
-const CACHE = 'fotn-v11';
+const CACHE = 'fotn-v13';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './generic.jpg?v=2',

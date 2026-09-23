@@ -896,6 +896,9 @@ async function writeToDir(dir,name,blob){
 }
 
 //// ---------- LOAD ----------
+// Signature en tête, puis couleur, puis N&B ; ordre alphabétique dans chaque groupe.
+const presetGroup=p=>p.cat==='Signature'?0:p.mono?2:1;
+PRESETS.sort((a,b)=>(presetGroup(a)-presetGroup(b))||a.name.localeCompare(b.name,'fr',{numeric:true,sensitivity:'base'}));
 RECIPES=PRESETS.map((p,i)=>{p._i=i;return p;});
 RAIL=[ORIGINAL].concat(RECIPES);                  // editor rail = "Original" + the film looks
 RECIPES.forEach(p=>{if(p.lut)loadLUT(p.lut);});    // warm the LUT cache (small Hald PNGs)
