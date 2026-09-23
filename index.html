@@ -896,6 +896,8 @@ async function writeToDir(dir,name,blob){
 }
 
 //// ---------- LOAD ----------
+// Couleur d'abord, puis N&B ; ordre alphabétique dans chaque groupe.
+PRESETS.sort((a,b)=>(a.mono-b.mono)||a.name.localeCompare(b.name,'fr',{numeric:true,sensitivity:'base'}));
 RECIPES=PRESETS.map((p,i)=>{p._i=i;return p;});
 RAIL=[ORIGINAL].concat(RECIPES);                  // editor rail = "Original" + the film looks
 RECIPES.forEach(p=>{if(p.lut)loadLUT(p.lut);});    // warm the LUT cache (small Hald PNGs)
