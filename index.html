@@ -778,7 +778,7 @@ function applyGlow(d,w,h,O){
   for(let i=0;i<n;i++){const c=C[i]||1;H[i]/=c;R[i]/=c;G[i]/=c;B[i]/=c;}
   if(O.hal)boxBlur(H,sw,sh,2,3);
   if(O.bloom){boxBlur(R,sw,sh,5,3);boxBlur(G,sw,sh,5,3);boxBlur(B,sw,sh,5,3);}
-  const hk=O.hal*1.6, bk=O.bloom;
+  const hk=O.hal*1.9, bk=O.bloom*1.2;
   for(let y=0,p=0;y<h;y++){
     let fy=(y+0.5)/s-0.5;fy=fy<0?0:fy>sh-1?sh-1:fy;const y0=fy|0,y1=y0<sh-1?y0+1:y0,dy=fy-y0;
     for(let x=0;x<w;x++,p+=4){
