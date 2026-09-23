@@ -1,5 +1,5 @@
 // fotn service worker — offline app shell + asset cache
-const CACHE = 'fotn-v13';
+const CACHE = 'fotn-v14';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './generic.jpg?v=2',
@@ -8,7 +8,7 @@ const CORE = [
   './luts/kodacolor100.png', './luts/ultramax400.png', './luts/velvia100.png', './luts/hp5.png',
   './luts/signature1.png',
   './luts/ilford-xp2-super400.png', './luts/lomochrome-purple-xr.png', './luts/neopan-acros-100.png', './luts/polaroid-type100-sepia.png', './luts/rollei-cn-200.png',
-  './luts/kodachrome40.png', './luts/agfacolor40.png',
+  './luts/kodachrome40.png',
   './luts/agfaoptima.png', './luts/fujiinstax.png',
 ];
 
