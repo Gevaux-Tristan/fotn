@@ -1593,17 +1593,17 @@ function buildToolSlider(rail){
 function attachRelativeSlider(inp,onInput,onCommit){
   const mn=parseFloat(inp.min), mx=parseFloat(inp.max), st=parseFloat(inp.step)||1;
   inp.style.touchAction='none';
-  let dragging=false, startX=0, startVal=0;
+  let dragging=false, startX=0, startVal=0, trackW=0;
   inp.addEventListener('pointerdown',e=>{
     dragging=true; startX=e.clientX; startVal=parseFloat(inp.value)||0;
+    trackW=inp.getBoundingClientRect().width;      // measured once — reading it per pointermove forces a reflow every frame
     try{inp.setPointerCapture(e.pointerId);}catch(_){}
     try{inp.focus({preventScroll:true});}catch(_){}
     e.preventDefault();
   });
   inp.addEventListener('pointermove',e=>{
-    if(!dragging)return; e.preventDefault();
-    const rect=inp.getBoundingClientRect(); if(rect.width<=0)return;
-    const per=(mx-mn)/rect.width;                 // full track width spans the whole range
+    if(!dragging||trackW<=0)return; e.preventDefault();
+    const per=(mx-mn)/trackW;                      // full track width spans the whole range
     let v=startVal+(e.clientX-startX)*per;
     v=Math.round(v/st)*st;
     v=v<mn?mn:v>mx?mx:v;
