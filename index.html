@@ -688,16 +688,14 @@ function buildOps(P,A){
   const con=clamp(lerp(1,(P.con==null?1:P.con),k)+(A.contrast||0)/100*0.5,0.4,2.0);
   const hi=(A.highlights||0)/100*4;
   const sh=(A.shadows||0)/100*4;
-  const toneRecover=(A.toneRecover||0)/100;                 // strength of the filmic S-curve roll-off
   const lift=clamp((P.lift||0)*k+(A.fade||0)/100*0.45,0,0.7);
   const grain=clamp((P.grain||0)*k+(A.grain||0)/100*2,0,3);
-  const dehalo=(A.dehalo||0)/100;                            // strength of the anti-ringing detail compression
   const vig=clamp((P.vig||0)*k+(A.vignette||0)/100*0.55,0,0.85);
   const hal=clamp((P.hal||0)*k+(A.halation||0)/100,0,1.5);
   const bloom=clamp((P.bloom||0)*k+(A.bloom||0)/100*0.8,0,1.2);
   const gSize=(A.grainSize==null?40:A.grainSize)/100;
   const baseMx=P.mx||I3, mx=baseMx===I3?I3:baseMx.map((v,i)=>lerp(I3[i],v,k));
-  return {rG,gG,bG,exp,bri,sat,con,hi,sh,toneRecover,lift,grain,dehalo,vig,hal,bloom,gSize,
+  return {rG,gG,bG,exp,bri,sat,con,hi,sh,lift,grain,vig,hal,bloom,gSize,
     split:(P.split||0)*k, splitS:P.splitS||[0,0,0], splitH:P.splitH||[0,0,0],
     mx,
     lut:lutReady?L.data:null, lutN:lutReady?L.n:LUT_N, lutK:k,   // LUT applied first, blended by intensity
@@ -775,14 +773,6 @@ function renderRecipe(src,P,A,canvas,w,h,opts){
       lum=0.299*r+0.587*g+0.114*b;
       if(O.hi&&lum>0.45){const f=(lum-0.45)/0.55*O.hi*0.028;r+=f;g+=f;b+=f;}
       if(O.sh&&lum<0.55){const f=(0.55-lum)/0.55*O.sh*0.028;r-=f;g-=f;b-=f;}
-      // 6b. tonal recovery — filmic S-curve (smoothstep) pulled toward per-channel, so it
-      // deepens midtone contrast and gently rolls off the extremes the way a bigger sensor's
-      // native response does, undoing the flat, evenly-lit look of phone HDR tone-mapping.
-      if(O.toneRecover){
-        const sr=r<0?0:r>1?1:r, sg=g<0?0:g>1?1:g, sb=b<0?0:b>1?1:b;
-        const cr=sr*sr*(3-2*sr), cg=sg*sg*(3-2*sg), cb=sb*sb*(3-2*sb);
-        r+=(cr-r)*O.toneRecover; g+=(cg-g)*O.toneRecover; b+=(cb-b)*O.toneRecover;
-      }
       // 7. matte / fade
       if(O.lift){const L=O.lift;r=L+r*(1-L);g=L+g*(1-L);b=L+b*(1-L);}
       // 8. mono + toning (blended toward colour by preset intensity)
@@ -801,33 +791,12 @@ function renderRecipe(src,P,A,canvas,w,h,opts){
       d[p+2]=b<0?0:b>1?255:b*255;
     }
   }
-  // 10. de-halo, then 11. optical glow (halation + bloom), then 12. film grain — all spatial, so post-pass
-  if(O.dehalo)applyDehalo(d,w,h,O);
+  // 10. optical glow (halation + bloom), then 11. film grain — both spatial, so post-pass
   if(O.hal||O.bloom)applyGlow(d,w,h,O);
   if(O.grain&&!(opts&&opts.noGrain))applyGrain(d,w,h,O,!!P.mono);
   ctx.putImageData(id,0,0);
 }
 
-// De-halo: undo phone-sharpening ringing by soft-compressing the high-frequency luminance
-// detail (the same "detail layer" that oversharpening amplifies into edge fringes). A blurred
-// luminance stands in for the low-frequency image; detail = luminance - blur. Small swings
-// (real micro-texture) pass through nearly untouched, but large swings (the halos) get pulled
-// hard toward zero, since the compression grows with |detail|. Applied as a luminance-only
-// shift so colour/chroma stay put.
-function applyDehalo(d,w,h,O){
-  const n=w*h, L=new Float32Array(n);
-  for(let y=0,p=0;y<h;y++)for(let x=0;x<w;x++,p+=4)L[y*w+x]=0.299*d[p]/255+0.587*d[p+1]/255+0.114*d[p+2]/255;
-  const B=L.slice();boxBlur(B,w,h,2,2);
-  const k=O.dehalo*7;
-  for(let i=0,p=0;i<n;i++,p+=4){
-    const detail=L[i]-B[i];
-    const delta=(detail/(1+k*Math.abs(detail))-detail)*255;
-    if(delta){
-      const r=d[p]+delta, g=d[p+1]+delta, b=d[p+2]+delta;
-      d[p]=r<0?0:r>255?255:r; d[p+1]=g<0?0:g>255?255:g; d[p+2]=b<0?0:b>255?255:b;
-    }
-  }
-}
 // Separable box blur on a small float buffer (clamped edges), in place.
 function boxBlur(a,w,h,rad,passes){
   const t=new Float32Array(Math.max(w,h)), n=2*rad+1;
@@ -1387,14 +1356,12 @@ const ADJ=[
   {k:'contrast',   label:'Contraste',      min:-100,max:100,step:1},
   {k:'highlights', label:'Hautes lumières',min:-100,max:100,step:1},
   {k:'shadows',    label:'Ombres',         min:-100,max:100,step:1},
-  {k:'toneRecover',label:'Tonalité',       min:0,   max:100,step:1},
   {k:'saturation', label:'Saturation',     min:-100,max:100,step:1},
   {k:'temperature',label:'Température',     min:-100,max:100,step:1},
   {k:'tint',       label:'Teinte',         min:-100,max:100,step:1},
   {k:'intensity',  label:'Intensité',      min:0,   max:100,step:1,def:100},
   {k:'grain',      label:'Grain',          min:0,   max:100,step:1},
   {k:'grainSize',  label:'Taille du grain',min:0,   max:100,step:1,def:40},
-  {k:'dehalo',     label:'Halos',          min:0,   max:100,step:1},
   {k:'halation',   label:'Halation',       min:0,   max:100,step:1},
   {k:'bloom',      label:'Bloom',          min:0,   max:100,step:1},
   {k:'vignette',   label:'Vignettage',     min:0,   max:100,step:1},
@@ -1498,8 +1465,6 @@ const ADJ_ICON={
   halation:'M7 11H1v2h6v-2zm2.17-3.24L7.05 5.64 5.64 7.05l2.12 2.12 1.41-1.41zM13 1h-2v6h2V1zm5.36 6.05-1.41-1.41-2.12 2.12 1.41 1.41 2.12-2.12zM17 11v2h6v-2h-6zm-5-2c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm2.83 7.24 2.12 2.12 1.41-1.41-2.12-2.12-1.41 1.41zm-9.19.71 1.41 1.41 2.12-2.12-1.41-1.41-2.12 2.12zM11 23h2v-6h-2v6z',
   bloom:'M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z',
   fade:'M11 9h2v2h-2V9zm-2 2h2v2H9v-2zm4 0h2v2h-2v-2zm2-2h2v2h-2V9zM7 9h2v2H7V9zm12-6H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 13h2v2H7v-2zm8 0h2v2h-2v-2zm-4 0h2v2h-2v-2z',
-  toneRecover:'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 15h2v2H7zm4-4h2v6h-2zm4-4h2v10h-2z',
-  dehalo:'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM8 8h8v8H8zM10 14h4v-4H10z',
 };
 const TAB_ICON={
   presets:'M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25z',
