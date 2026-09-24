@@ -201,13 +201,15 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .camov.show{opacity:1;pointer-events:auto}
 .camov[hidden]{display:none}
 #camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+#camVideo.mirror{transform:scaleX(-1)}
 .camMask{position:absolute;left:0;width:100%;height:0;background:rgba(0,0,0,.55);pointer-events:none;
   transition:height .15s}
 #camMaskTop{top:0;border-bottom:1px solid rgba(255,255,255,.5)}
 #camMaskBot{bottom:0;border-top:1px solid rgba(255,255,255,.5)}
-.camClose,.camLock{position:absolute;top:calc(var(--safe-t) + 14px);color:#fff;background:rgba(0,0,0,.4);
+.camClose,.camLock,.camSwitch{position:absolute;top:calc(var(--safe-t) + 14px);color:#fff;background:rgba(0,0,0,.4);
   border:1px solid rgba(255,255,255,.25);transition:.15s}
 .camClose{left:14px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center}
+.camSwitch{left:64px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center}
 .camLock{right:14px;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;font-size:13px;font-weight:600}
 .camLock svg{flex:none}
 .camLock.on{background:#F9F4EE;color:#141414;border-color:#F9F4EE}
@@ -455,6 +457,9 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   <div class="camFocus" id="camFocus"></div>
   <button class="camClose" id="camClose" aria-label="Fermer l'appareil photo" title="Fermer">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+  </button>
+  <button class="camSwitch" id="camSwitch" aria-label="Changer de caméra (avant/arrière)" title="Changer de caméra">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path></svg>
   </button>
   <button class="camLock" id="camLock" aria-label="Verrouiller la mise au point" title="Verrouiller la mise au point" aria-pressed="false">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm3 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"></path></svg>
@@ -1721,7 +1726,7 @@ $('#camInput').addEventListener('change',e=>{addPhotos(e.target.files,true,true)
 //// ---------- IN-APP CAMERA (tap-to-focus + lock, brightness preview before shooting) ----------
 // Falls back to the native system camera (#camInput) whenever getUserMedia — or a capability
 // it needs — isn't available, so the shutter never dead-ends on an unsupported browser.
-let camStream=null, camTrack=null, camCaps=null, camFocusLocked=false, camBrightVal=0;
+let camStream=null, camTrack=null, camCaps=null, camFocusLocked=false, camBrightVal=0, camFacing='environment';
 const camSupported=()=>!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
 // default capture format: 2:3 (portrait) — matches the app's mobile-only, portrait-held use.
 // The viewfinder masks down to this frame live, and the shutter crops the sensor to match,
@@ -1734,18 +1739,11 @@ function updateCamMask(){
   $('#camMaskTop').style.height=bar+'px';
   $('#camMaskBot').style.height=bar+'px';
 }
-async function openCamera(){
-  if(!camSupported()){$('#camInput').click();return;}
-  const ov=$('#camOv');
-  ov.hidden=false; requestAnimationFrame(()=>{ov.classList.add('show');updateCamMask();});
-  camFocusLocked=false; camBrightVal=0;
-  $('#camBrightRange').value=0; $('#camVideo').style.filter='';
-  updateCamLockUI();
-  try{
-    camStream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1920}},audio:false});
-  }catch(e){closeCamera();toast('Caméra indisponible');return;}
+async function startCamStream(){
+  camStream=await navigator.mediaDevices.getUserMedia({
+    video:{facingMode:{ideal:camFacing},width:{ideal:1920},height:{ideal:1920}},audio:false});
   $('#camVideo').srcObject=camStream;
+  $('#camVideo').classList.toggle('mirror',camFacing==='user');   // selfie preview reads naturally, mirrored
   camTrack=camStream.getVideoTracks()[0];
   camCaps=(camTrack.getCapabilities&&camTrack.getCapabilities())||{};
   // manual focus lock needs the track to support switching focusMode itself — most mobile
@@ -1754,6 +1752,24 @@ async function openCamera(){
   const lockBtn=$('#camLock');
   lockBtn.setAttribute('aria-disabled',lockable?'false':'true');
   lockBtn.title=lockable?'Verrouiller la mise au point':'Verrouillage non pris en charge sur cet appareil';
+}
+async function openCamera(){
+  if(!camSupported()){$('#camInput').click();return;}
+  const ov=$('#camOv');
+  ov.hidden=false; requestAnimationFrame(()=>{ov.classList.add('show');updateCamMask();});
+  camFacing='environment'; camFocusLocked=false; camBrightVal=0;
+  $('#camBrightRange').value=0; $('#camVideo').style.filter='';
+  updateCamLockUI();
+  try{await startCamStream();}catch(e){closeCamera();toast('Caméra indisponible');return;}
+}
+async function toggleCamFacing(){
+  if(!camStream)return;
+  const prev=camFacing;
+  camFacing=camFacing==='environment'?'user':'environment';
+  camStream.getTracks().forEach(t=>t.stop());
+  camFocusLocked=false; updateCamLockUI();
+  try{await startCamStream();}
+  catch(e){camFacing=prev;try{await startCamStream();}catch(e2){closeCamera();toast('Caméra indisponible');}}
 }
 function closeCamera(){
   const ov=$('#camOv');
@@ -1807,7 +1823,9 @@ function capturePhoto(){
   let sx=0,sy=0,sw=vw,sh=vh;
   if(vw/vh>CAM_AR){sw=vh*CAM_AR;sx=(vw-sw)/2;} else {sh=vw/CAM_AR;sy=(vh-sh)/2;}
   c.width=Math.round(sw);c.height=Math.round(sh);
-  c.getContext('2d').drawImage(video,sx,sy,sw,sh,0,0,c.width,c.height);
+  const ctx=c.getContext('2d');
+  if(camFacing==='user'){ctx.translate(c.width,0);ctx.scale(-1,1);}   // save selfies mirrored, matching the preview
+  ctx.drawImage(video,sx,sy,sw,sh,0,0,c.width,c.height);
   const bv=camBrightVal;
   c.toBlob(blob=>{
     if(!blob){toast('Capture impossible');return;}
@@ -1817,6 +1835,7 @@ function capturePhoto(){
   },'image/jpeg',0.92);
 }
 $('#camClose').onclick=closeCamera;
+$('#camSwitch').onclick=toggleCamFacing;
 $('#camLock').onclick=toggleCamLock;
 $('#camShutter').onclick=capturePhoto;
 $('#camBrightRange').addEventListener('input',camBrightInput);
