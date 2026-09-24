@@ -274,12 +274,21 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .crop-box::after{background:
   linear-gradient(0deg,transparent calc(33.33% - .5px),#F9F4EE calc(33.33% - .5px),#F9F4EE calc(33.33% + .5px),transparent calc(33.33% + .5px)),
   linear-gradient(0deg,transparent calc(66.66% - .5px),#F9F4EE calc(66.66% - .5px),#F9F4EE calc(66.66% + .5px),transparent calc(66.66% + .5px))}
-.crop-h{position:absolute;width:30px;height:30px;z-index:2}
+.crop-h{position:absolute;width:44px;height:44px;z-index:2;touch-action:none}   /* 44px = accessible min touch target */
 .crop-h::before{content:"";position:absolute;width:16px;height:16px;border:2px solid #F9F4EE;border-radius:1px}
-.crop-h.tl{left:-15px;top:-15px}.crop-h.tl::before{left:0;top:0;border-right:none;border-bottom:none}
-.crop-h.tr{right:-15px;top:-15px}.crop-h.tr::before{right:0;top:0;border-left:none;border-bottom:none}
-.crop-h.bl{left:-15px;bottom:-15px}.crop-h.bl::before{left:0;bottom:0;border-right:none;border-top:none}
-.crop-h.br{right:-15px;bottom:-15px}.crop-h.br::before{right:0;bottom:0;border-left:none;border-top:none}
+.crop-h.tl{left:-22px;top:-22px}.crop-h.tl::before{left:6px;top:6px;border-right:none;border-bottom:none}
+.crop-h.tr{right:-22px;top:-22px}.crop-h.tr::before{right:6px;top:6px;border-left:none;border-bottom:none}
+.crop-h.bl{left:-22px;bottom:-22px}.crop-h.bl::before{left:6px;bottom:6px;border-right:none;border-top:none}
+.crop-h.br{right:-22px;bottom:-22px}.crop-h.br::before{right:6px;bottom:6px;border-left:none;border-top:none}
+/* edge handles — drag any side with one finger; free-ratio only (ratio-locked keeps corner-only) */
+.crop-h.edge::before{border:none;background:#F9F4EE;border-radius:2px}
+.crop-h.t,.crop-h.b{left:50%;width:64px;height:28px;margin-left:-32px;cursor:ns-resize}
+.crop-h.l,.crop-h.r{top:50%;width:28px;height:64px;margin-top:-32px;cursor:ew-resize}
+.crop-h.t{top:-14px}.crop-h.b{bottom:-14px}
+.crop-h.l{left:-14px}.crop-h.r{right:-14px}
+.crop-h.t::before,.crop-h.b::before{left:50%;top:50%;width:26px;height:3px;transform:translate(-50%,-50%)}
+.crop-h.l::before,.crop-h.r::before{left:50%;top:50%;width:3px;height:26px;transform:translate(-50%,-50%)}
+.crop-box:not(.free) .crop-h.edge{display:none}   /* ratio locked: corners only, so the ratio can't be broken by mistake */
 /* straighten: hide the box, show a full rule-of-thirds grid over the WYSIWYG result */
 .crop.tilt .crop-box{display:none}
 .crop-grid{position:absolute;inset:0;pointer-events:none;display:none;opacity:.4;
@@ -515,6 +524,10 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
         <span class="crop-h tr" data-c="tr"></span>
         <span class="crop-h bl" data-c="bl"></span>
         <span class="crop-h br" data-c="br"></span>
+        <span class="crop-h edge t" data-c="t"></span>
+        <span class="crop-h edge b" data-c="b"></span>
+        <span class="crop-h edge l" data-c="l"></span>
+        <span class="crop-h edge r" data-c="r"></span>
       </div>
     </div>
   </div>
@@ -2082,7 +2095,7 @@ function arnFor(r){if(r==null)return null;const [IW,IH]=cropSrcWH();const R=(r==
 // displayed image rect inside #preview (object-fit: contain)
 function imgDispRect(){
   const pv=$('#preview').getBoundingClientRect();const [IW,IH]=cropSrcWH();
-  const PAD=26;                              // room around the full-frame box for the corner handles
+  const PAD=30;                              // room around the full-frame box for the corner/edge handles
   const aw=Math.max(1,pv.width-2*PAD),ah=Math.max(1,pv.height-2*PAD);
   const s=Math.min(aw/IW,ah/IH),dW=IW*s,dH=IH*s;
   return {left:(pv.width-dW)/2,top:(pv.height-dH)/2,w:dW,h:dH};
@@ -2157,6 +2170,7 @@ function buildCropMenu(menu){
 }
 function setCropRatio(key){
   cropARkey=key;cropARn=arnFor((CROP_RATIOS.find(c=>c.k===key)||{}).r);markCropRatios();
+  $('#cropBox').classList.toggle('free',!cropARn);   // free ratio → also show the edge handles
   if(cropARn){                                   // snap to the largest box of this ratio, kept around the current centre
     const cx=cropDraft.x+cropDraft.w/2, cy=cropDraft.y+cropDraft.h/2;
     let w=1,h=w/cropARn; if(h>1){h=1;w=h*cropARn;}
@@ -2186,6 +2200,14 @@ function resizeCropCorner(corner,s,dnx,dny){
     cropDraft={x:dirX>0?ax:ax-w, y:dirY>0?ay:ay-h, w, h};
   }
 }
+// single-edge drag (free ratio only) — resize one side, opposite side stays put
+function resizeCropEdge(edge,s,dnx,dny){
+  const MIN=0.07;
+  if(edge==='l'){const r=s.x+s.w,nx=clamp(s.x+dnx,0,r-MIN);cropDraft={...s,x:nx,w:r-nx};}
+  else if(edge==='r'){cropDraft={...s,w:clamp(s.w+dnx,MIN,1-s.x)};}
+  else if(edge==='t'){const b=s.y+s.h,ny=clamp(s.y+dny,0,b-MIN);cropDraft={...s,y:ny,h:b-ny};}
+  else if(edge==='b'){cropDraft={...s,h:clamp(s.h+dny,MIN,1-s.y)};}
+}
 (function cropDrag(){
   const ov=$('#crop');let active=null;
   ov.addEventListener('pointerdown',e=>{
@@ -2200,7 +2222,8 @@ function resizeCropCorner(corner,s,dnx,dny){
   ov.addEventListener('pointermove',e=>{
     if(!active)return;
     const dnx=(e.clientX-active.px)/active.R.w, dny=(e.clientY-active.py)/active.R.h, s=active.start;
-    if(active.corner)resizeCropCorner(active.corner,s,dnx,dny);
+    if(active.corner==='t'||active.corner==='b'||active.corner==='l'||active.corner==='r')resizeCropEdge(active.corner,s,dnx,dny);
+    else if(active.corner)resizeCropCorner(active.corner,s,dnx,dny);
     else cropDraft={x:clamp(s.x+dnx,0,1-s.w),y:clamp(s.y+dny,0,1-s.h),w:s.w,h:s.h};
     layoutCropBox();
   });
@@ -2212,6 +2235,7 @@ function enterCrop(){
   cropMode=true;toolK=null;cropDraft=cropN?{...cropN}:{x:0,y:0,w:1,h:1,rot:0,kv:0,kh:0,o:0};
   cropDraft.rot=cropDraft.rot||0;cropDraft.kv=cropDraft.kv||0;cropDraft.kh=cropDraft.kh||0;cropDraft.o=cropDraft.o||0;
   cropARkey='free';cropARn=null;
+  $('#cropBox').classList.add('free');
   $('#crop').hidden=false;$('#crop').classList.toggle('tilt',geoActive(cropDraft));
   renderDock();paintPreview();                   // ratio chips + straighten + ✕/✓ in the dock
   requestAnimationFrame(layoutCropBox);
