@@ -327,12 +327,12 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .ed-rail.editing{flex-direction:column;align-items:stretch;gap:11px;padding:16px 20px}
 .tool-val{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--txt)}
 /* two-tab menu */
-.ed-menu{display:flex;align-items:stretch;border-top:1px solid var(--line);padding-bottom:var(--safe-b)}
+.ed-menu{display:flex;align-items:stretch;border-top:1px solid var(--line);padding-bottom:var(--safe-b);background:#292929}
 .ed-menu .m{flex:1;padding:11px 6px;background:none;font-size:12px;font-weight:600;letter-spacing:.2px;
-  color:var(--txt3);transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+  color:#EFE9E2;opacity:.6;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}
 .ed-menu .m svg{display:block}
-.ed-menu .m:hover{color:var(--txt2)}
-.ed-menu .m.on{color:var(--accent)}
+.ed-menu .m:hover{opacity:.8}
+.ed-menu .m.on{opacity:1}
 /* tool-edit menu = cancel · label · confirm */
 .ed-menu.editing{align-items:center;padding:5px 8px;padding-bottom:calc(var(--safe-b) + 5px)}
 .ed-menu .ticon{flex:none;width:60px;height:44px;display:grid;place-items:center;background:none;color:var(--txt)}
