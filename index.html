@@ -196,41 +196,6 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .mxpick[aria-disabled="true"]{opacity:.35}
 .mxempty{padding:2px 0 14px;font-size:12px;color:var(--txt3);text-align:center}
 
-/* in-app camera — tap-to-focus (+ lock) and a brightness preview before shooting */
-.camov{position:fixed;inset:0;z-index:400;background:#000;opacity:0;pointer-events:none;transition:opacity .2s}
-.camov.show{opacity:1;pointer-events:auto}
-.camov[hidden]{display:none}
-#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
-#camVideo.mirror{transform:scaleX(-1)}
-.camMask{position:absolute;left:0;width:100%;height:0;background:rgba(0,0,0,.55);pointer-events:none;
-  transition:height .15s}
-#camMaskTop{top:0;border-bottom:1px solid rgba(255,255,255,.5)}
-#camMaskBot{bottom:0;border-top:1px solid rgba(255,255,255,.5)}
-.camClose,.camLock,.camSwitch{position:absolute;top:calc(var(--safe-t) + 14px);color:#fff;background:rgba(0,0,0,.4);
-  border:1px solid rgba(255,255,255,.25);transition:.15s}
-.camClose{left:14px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center}
-.camSwitch{left:64px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center}
-.camLock{right:14px;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;font-size:13px;font-weight:600}
-.camLock svg{flex:none}
-.camLock.on{background:#F9F4EE;color:#141414;border-color:#F9F4EE}
-.camLock[aria-disabled="true"]{opacity:.35;pointer-events:none}
-.camFocus{position:absolute;left:-100px;top:-100px;width:64px;height:64px;margin:-32px 0 0 -32px;
-  border:2px solid #fff;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .15s}
-.camFocus.show{opacity:1;animation:camFocusPulse .4s ease}
-.camFocus.locked{border-color:#F9F4EE}
-@keyframes camFocusPulse{from{transform:scale(1.35)}to{transform:scale(1)}}
-.camBright{position:absolute;left:20px;right:20px;bottom:calc(var(--safe-b) + 112px);
-  display:flex;align-items:center;gap:10px;color:#fff}
-.camBright svg{flex:none;opacity:.85}
-.camBright input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;
-  background:rgba(255,255,255,.35);outline-offset:8px}
-.camBright input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
-  background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
-.camBright input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:none}
-.camShutter{position:absolute;left:50%;bottom:calc(var(--safe-b) + 26px);transform:translateX(-50%);
-  width:70px;height:70px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.55)}
-.camShutter:active{transform:translateX(-50%) scale(.9)}
-
 /* ---------- DETAIL / EDITOR ---------- */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);opacity:0;
   pointer-events:none;transition:.25s;z-index:50}
@@ -446,30 +411,6 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
     <svg class="ic-def" width="25" height="25" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path></svg>
     <svg class="ic-sel" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
   </button>
-</div>
-<!-- in-app camera: tap-to-focus (+ lock) and a brightness preview before shooting -->
-<div class="camov" id="camOv" hidden>
-  <video id="camVideo" playsinline autoplay muted></video>
-  <canvas id="camCanvas" hidden></canvas>
-  <!-- letterbox guide: shows the 2:3 frame that will actually be kept, so shooting is WYSIWYG -->
-  <div class="camMask" id="camMaskTop"></div>
-  <div class="camMask" id="camMaskBot"></div>
-  <div class="camFocus" id="camFocus"></div>
-  <button class="camClose" id="camClose" aria-label="Fermer l'appareil photo" title="Fermer">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
-  </button>
-  <button class="camSwitch" id="camSwitch" aria-label="Changer de caméra (avant/arrière)" title="Changer de caméra">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path></svg>
-  </button>
-  <button class="camLock" id="camLock" aria-label="Verrouiller la mise au point" title="Verrouiller la mise au point" aria-pressed="false">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm3 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"></path></svg>
-    <span>Mise au point</span>
-  </button>
-  <div class="camBright">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.76 4.84 4.96 3.05 3.55 4.46l1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7 1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91 1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"></path></svg>
-    <input type="range" id="camBrightRange" min="-100" max="100" step="1" value="0" aria-label="Luminosité">
-  </div>
-  <button class="camShutter" id="camShutter" aria-label="Prendre la photo" title="Prendre la photo"></button>
 </div>
 <!-- native system camera (capture) + library import file inputs -->
 <input id="camInput" type="file" accept="image/*" capture="environment" hidden>
@@ -1723,126 +1664,6 @@ async function addPhotos(files, openIfSingle, fromCamera, initVals){
 $('#upload').addEventListener('change',e=>{addPhotos(e.target.files,true,false);e.target.value='';});          // import → no default crop
 $('#camInput').addEventListener('change',e=>{addPhotos(e.target.files,true,true);e.target.value='';});        // camera → default 2:3 crop
 
-//// ---------- IN-APP CAMERA (tap-to-focus + lock, brightness preview before shooting) ----------
-// Falls back to the native system camera (#camInput) whenever getUserMedia — or a capability
-// it needs — isn't available, so the shutter never dead-ends on an unsupported browser.
-let camStream=null, camTrack=null, camCaps=null, camFocusLocked=false, camBrightVal=0, camFacing='environment';
-const camSupported=()=>!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
-// default capture format: 2:3 (portrait) — matches the app's mobile-only, portrait-held use.
-// The viewfinder masks down to this frame live, and the shutter crops the sensor to match,
-// so what's on screen while shooting IS what gets saved (no surprise post-hoc crop).
-const CAM_AR=2/3;
-function updateCamMask(){
-  const video=$('#camVideo'), bw=video.clientWidth, bh=video.clientHeight;
-  if(!bw||!bh)return;
-  const bar=bw/bh<CAM_AR?Math.max(0,(bh-bw/CAM_AR)/2):0;   // portrait screens only: letterbox top/bottom
-  $('#camMaskTop').style.height=bar+'px';
-  $('#camMaskBot').style.height=bar+'px';
-}
-async function startCamStream(){
-  camStream=await navigator.mediaDevices.getUserMedia({
-    video:{facingMode:{ideal:camFacing},width:{ideal:1920},height:{ideal:1920}},audio:false});
-  $('#camVideo').srcObject=camStream;
-  $('#camVideo').classList.toggle('mirror',camFacing==='user');   // selfie preview reads naturally, mirrored
-  camTrack=camStream.getVideoTracks()[0];
-  camCaps=(camTrack.getCapabilities&&camTrack.getCapabilities())||{};
-  // manual focus lock needs the track to support switching focusMode itself — most mobile
-  // browsers (notably iOS Safari) don't expose it at all, so the button degrades to disabled.
-  const lockable=Array.isArray(camCaps.focusMode)&&camCaps.focusMode.includes('manual');
-  const lockBtn=$('#camLock');
-  lockBtn.setAttribute('aria-disabled',lockable?'false':'true');
-  lockBtn.title=lockable?'Verrouiller la mise au point':'Verrouillage non pris en charge sur cet appareil';
-}
-async function openCamera(){
-  if(!camSupported()){$('#camInput').click();return;}
-  const ov=$('#camOv');
-  ov.hidden=false; requestAnimationFrame(()=>{ov.classList.add('show');updateCamMask();});
-  camFacing='environment'; camFocusLocked=false; camBrightVal=0;
-  $('#camBrightRange').value=0; $('#camVideo').style.filter='';
-  updateCamLockUI();
-  try{await startCamStream();}catch(e){closeCamera();toast('Caméra indisponible');return;}
-}
-async function toggleCamFacing(){
-  if(!camStream)return;
-  const prev=camFacing;
-  camFacing=camFacing==='environment'?'user':'environment';
-  camStream.getTracks().forEach(t=>t.stop());
-  camFocusLocked=false; updateCamLockUI();
-  try{await startCamStream();}
-  catch(e){camFacing=prev;try{await startCamStream();}catch(e2){closeCamera();toast('Caméra indisponible');}}
-}
-function closeCamera(){
-  const ov=$('#camOv');
-  ov.classList.remove('show');
-  setTimeout(()=>{ov.hidden=true;},200);
-  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
-  camTrack=null;camCaps=null;camFocusLocked=false;
-  $('#camFocus').classList.remove('show','locked');
-}
-async function camTapFocus(ev){
-  if(!camTrack||camFocusLocked)return;
-  const video=$('#camVideo'), r=video.getBoundingClientRect();
-  const cx=ev.clientX, cy=ev.clientY;
-  const nx=clamp((cx-r.left)/r.width,0,1), ny=clamp((cy-r.top)/r.height,0,1);
-  const fo=$('#camFocus');
-  fo.style.left=(cx-r.left)+'px'; fo.style.top=(cy-r.top)+'px';
-  fo.classList.remove('show');void fo.offsetWidth;fo.classList.add('show');
-  if(camCaps&&Array.isArray(camCaps.focusMode)&&camCaps.focusMode.length){
-    try{await camTrack.applyConstraints({advanced:[{pointsOfInterest:[{x:nx,y:ny}]}]});}catch(e){}
-  }
-}
-async function toggleCamLock(){
-  if(!camTrack||!camCaps)return;
-  if(!Array.isArray(camCaps.focusMode)||!camCaps.focusMode.includes('manual')){
-    toast('Verrouillage non pris en charge sur cet appareil');return;
-  }
-  try{
-    await camTrack.applyConstraints({advanced:[{focusMode:camFocusLocked?'continuous':'manual'}]});
-    camFocusLocked=!camFocusLocked;
-    updateCamLockUI();
-    toast(camFocusLocked?'Mise au point verrouillée':'Mise au point automatique');
-  }catch(e){toast('Verrouillage impossible');}
-}
-function updateCamLockUI(){
-  const b=$('#camLock');
-  b.classList.toggle('on',camFocusLocked);
-  b.setAttribute('aria-pressed',camFocusLocked?'true':'false');
-  $('#camFocus').classList.toggle('locked',camFocusLocked);
-}
-function camBrightInput(e){
-  camBrightVal=+e.target.value;
-  // preview only — the value travels with the photo as its initial (still editable) brightness,
-  // the raw frame is captured untouched so nothing is baked/clipped into the saved JPEG
-  $('#camVideo').style.filter=camBrightVal?`brightness(${(1+camBrightVal/100*0.5).toFixed(3)})`:'';
-}
-function capturePhoto(){
-  if(!camTrack)return;
-  const video=$('#camVideo'), c=$('#camCanvas');
-  const vw=video.videoWidth||1280, vh=video.videoHeight||720;
-  // crop the raw sensor frame to the 2:3 guide shown live in the mask — WYSIWYG capture
-  let sx=0,sy=0,sw=vw,sh=vh;
-  if(vw/vh>CAM_AR){sw=vh*CAM_AR;sx=(vw-sw)/2;} else {sh=vw/CAM_AR;sy=(vh-sh)/2;}
-  c.width=Math.round(sw);c.height=Math.round(sh);
-  const ctx=c.getContext('2d');
-  if(camFacing==='user'){ctx.translate(c.width,0);ctx.scale(-1,1);}   // save selfies mirrored, matching the preview
-  ctx.drawImage(video,sx,sy,sw,sh,0,0,c.width,c.height);
-  const bv=camBrightVal;
-  c.toBlob(blob=>{
-    if(!blob){toast('Capture impossible');return;}
-    const file=new File([blob],'camera-'+Date.now()+'.jpg',{type:'image/jpeg'});
-    closeCamera();
-    addPhotos([file],true,true,bv?{brightness:bv}:null);
-  },'image/jpeg',0.92);
-}
-$('#camClose').onclick=closeCamera;
-$('#camSwitch').onclick=toggleCamFacing;
-$('#camLock').onclick=toggleCamLock;
-$('#camShutter').onclick=capturePhoto;
-$('#camBrightRange').addEventListener('input',camBrightInput);
-$('#camVideo').addEventListener('click',camTapFocus);
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&camStream)closeCamera();});
-window.addEventListener('resize',()=>{if(!$('#camOv').hidden)updateCamMask();});
-
 //// ---------- SURIMPRESSION (double / triple exposition) ----------
 // An EDIT SETTING, not a capture mode: 1 or 2 library photos are stacked onto the photo being
 // edited. It stays non-destructive — `edit.mx` holds {ids, mode, opacity} and the blend happens
@@ -2273,7 +2094,7 @@ window.addEventListener('resize',()=>{if(cropMode)layoutCropBox();});
 // The OS camera handles capture (best quality, native aspect, no custom UI);
 // the look is then applied & tweaked in the editor.
 // FABs double as selection actions: Caméra→Télécharger, Import→Supprimer while selecting
-$('#fabCam').onclick=()=>{ if(selectMode)exportSelected(); else openCamera(); };
+$('#fabCam').onclick=()=>{ if(selectMode)exportSelected(); else $('#camInput').click(); };
 $('#fabImport').onclick=()=>{ if(selectMode)deleteSelected(); else $('#upload').click(); };
 
 //// foot buttons
