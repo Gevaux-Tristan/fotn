@@ -754,21 +754,23 @@ function renderRecipe(src,P,A,canvas,w,h,opts){
       r*=O.rG*O.exp; g*=O.gG*O.exp; b*=O.bG*O.exp;
       // 1b. brightness (flat additive lift, unlike exposure's multiplicative stops)
       if(O.bri){r+=O.bri; g+=O.bri; b+=O.bri;}
-      // 2. film colour matrix
-      let nr=r*mx[0]+g*mx[1]+b*mx[2];
-      let ng=r*mx[3]+g*mx[4]+b*mx[5];
-      let nb=r*mx[6]+g*mx[7]+b*mx[8];
-      r=nr;g=ng;b=nb;
+      // 2. film colour matrix (skip when identity — true for every current LUT-only preset)
+      if(mx!==I3){
+        const nr=r*mx[0]+g*mx[1]+b*mx[2];
+        const ng=r*mx[3]+g*mx[4]+b*mx[5];
+        const nb=r*mx[6]+g*mx[7]+b*mx[8];
+        r=nr;g=ng;b=nb;
+      }
       let lum=0.299*r+0.587*g+0.114*b;
-      // 3. saturation
-      r=lum+(r-lum)*O.sat; g=lum+(g-lum)*O.sat; b=lum+(b-lum)*O.sat;
+      // 3. saturation (skip when neutral)
+      if(O.sat!==1){r=lum+(r-lum)*O.sat; g=lum+(g-lum)*O.sat; b=lum+(b-lum)*O.sat;}
       // 4. split-tone (shadows / highlights)
       if(O.split){
         const sF=lum<0.5?(0.5-lum)*2:0, hF=lum>0.5?(lum-0.5)*2:0, sp=O.split;
         r+=(O.splitS[0]*sF+O.splitH[0]*hF)*sp; g+=(O.splitS[1]*sF+O.splitH[1]*hF)*sp; b+=(O.splitS[2]*sF+O.splitH[2]*hF)*sp;
       }
-      // 5. contrast (pivot 0.5)
-      r=(r-0.5)*O.con+0.5; g=(g-0.5)*O.con+0.5; b=(b-0.5)*O.con+0.5;
+      // 5. contrast (pivot 0.5, skip when neutral)
+      if(O.con!==1){r=(r-0.5)*O.con+0.5; g=(g-0.5)*O.con+0.5; b=(b-0.5)*O.con+0.5;}
       // 6. highlight / shadow tone
       lum=0.299*r+0.587*g+0.114*b;
       if(O.hi&&lum>0.45){const f=(lum-0.45)/0.55*O.hi*0.028;r+=f;g+=f;b+=f;}
