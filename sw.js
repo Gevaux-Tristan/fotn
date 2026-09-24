@@ -1,8 +1,9 @@
 // fotn service worker — offline app shell + asset cache
-const CACHE = 'fotn-v17';
+const CACHE = 'fotn-v18';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './generic.jpg?v=2',
+  './fonts/anaheim-latin.woff2?v=1',
   './favicon.svg?v=11', './icon.svg?v=11', './icon-192.png?v=11', './icon-512.png?v=11', './apple-touch-icon.png?v=11',
   './luts/portra400.png', './luts/pro400h.png', './luts/gold200.png', './luts/colorplus200.png',
   './luts/kodacolor100.png', './luts/ultramax400.png', './luts/velvia100.png', './luts/hp5.png',
@@ -33,22 +34,23 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Page loads: always fetch a FRESH copy (bypass the HTTP cache) so updates show
-  // immediately; fall back to the cached shell only when offline.
+  // Page loads: serve the cached shell INSTANTLY (no blank wait on the network),
+  // then refetch a fresh copy in the background so the next open is up to date.
   if (req.mode === 'navigate') {
     e.respondWith(
-      fetch('./index.html', {cache: 'reload'}).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put('./index.html', copy));
-        return res;
-      }).catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
+      caches.match('./index.html').then(hit => {
+        const update = fetch('./index.html', {cache: 'reload'}).then(res => {
+          caches.open(CACHE).then(c => c.put('./index.html', res.clone()));
+          return res;
+        }).catch(() => hit);
+        return hit || update;
+      })
     );
     return;
   }
 
-  // Same-origin assets + Google Fonts: cache-first, then network (and cache it).
-  const isFont = url.host.includes('fonts.googleapis.com') || url.host.includes('fonts.gstatic.com');
-  if (url.origin === self.location.origin || isFont) {
+  // Same-origin assets: cache-first, then network (and cache it).
+  if (url.origin === self.location.origin) {
     e.respondWith(
       caches.match(req).then(hit => hit || fetch(req).then(res => {
         const copy = res.clone();
