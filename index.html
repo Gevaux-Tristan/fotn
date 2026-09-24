@@ -208,16 +208,16 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   .editor.open{transform:translateX(0)}
 }
 .ed-head{display:flex;align-items:center;gap:8px;padding:calc(var(--safe-t) + 12px) 14px 12px;
-  border-bottom:1px solid var(--line);flex:none}
+  background:#292929;color:#EFE9E2;flex:none}
 .ed-head .x{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:none;display:grid;place-items:center;flex:none;transition:background .15s}
-.ed-head .x:hover{background:var(--panel2)}
+.ed-head .x:hover{background:rgba(255,255,255,.12)}
 .ed-head .x::before,.ed-head .hfav::before{content:"";position:absolute;inset:-5px}  /* ≥44px touch target */
 .ed-head .t{min-width:0;flex:1}
-.ed-head .t h2{margin:0;font-size:18px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ed-head .t h2{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .ed-head .t span{font-size:11px;color:var(--txt3)}
-.ed-head .hfav{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:var(--panel2);display:grid;place-items:center;flex:none;transition:background .15s}
-.ed-head .hfav:hover{background:var(--line2)}
-.ed-head .hfav.on{color:var(--accent)}
+.ed-head .hfav{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:rgba(255,255,255,.1);display:grid;place-items:center;flex:none;transition:background .15s}
+.ed-head .hfav:hover{background:rgba(255,255,255,.18)}
+.ed-head .hfav.on{color:#EFE9E2}
 
 /* preview fills the space above the dock — the photo is the hero */
 .preview{position:relative;width:100%;background:var(--bg2);overflow:hidden;flex:1;min-height:0}
@@ -272,12 +272,12 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 
 /* header action buttons (reset / export) */
 .ed-head .hbtn{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:none;
-  display:grid;place-items:center;flex:none;color:var(--txt);transition:background .15s,filter .15s}
-.ed-head .hbtn:hover{background:var(--panel2)}
+  display:grid;place-items:center;flex:none;color:#EFE9E2;transition:background .15s,filter .15s}
+.ed-head .hbtn:hover{background:rgba(255,255,255,.12)}
 .ed-head .hbtn::before{content:"";position:absolute;inset:-5px}   /* ≥44px touch target */
 .ed-head .hbtn.exp.busy{opacity:.6;pointer-events:none}
-.ed-head .hbtn.save{background:var(--accent);color:var(--ink)}        /* primary action */
-.ed-head .hbtn.save:hover{background:var(--accent);filter:brightness(1.08)}
+.ed-head .hbtn.save{background:#EFE9E2;color:#292929}        /* primary action */
+.ed-head .hbtn.save:hover{background:#EFE9E2;filter:brightness(1.08)}
 .ed-head .hbtn[hidden]{display:none}
 
 /* ---------- EDITOR DOCK (VSCO-style): a rail above a two-tab menu ---------- */
