@@ -1328,17 +1328,24 @@ async function exportBatch(items){
       }
       downloadBlob(rendered[0].blob,f.name);exitSelect();toast('Photo exportée');return;
     }
-    // …multiple photos → ONE zip whose contents live in a FOTN/ folder (unzips to a FOTN folder).
+    // …multiple photos, no folder API (iOS): share the JPEGs directly, one per file — the
+    // system sheet (Photos, Google Photos…) then saves each independently, no unzip needed.
+    const done=(n)=>{exitSelect();toast(n+' photos'+(failed?` (${failed} échec)`:''));};
+    const files=rendered.map(r=>new File([r.blob],r.name,{type:'image/jpeg'}));
+    if(navigator.canShare&&navigator.canShare({files})){
+      try{await navigator.share({files,title:'FOTN'});done(rendered.length);return;}
+      catch(e){if(e&&e.name==='AbortError')return;}
+    }
+    // Fallback (share of many files refused/unsupported) → zip, still under a FOTN/ folder.
     ov.set('Compression…');await nextFrame();
     const entries=rendered.map(r=>({name:'FOTN/'+r.name, blob:r.blob}));
     const zip=await makeZip(entries), zname='FOTN_'+stampCompact()+'.zip';
     const zfile=new File([zip],zname,{type:'application/zip'});
-    const done=()=>{exitSelect();toast(entries.length+' photos → dossier FOTN'+(failed?` (${failed} échec)`:''));};
     if(navigator.canShare&&navigator.canShare({files:[zfile]})){
-      try{await navigator.share({files:[zfile],title:'FOTN'});done();return;}
+      try{await navigator.share({files:[zfile],title:'FOTN'});done(entries.length);return;}
       catch(e){if(e&&e.name==='AbortError')return;}
     }
-    downloadBlob(zip,zname);done();
+    downloadBlob(zip,zname);done(entries.length);
   }catch(e){toast('Export impossible');}
   finally{hideBusy(ov);}
 }
