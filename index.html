@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F9F4EE">
+<meta name="theme-color" content="#EFE9E2">
 <title>fotn</title>
 <meta name="description" content="fotn — presets photo inspirés des pellicules argentiques classiques, à appliquer et régler sur vos photos.">
-<link rel="icon" type="image/svg+xml" href="favicon.svg?v=13">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=13">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=13">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=14">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=14">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=14">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -19,12 +19,12 @@
 <style>
 :root{
   /* Monochrome LIGHT — cream / black / grey (colour lives only in the photos) */
-  --bg:#F9F4EE; --bg2:#f7f7f7; --panel:#f0f0f0; --panel2:#e8e8e8;
+  --bg:#EFE9E2; --bg2:#f7f7f7; --panel:#f0f0f0; --panel2:#e8e8e8;
   --line:#e4e4e4; --line2:#d2d2d2;
   --txt:#292929; --txt2:#595959; --txt3:#8c8c8c;
   --accent:#292929; --accent2:#2c2c2c;   /* "accent" = the darkest neutral, for active/primary */
   --pos:#141414; --neg:#9a9a9a;
-  --ink:#F9F4EE;            /* text/icon colour on the dark accent */
+  --ink:#EFE9E2;            /* text/icon colour on the dark accent */
   /* radius scale */
   --r-lg:16px;             /* cards, sheets */
   --r-md:11px;             /* inputs, buttons, panels, controls */
@@ -103,7 +103,7 @@ header.top{
 .pcard img{width:100%;height:auto;display:block;pointer-events:none}   /* natural ratio, no crop, no radius */
 /* long-press → multi-select mode (checkbox per card) */
 .pcard .pcheck{position:absolute;top:8px;right:8px;z-index:2;width:26px;height:26px;border-radius:50%;
-  display:none;place-items:center;color:#F9F4EE;background:rgba(0,0,0,.32);
+  display:none;place-items:center;color:#EFE9E2;background:rgba(0,0,0,.32);
   box-shadow:0 0 0 2px rgba(249,244,238,.92);transition:background .12s,box-shadow .12s}
 .gallery.selecting .pcheck{display:grid;animation:pdelIn .14s ease}
 .gallery.selecting .pcard{cursor:default}
@@ -209,12 +209,12 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .camSwitch{left:64px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center}
 .camLock{right:14px;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;font-size:13px;font-weight:600}
 .camLock svg{flex:none}
-.camLock.on{background:#F9F4EE;color:#292929;border-color:#F9F4EE}
+.camLock.on{background:#EFE9E2;color:#292929;border-color:#EFE9E2}
 .camLock[aria-disabled="true"]{opacity:.35;pointer-events:none}
 .camFocus{position:absolute;left:-100px;top:-100px;width:64px;height:64px;margin:-32px 0 0 -32px;
   border:2px solid #fff;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .15s}
 .camFocus.show{opacity:1;animation:camFocusPulse .4s ease}
-.camFocus.locked{border-color:#F9F4EE}
+.camFocus.locked{border-color:#EFE9E2}
 @keyframes camFocusPulse{from{transform:scale(1.35)}to{transform:scale(1)}}
 .camBright{position:absolute;left:20px;right:20px;bottom:calc(var(--safe-b) + 112px);
   display:flex;align-items:center;gap:10px;color:#fff}
@@ -268,19 +268,19 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move}
 .crop-box::before,.crop-box::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.32}
 .crop-box::before{background:
-  linear-gradient(90deg,transparent calc(33.33% - .5px),#F9F4EE calc(33.33% - .5px),#F9F4EE calc(33.33% + .5px),transparent calc(33.33% + .5px)),
-  linear-gradient(90deg,transparent calc(66.66% - .5px),#F9F4EE calc(66.66% - .5px),#F9F4EE calc(66.66% + .5px),transparent calc(66.66% + .5px))}
+  linear-gradient(90deg,transparent calc(33.33% - .5px),#EFE9E2 calc(33.33% - .5px),#EFE9E2 calc(33.33% + .5px),transparent calc(33.33% + .5px)),
+  linear-gradient(90deg,transparent calc(66.66% - .5px),#EFE9E2 calc(66.66% - .5px),#EFE9E2 calc(66.66% + .5px),transparent calc(66.66% + .5px))}
 .crop-box::after{background:
-  linear-gradient(0deg,transparent calc(33.33% - .5px),#F9F4EE calc(33.33% - .5px),#F9F4EE calc(33.33% + .5px),transparent calc(33.33% + .5px)),
-  linear-gradient(0deg,transparent calc(66.66% - .5px),#F9F4EE calc(66.66% - .5px),#F9F4EE calc(66.66% + .5px),transparent calc(66.66% + .5px))}
+  linear-gradient(0deg,transparent calc(33.33% - .5px),#EFE9E2 calc(33.33% - .5px),#EFE9E2 calc(33.33% + .5px),transparent calc(33.33% + .5px)),
+  linear-gradient(0deg,transparent calc(66.66% - .5px),#EFE9E2 calc(66.66% - .5px),#EFE9E2 calc(66.66% + .5px),transparent calc(66.66% + .5px))}
 .crop-h{position:absolute;width:44px;height:44px;z-index:2;touch-action:none}   /* 44px = accessible min touch target */
-.crop-h::before{content:"";position:absolute;width:16px;height:16px;border:2px solid #F9F4EE;border-radius:1px}
+.crop-h::before{content:"";position:absolute;width:16px;height:16px;border:2px solid #EFE9E2;border-radius:1px}
 .crop-h.tl{left:-22px;top:-22px}.crop-h.tl::before{left:6px;top:6px;border-right:none;border-bottom:none}
 .crop-h.tr{right:-22px;top:-22px}.crop-h.tr::before{right:6px;top:6px;border-left:none;border-bottom:none}
 .crop-h.bl{left:-22px;bottom:-22px}.crop-h.bl::before{left:6px;bottom:6px;border-right:none;border-top:none}
 .crop-h.br{right:-22px;bottom:-22px}.crop-h.br::before{right:6px;bottom:6px;border-left:none;border-top:none}
 /* edge handles — drag any side with one finger; free-ratio only (ratio-locked keeps corner-only) */
-.crop-h.edge::before{border:none;background:#F9F4EE;border-radius:2px}
+.crop-h.edge::before{border:none;background:#EFE9E2;border-radius:2px}
 .crop-h.t,.crop-h.b{left:50%;width:64px;height:28px;margin-left:-32px;cursor:ns-resize}
 .crop-h.l,.crop-h.r{top:50%;width:28px;height:64px;margin-top:-32px;cursor:ew-resize}
 .crop-h.t{top:-14px}.crop-h.b{bottom:-14px}
@@ -292,10 +292,10 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .crop.tilt .crop-box{display:none}
 .crop-grid{position:absolute;inset:0;pointer-events:none;display:none;opacity:.4;
   background:
-   linear-gradient(90deg,transparent calc(33.33% - .5px),#F9F4EE calc(33.33% - .5px),#F9F4EE calc(33.33% + .5px),transparent calc(33.33% + .5px)),
-   linear-gradient(90deg,transparent calc(66.66% - .5px),#F9F4EE calc(66.66% - .5px),#F9F4EE calc(66.66% + .5px),transparent calc(66.66% + .5px)),
-   linear-gradient(0deg,transparent calc(33.33% - .5px),#F9F4EE calc(33.33% - .5px),#F9F4EE calc(33.33% + .5px),transparent calc(33.33% + .5px)),
-   linear-gradient(0deg,transparent calc(66.66% - .5px),#F9F4EE calc(66.66% - .5px),#F9F4EE calc(66.66% + .5px),transparent calc(66.66% + .5px))}
+   linear-gradient(90deg,transparent calc(33.33% - .5px),#EFE9E2 calc(33.33% - .5px),#EFE9E2 calc(33.33% + .5px),transparent calc(33.33% + .5px)),
+   linear-gradient(90deg,transparent calc(66.66% - .5px),#EFE9E2 calc(66.66% - .5px),#EFE9E2 calc(66.66% + .5px),transparent calc(66.66% + .5px)),
+   linear-gradient(0deg,transparent calc(33.33% - .5px),#EFE9E2 calc(33.33% - .5px),#EFE9E2 calc(33.33% + .5px),transparent calc(33.33% + .5px)),
+   linear-gradient(0deg,transparent calc(66.66% - .5px),#EFE9E2 calc(66.66% - .5px),#EFE9E2 calc(66.66% + .5px),transparent calc(66.66% + .5px))}
 .crop.tilt .crop-grid{display:block}
 /* single-adjustment slider (reused by the tool-edit view) */
 .range{position:relative;height:26px;display:flex;align-items:center}
