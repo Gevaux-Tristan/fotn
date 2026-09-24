@@ -2082,7 +2082,9 @@ function arnFor(r){if(r==null)return null;const [IW,IH]=cropSrcWH();const R=(r==
 // displayed image rect inside #preview (object-fit: contain)
 function imgDispRect(){
   const pv=$('#preview').getBoundingClientRect();const [IW,IH]=cropSrcWH();
-  const s=Math.min(pv.width/IW,pv.height/IH),dW=IW*s,dH=IH*s;
+  const PAD=26;                              // room around the full-frame box for the corner handles
+  const aw=Math.max(1,pv.width-2*PAD),ah=Math.max(1,pv.height-2*PAD);
+  const s=Math.min(aw/IW,ah/IH),dW=IW*s,dH=IH*s;
   return {left:(pv.width-dW)/2,top:(pv.height-dH)/2,w:dW,h:dH};
 }
 function layoutCropBox(){
