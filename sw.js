@@ -1,9 +1,9 @@
 // fotn service worker — offline app shell + asset cache
-const CACHE = 'fotn-v17';
+const CACHE = 'fotn-v20';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './generic.jpg?v=2',
-  './favicon.svg?v=11', './icon.svg?v=11', './icon-192.png?v=11', './icon-512.png?v=11', './apple-touch-icon.png?v=11',
+  './favicon.svg?v=14', './icon.svg?v=14', './icon-192.png?v=14', './icon-512.png?v=14', './apple-touch-icon.png?v=14',
   './luts/portra400.png', './luts/pro400h.png', './luts/gold200.png', './luts/colorplus200.png',
   './luts/kodacolor100.png', './luts/ultramax400.png', './luts/velvia100.png', './luts/hp5.png',
   './luts/signature1.png',
