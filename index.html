@@ -235,13 +235,14 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .crop-box::after{background:
   linear-gradient(0deg,transparent calc(33.33% - .5px),#EFE9E2 calc(33.33% - .5px),#EFE9E2 calc(33.33% + .5px),transparent calc(33.33% + .5px)),
   linear-gradient(0deg,transparent calc(66.66% - .5px),#EFE9E2 calc(66.66% - .5px),#EFE9E2 calc(66.66% + .5px),transparent calc(66.66% + .5px))}
-.crop-h{position:absolute;width:44px;height:44px;z-index:2;touch-action:none}   /* 44px = accessible min touch target */
+.crop-h{position:absolute;width:44px;height:44px;z-index:3;touch-action:none}   /* 44px = accessible min touch target */
 .crop-h::before{content:"";position:absolute;width:16px;height:16px;border:2px solid #EFE9E2;border-radius:1px}
 .crop-h.tl{left:-22px;top:-22px}.crop-h.tl::before{left:6px;top:6px;border-right:none;border-bottom:none}
 .crop-h.tr{right:-22px;top:-22px}.crop-h.tr::before{right:6px;top:6px;border-left:none;border-bottom:none}
 .crop-h.bl{left:-22px;bottom:-22px}.crop-h.bl::before{left:6px;bottom:6px;border-right:none;border-top:none}
 .crop-h.br{right:-22px;bottom:-22px}.crop-h.br::before{right:6px;bottom:6px;border-left:none;border-top:none}
 /* edge handles — drag any side with one finger; free-ratio only (ratio-locked keeps corner-only) */
+.crop-h.edge{z-index:2}   /* corner handles win hit-testing over edges when both overlap on a thin box */
 .crop-h.edge::before{border:none;background:#EFE9E2;border-radius:2px}
 .crop-h.t,.crop-h.b{left:50%;width:64px;height:28px;margin-left:-32px;cursor:ns-resize}
 .crop-h.l,.crop-h.r{top:50%;width:28px;height:64px;margin-top:-32px;cursor:ew-resize}
