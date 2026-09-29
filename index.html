@@ -768,10 +768,11 @@ function boxBlur(a,w,h,rad,passes){
   }
 }
 // Halation (red-orange glow bleeding round highlights, as light bounces off the film base)
-// and bloom (soft white-ish diffusion of the highlights). Computed on a ~128px buffer so
-// the glow scales with the frame: preview, thumbnails and export look the same.
+// and bloom (soft white-ish diffusion of the highlights). Computed on a ~384px buffer so
+// the glow scales with the frame (preview, thumbnails and export look the same) while
+// staying fine enough to hug the actual highlight edges instead of blobbing over them.
 function applyGlow(d,w,h,O){
-  const s=Math.max(1,Math.max(w,h)/128), sw=Math.ceil(w/s), sh=Math.ceil(h/s), n=sw*sh;
+  const s=Math.max(1,Math.max(w,h)/384), sw=Math.ceil(w/s), sh=Math.ceil(h/s), n=sw*sh;
   const H=new Float32Array(n), R=new Float32Array(n), G=new Float32Array(n), B=new Float32Array(n), C=new Float32Array(n);
   for(let y=0,p=0;y<h;y++){const row=((y/s)|0)*sw;
     for(let x=0;x<w;x++,p+=4){
@@ -779,8 +780,8 @@ function applyGlow(d,w,h,O){
       let t=l>0.6?(l-0.6)/0.4:0;t*=t;
       H[i]+=t;R[i]+=t*r;G[i]+=t*g;B[i]+=t*b;C[i]++;}}
   for(let i=0;i<n;i++){const c=C[i]||1;H[i]/=c;R[i]/=c;G[i]/=c;B[i]/=c;}
-  if(O.hal)boxBlur(H,sw,sh,2,3);
-  if(O.bloom){boxBlur(R,sw,sh,5,3);boxBlur(G,sw,sh,5,3);boxBlur(B,sw,sh,5,3);}
+  if(O.hal)boxBlur(H,sw,sh,6,3);
+  if(O.bloom){boxBlur(R,sw,sh,15,3);boxBlur(G,sw,sh,15,3);boxBlur(B,sw,sh,15,3);}
   const hk=O.hal*1.6, bk=O.bloom;
   for(let y=0,p=0;y<h;y++){
     let fy=(y+0.5)/s-0.5;fy=fy<0?0:fy>sh-1?sh-1:fy;const y0=fy|0,y1=y0<sh-1?y0+1:y0,dy=fy-y0;
