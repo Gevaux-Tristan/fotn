@@ -317,9 +317,12 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .crop-chips{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
 .crop-chips::-webkit-scrollbar{display:none}
 .crop-straight{display:flex;align-items:center;gap:11px}
-.crop-straight .range{flex:1}
-.cs-lab{font-size:12px;font-weight:600;color:var(--txt2);white-space:nowrap}
-.cs-val{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--txt);min-width:38px;text-align:right}
+.cs-lab{font-size:12px;font-weight:600;color:var(--txt2);white-space:nowrap;flex:1}
+.cs-btn{width:44px;height:44px;border-radius:50%;background:var(--panel);color:var(--txt);font-size:22px;line-height:1;
+  display:grid;place-items:center;border:1px solid transparent;touch-action:manipulation;user-select:none;transition:.15s}
+.cs-btn:active{background:var(--accent);color:var(--ink)}
+.cs-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent);min-width:58px;text-align:center;padding:8px 0}
+.cs-val.zero{color:var(--txt3)}
 .tchip .tico{display:grid;place-items:center;height:24px;color:var(--txt2);transition:color .15s}
 .tchip .tlabel{font-size:12px;font-weight:600;white-space:nowrap;line-height:1.1}
 .tchip.act{border-color:var(--accent)}
@@ -1994,22 +1997,28 @@ function rotate90(){
   // re-lock the ratio + relayout the box once the preview canvas has its new dimensions
   requestAnimationFrame(()=>requestAnimationFrame(()=>setCropRatio(cropARkey)));
 }
-function geoSlider(label,key,min,max,unit){
+// − / + stepper: one tap = one micro-step, hold = repeat. Can't overshoot the taps made.
+function geoSlider(label,key,min,max,unit,step){
+  step=step||(key==='rot'?0.5:1);
   const row=el('div','crop-straight');row.dataset.key=key;
   const lab=el('span','cs-lab');lab.textContent=label;
-  const range=el('div','range');
-  range.innerHTML='<div class="track"></div><div class="midmark" style="left:50%"></div><div class="fill"></div><input type="range" min="'+min+'" max="'+max+'" step="1" aria-label="'+label+'">';
-  const val=el('span','cs-val');
-  row.appendChild(lab);row.appendChild(range);row.appendChild(val);
-  const inp=range.querySelector('input'), fill=range.querySelector('.fill');
-  row._upd=()=>{const v=cropDraft[key]||0; inp.value=v; val.textContent=(v>0?'+':'')+v+unit;
-    const pct=(v-min)/(max-min)*100;
-    if(v>=0){fill.style.left='50%';fill.style.width=(pct-50)+'%';}else{fill.style.left=pct+'%';fill.style.width=(50-pct)+'%';}
-    fill.style.background=v?'var(--pos)':'var(--neg)';};
+  const mk=(t,aria)=>{const b=el('button','cs-btn');b.type='button';b.textContent=t;b.setAttribute('aria-label',aria+' '+label);return b;};
+  const minus=mk('−','Diminuer'),plus=mk('+','Augmenter');
+  const val=el('button','cs-val');val.type='button';val.title='Remettre à zéro';
+  row.appendChild(lab);row.appendChild(minus);row.appendChild(val);row.appendChild(plus);
+  const fmt=v=>(v>0?'+':'')+(Number.isInteger(v)?v:v.toFixed(1))+unit;
+  row._upd=()=>{const v=cropDraft[key]||0;val.textContent=fmt(v);val.classList.toggle('zero',!v);};
   row._upd();
-  const apply=()=>{cropDraft[key]=parseFloat(inp.value);row._upd();syncTransform();};
-  inp.addEventListener('input',apply);                 // keyboard
-  attachRelativeSlider(inp,apply,apply);               // VSCO-style relative drag (no jump-to-touch)
+  const bump=d=>{const v=Math.round(((cropDraft[key]||0)+d)*100)/100;
+    cropDraft[key]=Math.max(min,Math.min(max,v));row._upd();syncTransform();};
+  const hold=(btn,d)=>{let t=null,iv=null;
+    const stop=()=>{clearTimeout(t);clearInterval(iv);t=iv=null;};
+    btn.addEventListener('pointerdown',e=>{e.preventDefault();bump(d);stop();
+      t=setTimeout(()=>{iv=setInterval(()=>bump(d),90);},450);});
+    ['pointerup','pointerleave','pointercancel','blur'].forEach(ev=>btn.addEventListener(ev,stop));
+    btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();bump(d);}});};
+  hold(minus,-step);hold(plus,step);
+  val.onclick=()=>{cropDraft[key]=0;row._upd();syncTransform();};   // tap value = reset
   return row;
 }
 function syncTransform(){
