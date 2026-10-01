@@ -651,8 +651,9 @@ function buildOps(P,A){
   const hal=clamp((P.hal||0)*k+(A.halation||0)/100,0,1.5);
   const bloom=clamp((P.bloom||0)*k+(A.bloom||0)/100*0.8,0,1.2);
   const gSize=(A.grainSize==null?40:A.grainSize)/100;
+  const sharp=clamp((A.sharpness||0)/100,0,1), clar=clamp((A.clarity||0)/100,-1,1);
   const baseMx=P.mx||I3, mx=baseMx===I3?I3:baseMx.map((v,i)=>lerp(I3[i],v,k));
-  return {rG,gG,bG,exp,bri,sat,con,hi,sh,lift,grain,vig,hal,bloom,gSize,
+  return {rG,gG,bG,exp,bri,sat,con,hi,sh,lift,grain,vig,hal,bloom,gSize,sharp,clar,
     split:(P.split||0)*k, splitS:P.splitS||[0,0,0], splitH:P.splitH||[0,0,0],
     mx,
     lut:lutReady?L.data:null, lutN:lutReady?L.n:LUT_N, lutK:k,   // LUT applied first, blended by intensity
@@ -749,6 +750,7 @@ function renderRecipe(src,P,A,canvas,w,h,opts){
     }
   }
   // 10. optical glow (halation + bloom), then 11. film grain — both spatial, so post-pass
+  if(O.sharp||O.clar)applyDetail(d,w,h,O);
   if(O.hal||O.bloom)applyGlow(d,w,h,O);
   if(O.grain&&!(opts&&opts.noGrain))applyGrain(d,w,h,O,!!P.mono);
   ctx.putImageData(id,0,0);
@@ -766,6 +768,26 @@ function boxBlur(a,w,h,rad,passes){
       for(let i=-rad;i<=rad;i++)s+=a[(i<0?0:i>=h?h-1:i)*w+x];
       for(let y=0;y<h;y++){t[y]=s/n;const yo=y-rad, yi=y+rad+1;s+=a[(yi>=h?h-1:yi)*w+x]-a[(yo<0?0:yo)*w+x];}
       for(let y=0;y<h;y++)a[y*w+x]=t[y];}
+  }
+}
+// Detail: sharpness = unsharp mask with a tiny radius (fine edges);
+// clarity = unsharp mask with a wide radius, weighted to midtones (local contrast).
+// Both work on luminance only so colours don't shift. Radii scale with frame size.
+function applyDetail(d,w,h,O){
+  const n=w*h, Y=new Float32Array(n);
+  for(let i=0,p=0;i<n;i++,p+=4)Y[i]=(0.299*d[p]+0.587*d[p+1]+0.114*d[p+2])/255;
+  const m=Math.max(w,h);
+  let S=null,C=null;
+  if(O.sharp){S=Float32Array.from(Y);boxBlur(S,w,h,Math.max(1,Math.round(m/1200)),2);}
+  if(O.clar){C=Float32Array.from(Y);boxBlur(C,w,h,Math.max(4,Math.round(m/60)),3);}
+  const sa=O.sharp*1.4, ca=O.clar*0.9;
+  for(let i=0,p=0;i<n;i++,p+=4){
+    const y=Y[i];let dl=0;
+    if(S)dl+=(y-S[i])*sa;
+    if(C){const t=2*y-1;dl+=(y-C[i])*ca*(1-t*t);}      // midtone weight: protects pure blacks/whites
+    if(dl){dl*=255;
+      const r=d[p]+dl,g=d[p+1]+dl,b=d[p+2]+dl;
+      d[p]=r<0?0:r>255?255:r;d[p+1]=g<0?0:g>255?255:g;d[p+2]=b<0?0:b>255?255:b;}
   }
 }
 // Halation (red-orange glow bleeding round highlights, as light bounces off the film base)
@@ -1315,6 +1337,8 @@ const ADJ=[
   {k:'highlights', label:'Hautes lumières',min:-100,max:100,step:1},
   {k:'shadows',    label:'Ombres',         min:-100,max:100,step:1},
   {k:'saturation', label:'Saturation',     min:-100,max:100,step:1},
+  {k:'clarity',    label:'Clarté',         min:-100,max:100,step:1},
+  {k:'sharpness',  label:'Netteté',        min:0,   max:100,step:1},
   {k:'temperature',label:'Température',     min:-100,max:100,step:1},
   {k:'tint',       label:'Teinte',         min:-100,max:100,step:1},
   {k:'grain',      label:'Grain',          min:0,   max:100,step:1},
@@ -1411,6 +1435,8 @@ const ADJ_ICON={
   highlights:'M7 11H1v2h6v-2zm2.17-3.24L7.05 5.64 5.64 7.05l2.12 2.12 1.41-1.41zM13 1h-2v6h2V1zm5.36 6.05-1.41-1.41-2.12 2.12 1.41 1.41 2.12-2.12zM17 11v2h6v-2h-6zm-5-2c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm2.83 7.24 2.12 2.12 1.41-1.41-2.12-2.12-1.41 1.41zm-9.19.71 1.41 1.41 2.12-2.12-1.41-1.41-2.12 2.12zM11 23h2v-6h-2v6z',
   shadows:'M9 2c-1.05 0-2.05.16-3 .46 4.06 1.27 7 5.06 7 9.54s-2.94 8.27-7 9.54c.95.3 1.95.46 3 .46 5.52 0 10-4.48 10-10S14.52 2 9 2z',
   saturation:'M17.66 8 12 2.35 6.34 8C4.78 9.56 4 11.64 4 13.64s.78 4.11 2.34 5.67 3.61 2.35 5.66 2.35 4.1-.79 5.66-2.35S20 15.64 20 13.64 19.22 9.56 17.66 8zM6 14c.01-2 .62-3.27 1.76-4.4L12 5.27l4.24 4.38C17.38 10.73 17.99 12 18 14H6z',
+  clarity:'M12 3L2 21h20L12 3zm0 5.5l6.5 10.5h-13L12 8.5z',
+  sharpness:'M12 3L2 21h20L12 3zm0 6l5.5 9h-11L12 9z',
   temperature:'M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-1v1h1v2h-1v1h1v2h-2V5z',
   tint:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93s3.05-7.44 7-7.93v15.86zm2-15.86c1.03.13 2 .45 2.87.93H13v-.93zM13 7h5.24c.25.31.48.65.68 1H13V7zm0 3h6.74c.08.33.15.66.19 1H13v-1zm0 9.93V19h2.87c-.87.48-1.84.8-2.87.93zM18.24 17H13v-1h5.92c-.21.36-.44.69-.68 1zm1.5-3H13v-1h6.74c-.04.34-.11.67-.19 1z',
   grain:'M10 12c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm-6 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm12 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zM10 6c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm-6 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm12 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zM10 18c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm-6 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm12 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2z',
