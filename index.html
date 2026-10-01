@@ -221,7 +221,8 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 
 /* preview fills the space above the dock — the photo is the hero */
 .preview{position:relative;width:100%;background:var(--bg2);overflow:hidden;flex:1;min-height:0}
-.preview canvas{width:100%;height:100%;object-fit:contain;display:block}
+.preview canvas{width:100%;height:100%;object-fit:contain;display:block;box-sizing:border-box}
+.preview.cropping canvas{padding:30px}   /* margin around the image so crop handles stay reachable (keep = PAD in imgDispRect) */
 
 /* crop tool — adjustable box with rule-of-thirds (ratio/apply controls live in the dock) */
 .crop{position:absolute;inset:0;z-index:6;touch-action:none}
@@ -2072,11 +2073,12 @@ function enterCrop(){
   cropDraft.rot=cropDraft.rot||0;cropDraft.kv=cropDraft.kv||0;cropDraft.kh=cropDraft.kh||0;cropDraft.o=cropDraft.o||0;
   cropARkey='free';cropARn=null;
   $('#cropBox').classList.add('free');
+  $('#preview').classList.add('cropping');
   $('#crop').hidden=false;$('#crop').classList.toggle('tilt',geoActive(cropDraft));
   renderDock();paintPreview();                   // ratio chips + straighten + ✕/✓ in the dock
   requestAnimationFrame(layoutCropBox);
 }
-function exitCrop(){cropMode=false;$('#crop').hidden=true;$('#crop').classList.remove('tilt');}
+function exitCrop(){cropMode=false;$('#preview').classList.remove('cropping');$('#crop').hidden=true;$('#crop').classList.remove('tilt');}
 function cancelCrop(){exitCrop();renderDock();paintPreview();}
 function applyCrop(){
   const c=cropDraft;
