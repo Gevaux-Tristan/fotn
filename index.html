@@ -602,6 +602,7 @@ const I3=[1,0,0, 0,1,0, 0,0,1];
 const PRESETS=[
  // — Signature (look maison) —
  {name:'TPG',           film:'Look signature',                cat:'Signature', lut:'luts/signature1.png'},
+ {name:'TPG-2',         film:'Look signature',                cat:'Signature', lut:'luts/signature2.png'},
  // — Négatifs couleur —
  {name:'Portra 400',    film:'Négatif portrait · Frontier',  cat:'Négatif', lut:'luts/portra400.png'},
  {name:'Pro 400H',      film:'Négatif pro · Frontier',       cat:'Négatif', lut:'luts/pro400h.png'},
@@ -624,7 +625,6 @@ const PRESETS=[
  {name:'Polaroid Type 100 Sepia', film:'Instantané sépia · Dehancer', cat:'Instant', mono:1, lut:'luts/polaroid-type100-sepia.png'},
  {name:'LomoChrome Metropolis XR 100', film:'Couleur désaturée · Dehancer',   cat:'Vintage', lut:'luts/lomochrome-metropolis-xr100.jpg'},
  {name:'Rollei CN 200', film:'Négatif couleur · Dehancer', cat:'Négatif', lut:'luts/rollei-cn-200.png'},
- {name:'Pastel',        film:'Couleur lavée · pastel',    cat:'Vintage', lut:'luts/pastel-look.png'},
 ];
 PRESETS.forEach(p=>{p.mono=!!p.mono;});
 // neutral user adjustments (cards render presets at their default look)
