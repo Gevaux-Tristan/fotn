@@ -1,12 +1,12 @@
 // fotn service worker — offline app shell + asset cache
-const CACHE = 'fotn-v24';
+const CACHE = 'fotn-v25';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './generic.jpg?v=2',
   './favicon.svg?v=14', './icon.svg?v=14', './icon-192.png?v=14', './icon-512.png?v=14', './apple-touch-icon.png?v=14',
   './luts/portra400.png', './luts/pro400h.png', './luts/gold200.png', './luts/colorplus200.png',
   './luts/kodacolor100.png', './luts/ultramax400.png', './luts/velvia100.png', './luts/hp5.png',
-  './luts/signature1.png', './luts/kodak-tmax-100.png', './luts/kodak-tmax-3200.png', './luts/kodak-trix-1.png', './luts/kodak-trix-3.png',
+  './luts/signature1.png',
   './luts/ilford-xp2-super400.png', './luts/lomochrome-purple-xr.png', './luts/neopan-acros-100.png', './luts/polaroid-type100-sepia.png', './luts/rollei-cn-200.png', './luts/lomochrome-metropolis-xr100.jpg',
   './luts/kodachrome40.png',
   './luts/agfaoptima.png', './luts/fujiinstax.png',
