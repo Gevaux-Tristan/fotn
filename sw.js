@@ -1,12 +1,12 @@
 // fotn service worker — offline app shell + asset cache
-const CACHE = 'fotn-v31';
+const CACHE = 'fotn-v32';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './generic.jpg?v=2',
   './favicon.svg?v=14', './icon.svg?v=14', './icon-192.png?v=14', './icon-512.png?v=14', './apple-touch-icon.png?v=14',
   './luts/portra400.png', './luts/pro400h.png', './luts/gold200.png', './luts/colorplus200.png',
   './luts/kodacolor100.png', './luts/ultramax400.png', './luts/velvia100.png', './luts/hp5.png',
-  './luts/signature1.png', './luts/kodak-aerochrome-1.png', './luts/kodak-aerochrome-2.png', './luts/kodak-aerochrome-3.png', './luts/kodak-aerochrome-4.png', './luts/kodak-aerochrome-5.png',
+  './luts/signature1.png', './luts/tpg-2.png', './luts/kodak-aerochrome-1.png', './luts/kodak-aerochrome-2.png', './luts/kodak-aerochrome-3.png', './luts/kodak-aerochrome-4.png', './luts/kodak-aerochrome-5.png',
   './luts/ilford-xp2-super400.png', './luts/lomochrome-purple-xr.png', './luts/neopan-acros-100.png', './luts/polaroid-type100-sepia.png', './luts/rollei-cn-200.png', './luts/lomochrome-metropolis-xr100.jpg',
   './luts/kodachrome40.png',
   './luts/agfaoptima.png', './luts/fujiinstax.png',
