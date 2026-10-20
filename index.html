@@ -679,6 +679,7 @@ function drawCover(ctx,img,w,h){
 function renderRecipe(src,P,A,canvas,w,h,opts){
   canvas.width=w;canvas.height=h;
   const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  ctx.imageSmoothingQuality='high';   // big photos shrink with a proper filter: default smoothing aliases into noise the LUT amplifies
   const ready=src&&(src.naturalWidth||src.videoWidth||src.width);
   if(!ready){ctx.fillStyle='#151515';ctx.fillRect(0,0,w,h);return;}
   if(opts&&opts.crop){const c=opts.crop;
