@@ -37,4 +37,4 @@ No custom viewfinder — the camera FAB opens the **native OS camera** via `<inp
 150–340ms, ease-out curves. Editor slides in (sheet on mobile, drawer ≥880px). Preview re-renders on `requestAnimationFrame`. Full `prefers-reduced-motion: reduce` fallback (transitions/animations collapsed).
 
 ## Layout
-Mobile-first. Gallery: `repeat(auto-fill, minmax(158/190px, 1fr))`. Editor: full-screen sheet on mobile, 520px right drawer ≥880px. Safe-area insets respected.
+Mobile-first. Gallery: `repeat(auto-fill, minmax(158/190px, 1fr))`. Editor: full-screen sheet on mobile, 520px right drawer 880–1023px, full-screen split ≥1024px (photo left, 400px controls panel right: tabs on top, presets as a 4-col grid, tools as a 3-col grid; 440px panel ≥1440px). Gallery columns: 3 · 4 (≥560) · 6 (≥880) · 7 (≥1440) · 8 (≥1800). Safe-area insets respected.
