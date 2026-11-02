@@ -656,12 +656,13 @@ function buildOps(P,A){
   const lift=clamp((P.lift||0)*k+(A.fade||0)/100*0.45,0,0.7);
   const grain=clamp((P.grain||0)*k+(A.grain||0)/100*2,0,3);
   const vig=clamp((P.vig||0)*k+(A.vignette||0)/100*0.55,0,0.85);
-  const hal=clamp((P.hal||0)*k+(A.halation||0)/100,0,1.5);
-  const bloom=clamp((P.bloom||0)*k+(A.bloom||0)/100*0.8,0,1.2);
+  const hal=clamp((P.hal||0)*k*1.6+(A.halation||0)/100*1.8,0,2.8);
+  const bloom=clamp((P.bloom||0)*k*1.6+(A.bloom||0)/100*1.7,0,2.6);
+  const lens=clamp((A.lens||0)/100,0,1);
   const gSize=(A.grainSize==null?40:A.grainSize)/100;
   const sharp=clamp((A.sharpness||0)/100,0,1), clar=clamp((A.clarity||0)/100,-1,1);
   const baseMx=P.mx||I3, mx=baseMx===I3?I3:baseMx.map((v,i)=>lerp(I3[i],v,k));
-  return {rG,gG,bG,exp,sat,con,hi,sh,lift,grain,vig,hal,bloom,gSize,sharp,clar,
+  return {rG,gG,bG,exp,sat,con,hi,sh,lift,grain,vig,hal,bloom,lens,gSize,sharp,clar,
     split:(P.split||0)*k, splitS:P.splitS||[0,0,0], splitH:P.splitH||[0,0,0],
     mx,
     lut:lutReady?L.data:null, lutN:lutReady?L.n:LUT_N, lutK:k,   // LUT applied first, blended by intensity
@@ -758,6 +759,7 @@ function renderRecipe(src,P,A,canvas,w,h,opts){
   }
   // 10. optical glow (halation + bloom), then 11. film grain — both spatial, so post-pass
   if(O.sharp||O.clar)applyDetail(d,w,h,O);
+  if(O.lens)applyLens(d,w,h,O);
   if(O.hal||O.bloom)applyGlow(d,w,h,O);
   if(O.grain&&!(opts&&opts.noGrain))applyGrain(d,w,h,O,!!P.mono);
   ctx.putImageData(id,0,0);
@@ -797,6 +799,30 @@ function applyDetail(d,w,h,O){
       d[p]=r<0?0:r>255?255:r;d[p+1]=g<0?0:g>255?255:g;d[p+2]=b<0?0:b>255?255:b;}
   }
 }
+// Vintage lens softness: a light diffusion (blurred copy mixed back in) that grows toward the
+// frame edges, like an old uncoated lens. Computed on a reduced buffer so it scales with the frame.
+function applyLens(d,w,h,O){
+  const s=Math.max(1,Math.max(w,h)/640), sw=Math.ceil(w/s), sh=Math.ceil(h/s), n=sw*sh;
+  const R=new Float32Array(n), G=new Float32Array(n), B=new Float32Array(n), C=new Float32Array(n);
+  for(let y=0,p=0;y<h;y++){const row=((y/s)|0)*sw;
+    for(let x=0;x<w;x++,p+=4){const i=row+((x/s)|0);R[i]+=d[p];G[i]+=d[p+1];B[i]+=d[p+2];C[i]++;}}
+  for(let i=0;i<n;i++){const c=C[i]||1;R[i]/=c;G[i]/=c;B[i]/=c;}
+  const rad=Math.max(1,Math.round(Math.max(sw,sh)/260));
+  boxBlur(R,sw,sh,rad,2);boxBlur(G,sw,sh,rad,2);boxBlur(B,sw,sh,rad,2);
+  const cx=w/2, cy=h/2, maxd=Math.sqrt(cx*cx+cy*cy), L=O.lens;
+  for(let y=0,p=0;y<h;y++){
+    let fy=(y+0.5)/s-0.5;fy=fy<0?0:fy>sh-1?sh-1:fy;const y0=fy|0,y1=y0<sh-1?y0+1:y0,dy=fy-y0;
+    for(let x=0;x<w;x++,p+=4){
+      let fx=(x+0.5)/s-0.5;fx=fx<0?0:fx>sw-1?sw-1:fx;const x0=fx|0,x1=x0<sw-1?x0+1:x0,dx=fx-x0;
+      const i00=y0*sw+x0,i10=y0*sw+x1,i01=y1*sw+x0,i11=y1*sw+x1,
+            w00=(1-dx)*(1-dy),w10=dx*(1-dy),w01=(1-dx)*dy,w11=dx*dy;
+      const ex=Math.hypot(x-cx,y-cy)/maxd, m=L*(0.3+0.7*ex*ex)*0.85;   // centre stays fairly sharp
+      d[p]+=((R[i00]*w00+R[i10]*w10+R[i01]*w01+R[i11]*w11)-d[p])*m;
+      d[p+1]+=((G[i00]*w00+G[i10]*w10+G[i01]*w01+G[i11]*w11)-d[p+1])*m;
+      d[p+2]+=((B[i00]*w00+B[i10]*w10+B[i01]*w01+B[i11]*w11)-d[p+2])*m;
+    }
+  }
+}
 // Halation (red-orange glow bleeding round highlights, as light bounces off the film base)
 // and bloom (soft white-ish diffusion of the highlights). Computed on a ~384px buffer so
 // the glow scales with the frame (preview, thumbnails and export look the same) while
@@ -807,12 +833,12 @@ function applyGlow(d,w,h,O){
   for(let y=0,p=0;y<h;y++){const row=((y/s)|0)*sw;
     for(let x=0;x<w;x++,p+=4){
       const r=d[p]/255,g=d[p+1]/255,b=d[p+2]/255, l=0.299*r+0.587*g+0.114*b, i=row+((x/s)|0);
-      let t=l>0.6?(l-0.6)/0.4:0;t*=t;
+      let t=l>0.5?(l-0.5)/0.5:0;t=Math.sqrt(t)*t;
       H[i]+=t;R[i]+=t*r;G[i]+=t*g;B[i]+=t*b;C[i]++;}}
   for(let i=0;i<n;i++){const c=C[i]||1;H[i]/=c;R[i]/=c;G[i]/=c;B[i]/=c;}
-  if(O.hal)boxBlur(H,sw,sh,6,3);
-  if(O.bloom){boxBlur(R,sw,sh,15,3);boxBlur(G,sw,sh,15,3);boxBlur(B,sw,sh,15,3);}
-  const hk=O.hal*1.6, bk=O.bloom;
+  if(O.hal)boxBlur(H,sw,sh,8,3);
+  if(O.bloom){boxBlur(R,sw,sh,18,3);boxBlur(G,sw,sh,18,3);boxBlur(B,sw,sh,18,3);}
+  const hk=O.hal*2.4, bk=O.bloom*1.5;
   for(let y=0,p=0;y<h;y++){
     let fy=(y+0.5)/s-0.5;fy=fy<0?0:fy>sh-1?sh-1:fy;const y0=fy|0,y1=y0<sh-1?y0+1:y0,dy=fy-y0;
     for(let x=0;x<w;x++,p+=4){
@@ -820,7 +846,7 @@ function applyGlow(d,w,h,O){
       const i00=y0*sw+x0,i10=y0*sw+x1,i01=y1*sw+x0,i11=y1*sw+x1,
             w00=(1-dx)*(1-dy),w10=dx*(1-dy),w01=(1-dx)*dy,w11=dx*dy;
       let ar=0,ag=0,ab=0;
-      if(hk){const hv=(H[i00]*w00+H[i10]*w10+H[i01]*w01+H[i11]*w11)*hk;ar+=hv;ag+=hv*0.3;ab+=hv*0.08;}
+      if(hk){const hv=(H[i00]*w00+H[i10]*w10+H[i01]*w01+H[i11]*w11)*hk;ar+=hv;ag+=hv*0.38;ab+=hv*0.1;}
       if(bk){ar+=(R[i00]*w00+R[i10]*w10+R[i01]*w01+R[i11]*w11)*bk;
              ag+=(G[i00]*w00+G[i10]*w10+G[i01]*w01+G[i11]*w11)*bk;
              ab+=(B[i00]*w00+B[i10]*w10+B[i01]*w01+B[i11]*w11)*bk;}
@@ -1351,6 +1377,7 @@ const ADJ=[
   {k:'grainSize',  label:'Taille du grain',min:0,   max:100,step:1,def:40},
   {k:'halation',   label:'Halation',       min:0,   max:100,step:1},
   {k:'bloom',      label:'Bloom',          min:0,   max:100,step:1},
+  {k:'lens',       label:'Flou vintage',   min:0,   max:100,step:1},
   {k:'vignette',   label:'Vignettage',     min:0,   max:100,step:1},
   {k:'fade',       label:'Estompé',        min:0,   max:100,step:1},
 ];
@@ -1445,6 +1472,7 @@ const ADJ_ICON={
   temperature:'M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-1v1h1v2h-1v1h1v2h-2V5z',
   tint:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93s3.05-7.44 7-7.93v15.86zm2-15.86c1.03.13 2 .45 2.87.93H13v-.93zM13 7h5.24c.25.31.48.65.68 1H13V7zm0 3h6.74c.08.33.15.66.19 1H13v-1zm0 9.93V19h2.87c-.87.48-1.84.8-2.87.93zM18.24 17H13v-1h5.92c-.21.36-.44.69-.68 1zm1.5-3H13v-1h6.74c-.04.34-.11.67-.19 1z',
   grain:'M10 12c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm-6 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm12 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zM10 6c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm-6 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm12 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zM10 18c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm-6 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm12 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2z',
+  lens:'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z',
   vignette:'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14c-3.31 0-6-2.24-6-5s2.69-5 6-5 6 2.24 6 5-2.69 5-6 5z',
   grainSize:'M3 13h2v-2H3v2zm0 4h2v-2H3v2zm2 4v-2H3c0 1.1.89 2 2 2zM3 9h2V7H3v2zm12 12h2v-2h-2v2zm4-18H9c-1.11 0-2 .9-2 2v10c0 1.1.89 2 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H9V5h10v10zm-8 6h2v-2h-2v2zm-4 0h2v-2H7v2z',
   halation:'M7 11H1v2h6v-2zm2.17-3.24L7.05 5.64 5.64 7.05l2.12 2.12 1.41-1.41zM13 1h-2v6h2V1zm5.36 6.05-1.41-1.41-2.12 2.12 1.41 1.41 2.12-2.12zM17 11v2h6v-2h-6zm-5-2c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm2.83 7.24 2.12 2.12 1.41-1.41-2.12-2.12-1.41 1.41zm-9.19.71 1.41 1.41 2.12-2.12-1.41-1.41-2.12 2.12zM11 23h2v-6h-2v6z',
