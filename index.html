@@ -972,6 +972,9 @@ function idbMetaDel(k){return idbOpen().then(db=>new Promise((res,rej)=>{
   t.oncomplete=()=>res();t.onerror=()=>rej(t.error);}));}
 
 // ---------- FOTN export folder (File System Access API — Android/desktop Chrome) ----------
+// Desktop (souris) : Chrome refuse Téléchargements/Documents dans le sélecteur de dossier ("accès refusé")
+// → on passe par un téléchargement classique, qui atterrit dans Téléchargements. Dossier FOTN = mobile seulement.
+const IS_DESKTOP=!!(window.matchMedia&&matchMedia('(hover:hover) and (pointer:fine)').matches);
 let _fotnDir=null;
 async function fsVerify(h){                       // ensure readwrite permission (may prompt once/session)
   if(!h||!h.queryPermission)return true;
@@ -1354,7 +1357,7 @@ async function makeZip(entries){                 // entries: [{name, blob}]
 }
 async function exportBatch(items){
   // Acquire the FOTN folder FIRST (the picker/permission prompt needs the tap's activation, before any render).
-  const fsa=!!window.showDirectoryPicker;
+  const fsa=!!window.showDirectoryPicker&&!IS_DESKTOP;
   let dir=null;
   if(fsa){dir=await getFotnDir(true);if(!dir){toast('Export annulé');return;}}
   const ov=showBusy('Préparation…');
@@ -1373,6 +1376,14 @@ async function exportBatch(items){
         try{await writeToDir(dir,rendered[i].name,rendered[i].blob);wrote++;}catch(e){failed++;}}
       exitSelect();
       toast((wrote>1?`${wrote} photos`:'Photo')+' → dossier FOTN'+(failed?` (${failed} échec)`:''));
+      return;
+    }
+    // Desktop → un téléchargement par photo (dans Téléchargements)
+    if(IS_DESKTOP){
+      for(let i=0;i<rendered.length;i++){ov.set(`Téléchargement ${i+1}/${rendered.length}…`);
+        downloadBlob(rendered[i].blob,rendered[i].name);await new Promise(r=>setTimeout(r,350));}
+      exitSelect();
+      toast((rendered.length>1?`${rendered.length} photos`:'Photo')+' → Téléchargements'+(failed?` (${failed} échec)`:''));
       return;
     }
     // B) iOS (no folder API): single photo → share/download the JPEG…
@@ -2224,7 +2235,7 @@ async function exportImage(){
   const btn=$('#btnExport');btn.classList.add('busy');
   try{
     // Acquire the FOTN folder first (picker/permission needs the tap's activation, before rendering)
-    const fsa=!!window.showDirectoryPicker;
+    const fsa=!!window.showDirectoryPicker&&!IS_DESKTOP;
     let dir=null;
     if(fsa){dir=await getFotnDir(true);if(!dir){toast('Export annulé');return;}}
     const gs=geoSource(cropN,3600), src=gs.src, IW=gs.IW, IH=gs.IH;
@@ -2239,11 +2250,11 @@ async function exportImage(){
     if(dir){await writeToDir(dir,name,blob);toast('Photo → dossier FOTN');return;}   // Android/desktop
     // iOS: share sheet so the photo can be saved to Files (→ FOTN) or Photos
     const f=new File([blob],name,{type:'image/jpeg'});
-    if(navigator.canShare&&navigator.canShare({files:[f]})){
+    if(!IS_DESKTOP&&navigator.canShare&&navigator.canShare({files:[f]})){
       try{await navigator.share({files:[f],title:'FOTN'});toast('Exporté');return;}
       catch(e){if(e&&e.name==='AbortError')return;}   // cancelled → stop; other → download
     }
-    downloadBlob(blob,name);toast('Exporté · '+name);
+    downloadBlob(blob,name);toast(IS_DESKTOP?'Photo → Téléchargements':'Exporté · '+name);
   }catch(e){toast('Export impossible');}
   finally{btn.classList.remove('busy');}
 }
