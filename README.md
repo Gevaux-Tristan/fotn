@@ -26,7 +26,7 @@ mono-fichier (`index.html`, sans dépendance, sans build).
   1:1, 4:5, 5:4, 3:2, 2:3, 16:9, 9:16, grille des tiers), **curseur d'intensité** du look, et
   **réglages universels** en onglets (Lumière :
   exposition, contraste, hautes lumières, ombres ; Couleur : saturation, température, teinte ;
-  Rendu : intensité, grain, taille du grain, halation, bloom, vignettage, estompé). Export → `fotn_<preset>_<horodatage>-<id>.jpg`.
+  Rendu : intensité, grain, taille du grain, halation, bloom, flou vintage, vignettage, estompé). Export → `fotn_<preset>_<horodatage>-<id>.jpg`.
 
 ## Fichiers
 - `index.html` — toute l'app. `generic.jpg` — image de référence des cartes.
@@ -53,7 +53,7 @@ Hébergement statique. Déployé sur GitHub Pages : https://gevaux-tristan.githu
 
 ## Importer un look depuis un outil web (ex. Dehancer Online), usage perso
 1. Charger `luts/lut-identity-1000.png` (1000×1000, bloc 8×8 par nœud, résiste à la recompression).
-2. Appliquer le preset en **désactivant grain, halation, bloom, vignettage, netteté** : un effet
+2. Appliquer le preset en **désactivant grain, halation, bloom, flou vintage, vignettage, netteté** : un effet
    spatial casserait la LUT (on les refait dans fotn).
 3. Exporter sans redimensionner (PNG/TIFF de préférence, sinon JPEG qualité max), en PNG dans `luts/<nom>.png`.
 4. Ajouter une ligne dans `PRESETS` (`{name, film, cat, lut:'luts/<nom>.png'}`). Le loader accepte
