@@ -3,11 +3,11 @@
 Single-file webapp (`index.html`). Light, photographic, monochrome (cream / dark grey / white). Geist (Google Fonts).
 
 ## Theme
-Monochrome, restrained. The photo previews carry all the colour; the chrome is neutral. Library = cream canvas. **Editor = pure white** (header, preview, dock, tab menu), separated by 1px `#292929` dividers (the logo colour). Icons and text are dark (`#292929`) on white. The "accent" is the darkest neutral, used for active/primary states only.
+Monochrome, restrained. The photo previews carry all the colour; the chrome is neutral. Library = cream canvas. **Editor = pure white** (header, preview, dock, tab menu), separated by 2px (`--div`) `#292929` dividers (the logo colour). Icons and text are dark (`#292929`) on white. The "accent" is the darkest neutral, used for active/primary states only.
 
 ## Color (tokens in `:root`)
 - Surfaces: `--bg #EFE9E2` (cream, library) · `--bg2 #f7f7f7` · `--panel #f0f0f0` · `--panel2 #e8e8e8` · editor chrome `#fff`
-- Lines: `--line #e4e4e4` · `--line2 #d2d2d2` · editor dividers `#292929`
+- Lines: `--line #e4e4e4` · `--line2 #d2d2d2` · editor dividers `#292929`, 2px (`--div`)
 - Text: `--txt #292929` · `--txt2 #595959` · `--txt3 #8c8c8c`
 - Accent (dark): `--accent #292929` · `--accent2 #2c2c2c` — used for active / primary only.
 - Ink on accent (cream on dark): `--ink #EFE9E2`
