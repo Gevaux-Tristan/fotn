@@ -3,10 +3,10 @@
 Single-file webapp (`index.html`). Light, photographic, monochrome (cream / dark grey / white). Geist (Google Fonts).
 
 ## Theme
-Monochrome, restrained. The photo previews carry all the colour; the chrome is neutral. Library = cream canvas. **Editor = pure white** (header, preview, dock, tab menu), separated by 2px (`--div`) `#292929` dividers (the logo colour). Icons and text are dark (`#292929`) on white. The "accent" is the darkest neutral, used for active/primary states only.
+Monochrome, restrained. The photo previews carry all the colour; the chrome is neutral. Library = cream canvas. **Editor = same cream as the library** (header, preview, dock, tab menu — `--bg`), separated by 2px (`--div`) `#292929` dividers (the logo colour). Icons and text are dark (`#292929`) on cream. The "accent" is the darkest neutral, used for active/primary states only.
 
 ## Color (tokens in `:root`)
-- Surfaces: `--bg #EFE9E2` (cream, library) · `--bg2 #f7f7f7` · `--panel #f0f0f0` · `--panel2 #e8e8e8` · editor chrome `#fff`
+- Surfaces: `--bg #EFE9E2` (cream, library) · `--bg2 #f7f7f7` · `--panel #f0f0f0` · `--panel2 #e8e8e8` · editor chrome = `--bg`
 - Lines: `--line #e4e4e4` · `--line2 #d2d2d2` · editor dividers `#292929`, 2px (`--div`)
 - Text: `--txt #292929` · `--txt2 #595959` · `--txt3 #8c8c8c`
 - Accent (dark): `--accent #292929` · `--accent2 #2c2c2c` — used for active / primary only.
@@ -25,7 +25,7 @@ Geist (fallback Helvetica Neue, Arial). Fixed px scale (product register): 17 (h
 - pill `999px` (filter chips), circles `50%` (fav, fab)
 
 ## Components
-Preset card · filter chip · **editor preset strip** (VSCO-style row of 56px thumbnails, each previewing the look on the user's own photo; active = `--accent` border) · custom slider (track + polarity fill + thumb; bipolar sliders show a signed value, magnitude sliders like Intensité/Grain/Vignettage/Estompé show none) · segmented control · FAB (fav / import / camera) · bottom-sheet/side-drawer editor (white, `#292929` dividers) · toast. Every interactive element has default / hover / focus-visible / active; `--accent` focus ring (`:focus-visible`).
+Preset card · filter chip · **editor preset strip** (VSCO-style row of 56px thumbnails, each previewing the look on the user's own photo; active = `--accent` border) · custom slider (track + polarity fill + thumb; bipolar sliders show a signed value, magnitude sliders like Intensité/Grain/Vignettage/Estompé show none) · segmented control · FAB (fav / import / camera) · bottom-sheet/side-drawer editor (cream, `#292929` dividers) · toast. Every interactive element has default / hover / focus-visible / active; `--accent` focus ring (`:focus-visible`).
 
 ## Capture
 No custom viewfinder — the camera FAB opens the **native OS camera** via `<input type="file" accept="image/*" capture="environment">` (best quality, native aspect, correct orientation). Import uses the same pattern without `capture`. The captured/imported photo opens straight into the editor.
@@ -40,4 +40,4 @@ No custom viewfinder — the camera FAB opens the **native OS camera** via `<inp
 Mobile-first. Gallery: `repeat(auto-fill, minmax(158/190px, 1fr))`. Editor: full-screen sheet on mobile, 520px right drawer 880–1023px, full-screen split ≥1024px (photo left, 400px controls panel right: tabs on top, presets as a 4-col grid, tools as a 3-col grid; 440px panel ≥1440px). Gallery columns: 3 · 4 (≥560) · 6 (≥880) · 7 (≥1440) · 8 (≥1800). Safe-area insets respected.
 
 ## Preview
-The photo sits in a white field with a small margin (12px mobile, 40px ≥1024px) so white space breathes around it. Crop mode uses a fixed 30px margin (`PAD` in `imgDispRect`) for handle reach — keep both in sync.
+The photo sits in a cream field with a small margin (12px mobile, 40px ≥1024px) so cream space breathes around it. Crop mode uses a fixed 30px margin (`PAD` in `imgDispRect`) for handle reach — keep both in sync.
