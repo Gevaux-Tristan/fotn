@@ -22,6 +22,7 @@
   --accent:#292929; --accent2:#2c2c2c;   /* "accent" = the darkest neutral, for active/primary */
   --pos:#141414; --neg:#9a9a9a;
   --ink:#EFE9E2;            /* text/icon colour on the dark accent */
+  --div:2px;                /* editor divider thickness */
   /* radius scale */
   --r-lg:16px;             /* cards, sheets */
   --r-md:11px;             /* inputs, buttons, panels, controls */
@@ -198,7 +199,7 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   .editor.open{transform:translateX(0)}
 }
 .ed-head{display:flex;align-items:center;gap:8px;padding:calc(var(--safe-t) + 12px) 14px 12px;
-  background:#fff;color:#292929;border-bottom:1px solid #292929;flex:none}
+  background:#fff;color:#292929;border-bottom:var(--div) solid #292929;flex:none}
 .ed-head .x{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:none;display:grid;place-items:center;flex:none;transition:background .15s}
 .ed-head .x:hover{background:rgba(41,41,41,.08)}
 .ed-head .x::before,.ed-head .hfav::before{content:"";position:absolute;inset:-5px}  /* ≥44px touch target */
@@ -277,7 +278,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .ed-head .hbtn[hidden]{display:none}
 
 /* ---------- EDITOR DOCK (VSCO-style): a rail above a two-tab menu ---------- */
-.ed-dock{flex:none;background:#fff;border-top:1px solid #292929}
+.ed-dock{flex:none;background:#fff;border-top:var(--div) solid #292929}
 .ed-rail{display:flex;align-items:center;min-height:80px;padding:7px 14px}
 .ed-rail.scroller{overflow-x:auto;gap:11px;scrollbar-width:none;-ms-overflow-style:none}
 .ed-rail.scroller::-webkit-scrollbar{display:none}
@@ -326,7 +327,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .ed-rail.editing{flex-direction:column;align-items:stretch;gap:11px;padding:16px 20px}
 .tool-val{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--txt)}
 /* two-tab menu */
-.ed-menu{display:flex;align-items:stretch;border-top:1px solid #292929;padding-bottom:var(--safe-b);background:#fff}
+.ed-menu{display:flex;align-items:stretch;border-top:var(--div) solid #292929;padding-bottom:var(--safe-b);background:#fff}
 .ed-menu .m{flex:1;padding:11px 6px;background:none;font-size:12px;font-weight:600;letter-spacing:.2px;
   color:#292929;opacity:.5;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}
 .ed-menu .m svg{display:block}
@@ -374,8 +375,8 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   .preview canvas,.pv-ghost{padding:40px}
 
   .ed-dock{grid-column:2;grid-row:2;display:flex;flex-direction:column;min-height:0;
-    border-top:0;border-left:1px solid #292929}
-  .ed-menu{order:-1;border-top:0;border-bottom:1px solid #292929;padding-bottom:0}
+    border-top:0;border-left:var(--div) solid #292929}
+  .ed-menu{order:-1;border-top:0;border-bottom:var(--div) solid #292929;padding-bottom:0}
   .ed-menu .m{flex-direction:row;justify-content:center;gap:8px;padding:15px 6px}
   .ed-menu.editing{padding:6px 10px}
   .ed-rail{flex:1;min-height:0}
