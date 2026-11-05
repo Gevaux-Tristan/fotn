@@ -127,9 +127,13 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   background:rgba(249,244,238,.72);backdrop-filter:blur(4px);opacity:0;transition:opacity .18s}
 .busyov.show{opacity:1}
 .busybox{display:grid;justify-items:center;gap:14px}
-.busyspin{width:34px;height:34px;border-radius:0;border:3px solid var(--line2);border-top-color:var(--accent);
-  animation:busyspin .8s linear infinite}
-@keyframes busyspin{to{transform:rotate(360deg)}}
+.busyspin{width:38px;height:38px;display:block;overflow:visible}
+.busyspin rect{fill:none;stroke-width:3;stroke-linejoin:miter}
+.busyspin .bs-track{stroke:var(--line2)}
+.busyspin .bs-trace{stroke:var(--accent);stroke-dasharray:100;stroke-dashoffset:100;
+  animation:busytrace 1.6s cubic-bezier(.6,0,.4,1) infinite}
+@keyframes busytrace{0%{stroke-dashoffset:100}50%{stroke-dashoffset:0}100%{stroke-dashoffset:-100}}
+@media (prefers-reduced-motion:reduce){.busyspin .bs-trace{animation-duration:3.2s}}
 .busytxt{font-size:14px;font-weight:600;color:var(--txt)}
 
 /* app-styled confirm dialog (no native modals) */
@@ -1309,7 +1313,8 @@ async function exportBatch(items){
   finally{hideBusy(ov);}
 }
 function showBusy(msg){
-  const sc=el('div','busyov'),b=el('div','busybox'),sp=el('div','busyspin'),t=el('div','busytxt');
+  const sc=el('div','busyov'),b=el('div','busybox'),sp=el('div'),t=el('div','busytxt');
+  sp.innerHTML='<svg class="busyspin" viewBox="0 0 38 38" aria-hidden="true"><rect class="bs-track" x="1.5" y="1.5" width="35" height="35"/><rect class="bs-trace" x="1.5" y="1.5" width="35" height="35" pathLength="100"/></svg>';
   t.textContent=msg||'';b.appendChild(sp);b.appendChild(t);sc.appendChild(b);document.body.appendChild(sc);
   requestAnimationFrame(()=>sc.classList.add('show'));
   return {el:sc,set(m){t.textContent=m;}};
