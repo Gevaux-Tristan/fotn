@@ -1015,16 +1015,8 @@ RECIPES.forEach(p=>{if(p.lut)loadLUT(p.lut);});    // warm the LUT cache (small 
 loadLibrary();
 
 function loadLibrary(){
-  idbGetAll().then(items=>{library=items.sort(orderCmp);renderLibrary();})
+  idbGetAll().then(items=>{library=items.sort((a,b)=>(b.created||0)-(a.created||0));renderLibrary();})
              .catch(()=>{library=[];renderLibrary();});
-}
-// Manual order (`ord`, set by dragging) wins; anything never reordered falls back to newest-first.
-function orderCmp(a,b){
-  const ao=(a.ord==null?null:a.ord), bo=(b.ord==null?null:b.ord);
-  if(ao!=null&&bo!=null)return ao-bo;
-  if(ao!=null)return -1;
-  if(bo!=null)return 1;
-  return (b.created||0)-(a.created||0);
 }
 
 //// ---------- HOME = PHOTO LIBRARY ----------
@@ -1721,9 +1713,6 @@ async function addPhotos(files, openIfSingle, fromCamera, initVals){
     const item={id:uid(), created:Date.now()+i, blob:list[i], w:iw, h:ih,
       tw:tb?tb.w:iw, th:tb?tb.h:ih,
       edit:{presetName:'',vals:Object.assign(neutralAdj(),initVals||{}),crop:crop}, thumb:tb?tb.data:null};
-    // once a manual order exists, a new photo still lands first (ahead of the lowest `ord`)
-    let min=null;library.forEach(x=>{if(x.ord!=null&&(min==null||x.ord<min))min=x.ord;});
-    if(min!=null)item.ord=min-1;
     library.unshift(item);
     try{await idbPut(item);}catch(e){}
     added.push({item,r,crop});
