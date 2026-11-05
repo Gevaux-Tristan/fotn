@@ -285,7 +285,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 /* presets rail — thumbnail chips */
 .pchip{flex:none;display:flex;flex-direction:column;align-items:center;gap:7px;width:60px;cursor:pointer;background:none;padding:0}
 .pchip canvas{width:56px;height:56px;border-radius:0;display:block;background:var(--panel);
-  border:2px solid transparent;transition:border-color .15s,transform .15s}
+  border:var(--div) solid transparent;transition:border-color .15s,transform .15s}
 .pchip:hover canvas{transform:translateY(-2px)}
 .pchip.on canvas{border-color:var(--accent)}
 .pchip:active canvas{transform:translateY(0) scale(.96)}
@@ -294,8 +294,8 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .pchip.on span{color:var(--accent);font-weight:600}
 /* tools rail — labelled chips (show the live value when active) */
 .tchip{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-  min-width:74px;height:60px;padding:0 13px;border-radius:var(--r-md);background:var(--panel);
-  border:1px solid transparent;color:var(--txt2);cursor:pointer;transition:.15s}
+  min-width:74px;height:60px;padding:0 13px;border-radius:0;background:none;
+  border:var(--div) solid transparent;color:var(--txt2);cursor:pointer;transition:.15s}
 .tchip:hover{color:var(--txt)}
 /* dock ratio chips (crop) */
 .rchip{flex:none;align-self:center;padding:9px 14px;border-radius:999px;font-size:12.5px;font-weight:600;
@@ -320,7 +320,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .cs-val.zero{color:var(--txt3)}
 .tchip .tico{display:grid;place-items:center;height:24px;color:var(--txt2);transition:color .15s}
 .tchip .tlabel{font-size:12px;font-weight:600;white-space:nowrap;line-height:1.1}
-.tchip.act{border-color:var(--accent)}
+.tchip.act{border-color:#292929}
 .tchip.act .tico{color:var(--accent)}
 .tchip.act .tlabel{color:var(--accent)}
 /* tool-edit — one full-width slider */
