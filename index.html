@@ -223,7 +223,9 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .preview{position:relative;width:100%;background:var(--bg2);overflow:hidden;flex:1;min-height:0}
 .preview canvas{width:100%;height:100%;object-fit:contain;display:block;box-sizing:border-box}
 .preview{touch-action:pan-y}
-.preview canvas.slide{transition:transform .22s ease,opacity .22s ease}
+.preview canvas{will-change:transform}
+.pv-ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;box-sizing:border-box;pointer-events:none;user-select:none;will-change:transform}
+.pv-ghost[hidden]{display:none}
 .preview.cropping canvas{padding:30px}   /* margin around the image so crop handles stay reachable (keep = PAD in imgDispRect) */
 
 /* crop tool — adjustable box with rule-of-thirds (ratio/apply controls live in the dock) */
@@ -379,7 +381,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   .ed-head .t h2{position:static;width:auto;height:auto;margin:0;clip:auto;overflow:visible;
     font-size:15px;font-weight:600;color:#EFE9E2;white-space:nowrap;text-overflow:ellipsis}
   .preview{grid-column:1;grid-row:2;background:var(--bg)}
-  .preview canvas{padding:32px}
+  .preview canvas,.pv-ghost{padding:32px}
 
   .ed-dock{grid-column:2;grid-row:2;display:flex;flex-direction:column;min-height:0;
     border-top:0;border-left:1px solid var(--line)}
@@ -1525,31 +1527,71 @@ $('#edClose').onclick=closeEditor;$('#scrim').onclick=closeEditor;
 $('#btnSave').onclick=()=>{if(cropMode)applyCrop();saveItem(false);teardownEditor();};   // in crop mode: validate the crop too, then save → gallery
 $('#btnDelete').onclick=deleteCurrent;
 
-// — swipe (or ←/→) on the preview: previous / next photo of the library —
-let navBusy=false;
-async function goPhoto(dir){            // dir: +1 = next in library order, -1 = previous
-  if(navBusy||!currentItem||cropMode||toolK||!$('#mxov').hidden)return;
-  const i=library.findIndex(x=>x.id===currentItem.id), n=library[i+dir];
-  if(!n)return;                          // first / last photo: nothing to do
-  navBusy=true;
-  const cv=pvCanvas;
+// — swipe (or ←/→) on the preview: the photo follows the finger, the neighbour slides in next to it —
+let navBusy=false, ghost=null;
+const EASE='cubic-bezier(.22,1,.36,1)';
+const nextOf=d=>{const i=currentItem?library.findIndex(x=>x.id===currentItem.id):-1;return i<0?null:(library[i+d]||null);};
+function showGhost(it){
+  if(!ghost){ghost=document.createElement('img');ghost.className='pv-ghost';ghost.alt='';ghost.draggable=false;$('#preview').appendChild(ghost);}
+  if(ghost._id!==it.id){ghost._id=it.id;ghost.src=it.thumb||'';}
+  ghost.hidden=false;
+}
+const raf2=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function place(dx,dir,ms){
+  const W=$('#preview').clientWidth, tr=ms?`transform ${ms}ms ${EASE}`:'none';
+  pvCanvas.style.transition=tr;pvCanvas.style.transform=`translate3d(${dx}px,0,0)`;
+  if(ghost&&!ghost.hidden){ghost.style.transition=tr;ghost.style.transform=`translate3d(${dir*W+dx}px,0,0)`;}
+}
+// finish a gesture: commit=true → go to the neighbour, else spring back
+async function settle(dir,dx,commit){
+  const W=$('#preview').clientWidth;
+  if(!commit){place(0,dir,260);await wait(270);if(ghost)ghost.hidden=true;pvCanvas.style.transition='none';return;}
+  const n=nextOf(dir);navBusy=true;
   try{
-    await saveItem(true);                // keep the edits of the photo we leave
-    cv.classList.add('slide');cv.style.transform=`translateX(${-dir*40}px)`;cv.style.opacity='0';
-    await openItem(n);
-    cv.classList.remove('slide');cv.style.transform=`translateX(${dir*40}px)`;
-    void cv.offsetWidth;cv.classList.add('slide');cv.style.transform='';cv.style.opacity='';
+    saveItem(true);                       // sync part snapshots the photo we leave
+    showGhost(n);
+    place(-dir*W,dir,300);await wait(300);   // old photo exits, thumbnail of the new one lands
+    await openItem(n);await raf2();          // full-res canvas painted under the thumbnail
+    pvCanvas.style.transition='none';pvCanvas.style.transform='';
+    if(ghost)ghost.hidden=true;
   }finally{navBusy=false;}
 }
+function canNav(){return !navBusy&&currentItem&&!cropMode&&!toolK&&$('#mxov').hidden;}
+async function goPhoto(dir){            // keyboard: dir +1 = next, -1 = previous
+  if(!canNav()||!nextOf(dir))return;
+  showGhost(nextOf(dir));place(0,dir,0);ghost.getBoundingClientRect();
+  settle(dir,0,true);
+}
 (()=>{
-  const pv=$('#preview');let x0=0,y0=0,t0=0,track=false;
-  pv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;track=!cropMode&&!toolK;x0=e.clientX;y0=e.clientY;t0=Date.now();});
-  pv.addEventListener('pointerup',e=>{
-    if(!track)return;track=false;
-    const dx=e.clientX-x0,dy=e.clientY-y0;
-    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5&&Date.now()-t0<600)goPhoto(dx<0?1:-1);   // swipe left → next
+  const pv=$('#preview');
+  let id=null,x0=0,y0=0,t0=0,lx=0,lt=0,v=0,drag=false,dir=0,dxNow=0;
+  pv.addEventListener('pointerdown',e=>{
+    if((e.pointerType==='mouse'&&e.button!==0)||id!==null||!canNav())return;
+    id=e.pointerId;x0=lx=e.clientX;y0=e.clientY;t0=lt=Date.now();v=0;drag=false;dir=0;dxNow=0;
   });
-  pv.addEventListener('pointercancel',()=>{track=false;});
+  pv.addEventListener('pointermove',e=>{
+    if(e.pointerId!==id)return;
+    const dx=e.clientX-x0,dy=e.clientY-y0;
+    if(!drag){
+      if(Math.abs(dx)<8&&Math.abs(dy)<8)return;
+      if(Math.abs(dy)>Math.abs(dx)){id=null;return;}          // vertical intent: leave it alone
+      drag=true;try{pv.setPointerCapture(id);}catch(_){}
+    }
+    const d=dx<0?1:-1;
+    if(d!==dir){dir=d;if(nextOf(dir))showGhost(nextOf(dir));else if(ghost)ghost.hidden=true;}
+    const now=Date.now();v=(e.clientX-lx)/Math.max(1,now-lt);lx=e.clientX;lt=now;
+    dxNow=nextOf(dir)?dx:dx*0.3;                               // rubber band at the ends
+    place(dxNow,dir,0);
+  });
+  const end=e=>{
+    if(e.pointerId!==id)return;
+    const wasDrag=drag;id=null;drag=false;
+    if(!wasDrag)return;
+    const W=pv.clientWidth,ok=!!nextOf(dir)&&(Math.abs(dxNow)>W*0.25||Math.abs(v)>0.5&&Math.sign(v)===Math.sign(dxNow));
+    settle(dir,dxNow,ok);
+  };
+  pv.addEventListener('pointerup',end);pv.addEventListener('pointercancel',end);
   document.addEventListener('keydown',e=>{
     if(!$('#editor').classList.contains('open'))return;
     if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
