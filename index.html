@@ -346,6 +346,16 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   font-size:13px;font-weight:600;color:#EFE9E2}
 .ed-menu .tname svg{display:block}
 
+/* import progress — slim bar + count, non-blocking, only shown when an import takes a while */
+.impg{position:fixed;left:0;right:0;top:0;z-index:310;pointer-events:none;opacity:0;transition:opacity .2s}
+.impg.show{opacity:1}
+.impg .bar{height:3px;width:100%;background:rgba(41,41,41,.14)}
+.impg .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s ease-out}
+.impg .lab{position:absolute;top:calc(var(--safe-t) + 14px);left:50%;transform:translateX(-50%);
+  padding:7px 14px;border-radius:999px;background:var(--accent);color:var(--ink);
+  font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;
+  box-shadow:0 6px 18px rgba(0,0,0,.25)}
+
 /* ---------- DESKTOP (≥1024px) ----------
    Library: wider canvas, denser grid. Editor: full-screen split — photo on the left,
    controls in a fixed side panel on the right (no more phone-sized drawer). */
@@ -1739,18 +1749,39 @@ function thumbFromImage(img,crop){
   renderRecipe(img,ORIGINAL,NEUTRAL,cv,Math.max(1,Math.round(w)),Math.max(1,Math.round(h)),{crop:reg});
   try{return {data:cv.toDataURL('image/jpeg',0.82), w:cv.width, h:cv.height};}catch(e){return null;}
 }
+// Non-blocking import progress: appears only if the import lasts > 400ms. set(done) takes a
+// fractional count of photos (0…total) so the bar also moves inside a single big file.
+function importProgress(total){
+  const root=el('div','impg'),bar=el('div','bar'),fill=el('i'),lab=el('div','lab');
+  bar.appendChild(fill);root.appendChild(bar);root.appendChild(lab);
+  root.setAttribute('role','progressbar');root.setAttribute('aria-label','Import des photos');
+  root.setAttribute('aria-valuemin','0');root.setAttribute('aria-valuemax','100');
+  let shown=false,done=0;
+  const paintIt=()=>{const pct=Math.min(100,Math.round(done/total*100));
+    fill.style.width=pct+'%';root.setAttribute('aria-valuenow',pct);
+    lab.textContent=total>1?`Import ${Math.min(total,Math.floor(done)+1)}/${total} · ${pct} %`:`Import · ${pct} %`;};
+  const t=setTimeout(()=>{shown=true;document.body.appendChild(root);paintIt();requestAnimationFrame(()=>root.classList.add('show'));},400);
+  return {
+    set(d){done=d;if(shown)paintIt();},
+    end(){clearTimeout(t);if(!shown)return;done=total;paintIt();
+      setTimeout(()=>{root.classList.remove('show');setTimeout(()=>root.remove(),220);},250);}
+  };
+}
 // Add one or many photos (camera or library) → store each, then open the editor
 // only when a single photo was added (multi-import just populates the library).
 async function addPhotos(files, openIfSingle, fromCamera, initVals){
   const list=[...files].filter(Boolean);if(!list.length)return;
-  const added=[];
+  const added=[], prog=importProgress(list.length);
   for(let i=0;i<list.length;i++){
+    prog.set(i);await nextFrame();
     let r; try{r=await blobToImage(list[i]);}catch(e){continue;}
+    prog.set(i+0.4);await nextFrame();
     const iw=r.img.naturalWidth||r.img.width, ih=r.img.naturalHeight||r.img.height;
     // Camera captures get a default 2:3-family crop IN THE CAPTURE ORIENTATION (non-destructive):
     // portrait shot → 2:3 portrait, landscape shot → 3:2 landscape. Original blob kept, editable later.
     const crop=fromCamera?centeredCrop(iw,ih, iw>=ih?3/2:2/3):null;
     const tb=thumbFromImage(r.img,crop);
+    prog.set(i+0.75);
     const item={id:uid(), created:Date.now()+i, blob:list[i], w:iw, h:ih,
       tw:tb?tb.w:iw, th:tb?tb.h:ih,
       edit:{presetName:'',vals:Object.assign(neutralAdj(),initVals||{}),crop:crop}, thumb:tb?tb.data:null};
@@ -1760,7 +1791,9 @@ async function addPhotos(files, openIfSingle, fromCamera, initVals){
     library.unshift(item);
     try{await idbPut(item);}catch(e){}
     added.push({item,r,crop});
+    prog.set(i+1);
   }
+  prog.end();
   if(!added.length){toast('Import impossible');return;}
   renderLibrary();
   if(added.length===1 && openIfSingle){
