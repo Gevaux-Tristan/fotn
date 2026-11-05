@@ -433,19 +433,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   <header class="top">
     <!-- selection bar: shown while a multi-selection is active -->
     <div class="selbar" id="selbar" role="toolbar" aria-label="Actions de sélection" hidden>
-      <button class="sbtn ico" id="selClose" title="Quitter la sélection" aria-label="Quitter la sélection">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.9997 10.5865L16.9495 5.63672L18.3637 7.05093L13.4139 12.0007L18.3637 16.9504L16.9495 18.3646L11.9997 13.4149L7.04996 18.3646L5.63574 16.9504L10.5855 12.0007L5.63574 7.05093L7.04996 5.63672L11.9997 10.5865Z"></path></svg>
-      </button>
-      <span class="selcount" id="selCount" role="status" aria-live="polite"><b id="selNum">0</b><span class="lbl" id="selWord">&nbsp;photo</span></span>
       <button class="sbtn" id="selAll">Tout sélectionner</button>
-      <button class="sbtn act prim" id="selExport" title="Télécharger la sélection" aria-label="Télécharger la sélection">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 10H18L12 16L6 10H11V3H13V10ZM4 19H20V12H22V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V12H4V19Z"></path></svg>
-        <span class="lbl">Télécharger</span>
-      </button>
-      <button class="sbtn act" id="selDelete" title="Supprimer la sélection" aria-label="Supprimer la sélection">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 11H11V17H9V11ZM13 11H15V17H13V11ZM9 4V6H15V4H9Z"></path></svg>
-        <span class="lbl">Supprimer</span>
-      </button>
     </div>
   </header>
 
@@ -1050,16 +1038,10 @@ function setFabLabels(sel){
 // selection bar: live count + "Tout sélectionner / Tout désélectionner" + Supprimer
 function syncSelBar(){
   const n=selected.size, all=library.length && n===library.length;
-  $('#selNum').textContent=n;
-  $('#selWord').innerHTML='&nbsp;photo'+(n>1?'s':'');
-  $('#selCount').setAttribute('aria-label',
-    n?`${n} photo${n>1?'s':''} sélectionnée${n>1?'s':''}`:'Aucune photo sélectionnée');
   const btn=$('#selAll');
   btn.textContent=all?'Tout désélectionner':'Tout sélectionner';
   btn.setAttribute('aria-label',all?'Tout désélectionner':`Tout sélectionner (${library.length} photos)`);
   btn.setAttribute('aria-disabled',library.length?'false':'true');
-  $('#selDelete').hidden=!n;                                            // nothing to act on → hide, don't tease
-  $('#selExport').hidden=!n;
   // the FABs act on the selection too — dim them when there is nothing to act on
   ['#fabCam','#fabImport','#fabPaste'].forEach(s=>$(s).classList.toggle('dim',!n));
 }
@@ -1151,10 +1133,7 @@ document.addEventListener('pointerdown',e=>{
   exitSelect();
 },true);
 // selection-bar actions
-$('#selClose').onclick=()=>exitSelect();
 $('#selAll').onclick=()=>{ if(library.length && selected.size===library.length)deselectAll(); else selectAll(); };
-$('#selDelete').onclick=()=>deleteSelected();
-$('#selExport').onclick=()=>exportSelected();   // called straight from the tap: the folder picker needs that activation
 async function deleteSelected(){
   const ids=[...selected];if(!ids.length)return;
   const msg = ids.length===1 ? 'Supprimer cette photo ?'
