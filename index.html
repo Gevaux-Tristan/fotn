@@ -1281,7 +1281,7 @@ async function exportBatch(items){
   try{
     const rendered=[]; let failed=0;
     for(let i=0;i<items.length;i++){
-      ov.set(`Rendu ${i+1}/${items.length}…`);await nextFrame();
+      ov.set(`Rendu ${i+1}/${items.length}…`);ov.progress(.7*i/items.length);await nextFrame();
       const r=await renderItemToBlob(items[i],3200,1000+i);
       if(r&&r.blob)rendered.push(r); else failed++;
     }
@@ -1289,7 +1289,7 @@ async function exportBatch(items){
     // A) Android/desktop Chrome → write each JPEG straight into the FOTN folder.
     if(dir){
       let wrote=0;
-      for(let i=0;i<rendered.length;i++){ov.set(`Enregistrement ${i+1}/${rendered.length}…`);
+      for(let i=0;i<rendered.length;i++){ov.set(`Enregistrement ${i+1}/${rendered.length}…`);ov.progress(.7+.3*i/rendered.length);
         try{await writeToDir(dir,rendered[i].name,rendered[i].blob);wrote++;}catch(e){failed++;}}
       exitSelect();
       toast((wrote>1?`${wrote} photos`:'Photo')+' → dossier FOTN'+(failed?` (${failed} échec)`:''));
@@ -1297,7 +1297,7 @@ async function exportBatch(items){
     }
     // Desktop → un téléchargement par photo (dans Téléchargements)
     if(IS_DESKTOP){
-      for(let i=0;i<rendered.length;i++){ov.set(`Téléchargement ${i+1}/${rendered.length}…`);
+      for(let i=0;i<rendered.length;i++){ov.set(`Téléchargement ${i+1}/${rendered.length}…`);ov.progress(.7+.3*i/rendered.length);
         downloadBlob(rendered[i].blob,rendered[i].name);await new Promise(r=>setTimeout(r,350));}
       exitSelect();
       toast((rendered.length>1?`${rendered.length} photos`:'Photo')+' → Téléchargements'+(failed?` (${failed} échec)`:''));
@@ -1313,7 +1313,7 @@ async function exportBatch(items){
       downloadBlob(rendered[0].blob,f.name);exitSelect();toast('Photo exportée');return;
     }
     // …multiple photos → ONE zip whose contents live in a FOTN/ folder (unzips to a FOTN folder).
-    ov.set('Compression…');await nextFrame();
+    ov.set('Compression…');ov.progress(.85);await nextFrame();
     const entries=rendered.map(r=>({name:'FOTN/'+r.name, blob:r.blob}));
     const zip=await makeZip(entries), zname='FOTN_'+stampCompact()+'.zip';
     const zfile=new File([zip],zname,{type:'application/zip'});
