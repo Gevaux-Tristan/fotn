@@ -18,11 +18,8 @@ Rules: accent = actions, current selection, state only (never decoration). Text 
 ## Typography
 Geist (fallback Helvetica Neue, Arial). Fixed px scale (product register): 17 (h1) · 16 (h2) · 15 (body/input) · 14 (slider value, foot buttons) · 13 (labels, chips, controls) · 12 (compact controls, raw) · 11 (sub, eyebrow, count) · 10 (badges). Numbers use `font-variant-numeric: tabular-nums`.
 
-## Radius scale
-- `--r-lg 16px` cards / sheets
-- `--r-md 11px` inputs, buttons, panels, controls
-- `--r-sm 7px` badges, inner segments, logo
-- pill `999px` (filter chips), circles `50%` (fav, fab)
+## Radius
+Aucun arrondi : `border-radius: 0` partout (cartes, boutons, chips, FAB, icônes, sliders). Les variables `--r-*` valent `0`.
 
 ## Components
 Preset card · filter chip · **editor preset strip** (VSCO-style row of 56px thumbnails, each previewing the look on the user's own photo; active = `--accent` border) · custom slider (track + polarity fill + thumb; bipolar sliders show a signed value, magnitude sliders like Intensité/Grain/Vignettage/Estompé show none) · segmented control · FAB (fav / import / camera) · bottom-sheet/side-drawer editor (cream, `#292929` dividers) · toast. Every interactive element has default / hover / focus-visible / active; `--accent` focus ring (`:focus-visible`).

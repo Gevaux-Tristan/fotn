@@ -24,9 +24,9 @@
   --ink:#EFE9E2;            /* text/icon colour on the dark accent */
   --div:2px;                /* editor divider thickness */
   /* radius scale */
-  --r-lg:16px;             /* cards, sheets */
-  --r-md:11px;             /* inputs, buttons, panels, controls */
-  --r-sm:7px;              /* badges, inner segments, small marks */
+  --r-lg:0;             /* cards, sheets */
+  --r-md:0;             /* inputs, buttons, panels, controls */
+  --r-sm:0;              /* badges, inner segments, small marks */
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
 }
@@ -41,7 +41,7 @@ body{
 button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none}
 input{font-family:inherit}
 ::-webkit-scrollbar{width:9px;height:9px}
-::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:0}
 ::-webkit-scrollbar-track{background:transparent}
 
 /* ---------- HEADER ---------- */
@@ -56,10 +56,10 @@ header.top{
 .selbar{min-height:61px;display:flex;align-items:center;gap:10px;animation:selbarIn .16s ease}
 .selbar[hidden]{display:none}   /* class rule would otherwise beat the UA [hidden] */
 @keyframes selbarIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-.sbtn{flex:none;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;
+.sbtn{flex:none;padding:8px 14px;border-radius:0;font-size:13px;font-weight:600;white-space:nowrap;
   background:var(--panel);border:1px solid var(--line);color:var(--txt);transition:.15s}
 .sbtn:hover{border-color:var(--line2)}
-.sbtn.ico{padding:0;width:38px;height:38px;display:grid;place-items:center;border-radius:50%}
+.sbtn.ico{padding:0;width:38px;height:38px;display:grid;place-items:center;border-radius:0}
 /* primary = the dark accent, matching the dark FAB that carries the same action */
 .sbtn.prim{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .sbtn.prim:hover{filter:brightness(1.15)}
@@ -71,10 +71,10 @@ header.top{
    name) and the count keeps only its number. Everything spells itself out from 560px up. */
 @media(max-width:559px){
   .sbtn.act .lbl,.selcount .lbl{display:none}
-  .sbtn.act{padding:0;width:38px;height:38px;justify-content:center;border-radius:50%}
+  .sbtn.act{padding:0;width:38px;height:38px;justify-content:center;border-radius:0}
 }
 /* the count sits on the dithered backdrop → give it a cream pill so it stays readable */
-.selcount{flex:0 1 auto;min-width:0;margin-right:auto;padding:7px 12px;border-radius:999px;
+.selcount{flex:0 1 auto;min-width:0;margin-right:auto;padding:7px 12px;border-radius:0;
   background:rgba(249,244,238,.88);font-size:13px;font-weight:600;color:var(--txt);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:420px){.sbtn{padding:8px 11px;font-size:12px}.selcount{font-size:12px;padding:7px 10px}}
@@ -83,7 +83,7 @@ header.top{
 .filters{display:flex;gap:8px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;-ms-overflow-style:none}
 .filters::-webkit-scrollbar{display:none}
 .chip{
-  flex:none;padding:7px 13px;border-radius:999px;font-size:13px;white-space:nowrap;
+  flex:none;padding:7px 13px;border-radius:0;font-size:13px;white-space:nowrap;
   background:var(--panel);border:1px solid var(--line);color:var(--txt2);transition:.15s;
 }
 .chip:hover{border-color:var(--line2)}
@@ -100,7 +100,7 @@ header.top{
 .pcard:active{opacity:.85}
 .pcard img{width:100%;height:auto;display:block;pointer-events:none}   /* natural ratio, no crop, no radius */
 /* long-press → multi-select mode (checkbox per card) */
-.pcard .pcheck{position:absolute;top:8px;right:8px;z-index:2;width:26px;height:26px;border-radius:50%;
+.pcard .pcheck{position:absolute;top:8px;right:8px;z-index:2;width:26px;height:26px;border-radius:0;
   display:none;place-items:center;color:#EFE9E2;background:rgba(0,0,0,.32);
   box-shadow:0 0 0 2px rgba(249,244,238,.92);transition:background .12s,box-shadow .12s}
 .gallery.selecting .pcheck{display:grid;animation:pdelIn .14s ease}
@@ -124,7 +124,7 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   background:rgba(249,244,238,.72);backdrop-filter:blur(4px);opacity:0;transition:opacity .18s}
 .busyov.show{opacity:1}
 .busybox{display:grid;justify-items:center;gap:14px}
-.busyspin{width:34px;height:34px;border-radius:50%;border:3px solid var(--line2);border-top-color:var(--accent);
+.busyspin{width:34px;height:34px;border-radius:0;border:3px solid var(--line2);border-top-color:var(--accent);
   animation:busyspin .8s linear infinite}
 @keyframes busyspin{to{transform:rotate(360deg)}}
 .busytxt{font-size:14px;font-weight:600;color:var(--txt)}
@@ -165,7 +165,7 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .mxoplab{flex:none;font-size:12px;font-weight:600;color:var(--txt2)}
 .mxopval{flex:none;min-width:28px;font-size:12px;font-weight:700;color:var(--txt);text-align:right;
   font-variant-numeric:tabular-nums}
-.mxop input[type=range]{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;
+.mxop input[type=range]{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:4px;border-radius:0;
   background:var(--line2);outline-offset:6px}
 /* the library strip you pick the layers from */
 .mxpicks{display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;scrollbar-width:none}
@@ -175,7 +175,7 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   border:2px solid transparent;background:var(--panel);padding:0;cursor:pointer}
 .mxpick img{width:100%;height:100%;object-fit:cover;display:block}
 .mxpick.on{border-color:var(--accent)}
-.mxpick .mxord{position:absolute;right:3px;bottom:3px;min-width:16px;height:16px;border-radius:8px;
+.mxpick .mxord{position:absolute;right:3px;bottom:3px;min-width:16px;height:16px;border-radius:0;
   display:none;place-items:center;background:var(--accent);color:var(--ink);font-size:10px;font-weight:700}
 .mxpick.on .mxord{display:grid}
 .mxpick[aria-disabled="true"]{opacity:.35}
@@ -232,14 +232,14 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   linear-gradient(0deg,transparent calc(33.33% - .5px),#EFE9E2 calc(33.33% - .5px),#EFE9E2 calc(33.33% + .5px),transparent calc(33.33% + .5px)),
   linear-gradient(0deg,transparent calc(66.66% - .5px),#EFE9E2 calc(66.66% - .5px),#EFE9E2 calc(66.66% + .5px),transparent calc(66.66% + .5px))}
 .crop-h{position:absolute;width:44px;height:44px;z-index:3;touch-action:none}   /* 44px = accessible min touch target */
-.crop-h::before{content:"";position:absolute;width:16px;height:16px;border:2px solid #EFE9E2;border-radius:1px}
+.crop-h::before{content:"";position:absolute;width:16px;height:16px;border:2px solid #EFE9E2;border-radius:0}
 .crop-h.tl{left:-22px;top:-22px}.crop-h.tl::before{left:6px;top:6px;border-right:none;border-bottom:none}
 .crop-h.tr{right:-22px;top:-22px}.crop-h.tr::before{right:6px;top:6px;border-left:none;border-bottom:none}
 .crop-h.bl{left:-22px;bottom:-22px}.crop-h.bl::before{left:6px;bottom:6px;border-right:none;border-top:none}
 .crop-h.br{right:-22px;bottom:-22px}.crop-h.br::before{right:6px;bottom:6px;border-left:none;border-top:none}
 /* edge handles — drag any side with one finger; free-ratio only (ratio-locked keeps corner-only) */
 .crop-h.edge{z-index:2}   /* corner handles win hit-testing over edges when both overlap on a thin box */
-.crop-h.edge::before{border:none;background:#EFE9E2;border-radius:2px}
+.crop-h.edge::before{border:none;background:#EFE9E2;border-radius:0}
 .crop-h.t,.crop-h.b{left:50%;width:64px;height:28px;margin-left:-32px;cursor:ns-resize}
 .crop-h.l,.crop-h.r{top:50%;width:28px;height:64px;margin-top:-32px;cursor:ew-resize}
 .crop-h.t{top:-14px}.crop-h.b{bottom:-14px}
@@ -258,14 +258,14 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .crop.tilt .crop-grid{display:block}
 /* single-adjustment slider (reused by the tool-edit view) */
 .range{position:relative;height:26px;display:flex;align-items:center}
-.range .track{position:absolute;left:0;right:0;height:4px;border-radius:3px;background:var(--line2)}
+.range .track{position:absolute;left:0;right:0;height:4px;border-radius:0;background:var(--line2)}
 .range .midmark{position:absolute;top:50%;transform:translateY(-50%);width:1px;height:11px;background:var(--txt3);opacity:.6}
-.range .fill{position:absolute;height:4px;border-radius:3px;background:var(--accent);opacity:.9}
+.range .fill{position:absolute;height:4px;border-radius:0;background:var(--accent);opacity:.9}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;position:relative;z-index:2;margin:0;height:26px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:0;
   background:var(--accent);border:2px solid var(--bg);box-shadow:0 0 0 1px var(--line2),0 2px 8px rgba(0,0,0,.25);cursor:grab}
 input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.12)}
-input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:0;background:var(--accent);border:2px solid var(--bg)}
 
 /* header action buttons (reset / export) */
 .ed-head .hbtn{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:none;
@@ -298,7 +298,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   border:var(--div) solid transparent;color:var(--txt2);cursor:pointer;transition:.15s}
 .tchip:hover{color:var(--txt)}
 /* dock ratio chips (crop) */
-.rchip{flex:none;align-self:center;padding:9px 14px;border-radius:999px;font-size:12.5px;font-weight:600;
+.rchip{flex:none;align-self:center;padding:9px 14px;border-radius:0;font-size:12.5px;font-weight:600;
   white-space:nowrap;background:var(--panel);border:1px solid transparent;color:var(--txt2);cursor:pointer;transition:.15s}
 .rchip:hover{color:var(--txt)}
 .rchip.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
@@ -306,14 +306,14 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .ed-rail.cropedit{flex-direction:column;align-items:stretch;gap:9px;min-height:0;max-height:44vh;overflow-y:auto;padding:10px 14px}
 .crop-auto{display:flex;justify-content:center;gap:10px;padding-top:2px}
 .auto-btn svg{vertical-align:-3px;margin-right:5px}
-.auto-btn{padding:8px 18px;border-radius:999px;font-size:12.5px;font-weight:600;
+.auto-btn{padding:8px 18px;border-radius:0;font-size:12.5px;font-weight:600;
   background:var(--panel);border:1px solid transparent;color:var(--txt);transition:.15s}
 .auto-btn:hover{color:var(--accent)}
 .crop-chips{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
 .crop-chips::-webkit-scrollbar{display:none}
 .crop-straight{display:flex;align-items:center;gap:11px}
 .cs-lab{font-size:12px;font-weight:600;color:var(--txt2);white-space:nowrap;flex:1}
-.cs-btn{width:44px;height:44px;border-radius:50%;background:var(--panel);color:var(--txt);font-size:22px;line-height:1;
+.cs-btn{width:44px;height:44px;border-radius:0;background:var(--panel);color:var(--txt);font-size:22px;line-height:1;
   display:grid;place-items:center;border:1px solid transparent;touch-action:manipulation;user-select:none;transition:.15s}
 .cs-btn:active{background:var(--accent);color:var(--ink)}
 .cs-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent);min-width:58px;text-align:center;padding:8px 0}
@@ -347,7 +347,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .impg .bar{height:3px;width:100%;background:rgba(41,41,41,.14)}
 .impg .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s ease-out}
 .impg .lab{position:absolute;top:calc(var(--safe-t) + 14px);left:50%;transform:translateX(-50%);
-  padding:7px 14px;border-radius:999px;background:var(--accent);color:var(--ink);
+  padding:7px 14px;border-radius:0;background:var(--accent);color:var(--ink);
   font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;
   box-shadow:0 6px 18px rgba(0,0,0,.25)}
 
@@ -404,7 +404,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .brand{position:fixed;left:16px;bottom:calc(var(--safe-b) + 16px);z-index:2;height:44px;width:auto;pointer-events:none}
 
 .fabs{position:fixed;right:16px;bottom:calc(var(--safe-b) + 16px);z-index:30;display:flex;flex-direction:column;align-items:center;gap:10px}
-.fab{width:58px;height:58px;border-radius:50%;background:var(--accent);color:var(--ink);
+.fab{width:58px;height:58px;border-radius:0;background:var(--accent);color:var(--ink);
   display:grid;place-items:center;box-shadow:0 8px 24px -6px rgba(0,0,0,.28);transition:transform .15s,filter .15s}
 .fab:hover{transform:translateY(-2px);filter:brightness(1.06)}
 .fab:active{transform:translateY(0)}
