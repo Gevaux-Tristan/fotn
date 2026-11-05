@@ -195,7 +195,7 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   pointer-events:none;transition:.25s;z-index:50}
 .scrim.show{opacity:1;pointer-events:auto}
 .editor{
-  position:fixed;z-index:60;background:var(--bg2);
+  position:fixed;z-index:60;background:#fff;
   display:flex;flex-direction:column;
   transition:transform .34s cubic-bezier(.2,.8,.2,1);
 }
@@ -208,23 +208,23 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   .editor.open{transform:translateX(0)}
 }
 .ed-head{display:flex;align-items:center;gap:8px;padding:calc(var(--safe-t) + 12px) 14px 12px;
-  background:#292929;color:#EFE9E2;flex:none}
+  background:#fff;color:#292929;border-bottom:1px solid #292929;flex:none}
 .ed-head .x{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:none;display:grid;place-items:center;flex:none;transition:background .15s}
-.ed-head .x:hover{background:rgba(255,255,255,.12)}
+.ed-head .x:hover{background:rgba(41,41,41,.08)}
 .ed-head .x::before,.ed-head .hfav::before{content:"";position:absolute;inset:-5px}  /* ≥44px touch target */
 .ed-head .t{min-width:0;flex:1}
 .ed-head .t h2{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .ed-head .t span{font-size:11px;color:var(--txt3)}
-.ed-head .hfav{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:rgba(255,255,255,.1);display:grid;place-items:center;flex:none;transition:background .15s}
-.ed-head .hfav:hover{background:rgba(255,255,255,.18)}
-.ed-head .hfav.on{color:#EFE9E2}
+.ed-head .hfav{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:rgba(41,41,41,.06);display:grid;place-items:center;flex:none;transition:background .15s}
+.ed-head .hfav:hover{background:rgba(41,41,41,.12)}
+.ed-head .hfav.on{color:#292929}
 
 /* preview fills the space above the dock — the photo is the hero */
-.preview{position:relative;width:100%;background:var(--bg2);overflow:hidden;flex:1;min-height:0}
-.preview canvas{width:100%;height:100%;object-fit:contain;display:block;box-sizing:border-box}
+.preview{position:relative;width:100%;background:#fff;overflow:hidden;flex:1;min-height:0}
+.preview canvas{width:100%;height:100%;object-fit:contain;display:block;box-sizing:border-box;padding:12px}
 .preview{touch-action:pan-y}
 .preview canvas{will-change:transform}
-.pv-ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;box-sizing:border-box;pointer-events:none;user-select:none;will-change:transform}
+.pv-ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;box-sizing:border-box;padding:12px;pointer-events:none;user-select:none;will-change:transform}
 .pv-ghost[hidden]{display:none}
 .preview.cropping canvas{padding:30px}   /* margin around the image so crop handles stay reachable (keep = PAD in imgDispRect) */
 
@@ -278,16 +278,16 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 
 /* header action buttons (reset / export) */
 .ed-head .hbtn{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:none;
-  display:grid;place-items:center;flex:none;color:#EFE9E2;transition:background .15s,filter .15s}
-.ed-head .hbtn:hover{background:rgba(255,255,255,.12)}
+  display:grid;place-items:center;flex:none;color:#292929;transition:background .15s,filter .15s}
+.ed-head .hbtn:hover{background:rgba(41,41,41,.08)}
 .ed-head .hbtn::before{content:"";position:absolute;inset:-5px}   /* ≥44px touch target */
 .ed-head .hbtn.exp.busy{opacity:.6;pointer-events:none}
-.ed-head .hbtn.save{background:#EFE9E2;color:#292929}        /* primary action */
-.ed-head .hbtn.save:hover{background:#EFE9E2;filter:brightness(1.08)}
+.ed-head .hbtn.save{background:rgba(41,41,41,.08);color:#292929}        /* primary action */
+.ed-head .hbtn.save:hover{background:rgba(41,41,41,.14)}
 .ed-head .hbtn[hidden]{display:none}
 
 /* ---------- EDITOR DOCK (VSCO-style): a rail above a two-tab menu ---------- */
-.ed-dock{flex:none;background:var(--bg2);border-top:1px solid var(--line)}
+.ed-dock{flex:none;background:#fff;border-top:1px solid #292929}
 .ed-rail{display:flex;align-items:center;min-height:80px;padding:7px 14px}
 .ed-rail.scroller{overflow-x:auto;gap:11px;scrollbar-width:none;-ms-overflow-style:none}
 .ed-rail.scroller::-webkit-scrollbar{display:none}
@@ -336,18 +336,18 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .ed-rail.editing{flex-direction:column;align-items:stretch;gap:11px;padding:16px 20px}
 .tool-val{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--txt)}
 /* two-tab menu */
-.ed-menu{display:flex;align-items:stretch;border-top:1px solid var(--line);padding-bottom:var(--safe-b);background:#292929}
+.ed-menu{display:flex;align-items:stretch;border-top:1px solid #292929;padding-bottom:var(--safe-b);background:#fff}
 .ed-menu .m{flex:1;padding:11px 6px;background:none;font-size:12px;font-weight:600;letter-spacing:.2px;
-  color:#EFE9E2;opacity:.6;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+  color:#292929;opacity:.5;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}
 .ed-menu .m svg{display:block}
 .ed-menu .m:hover{opacity:.8}
 .ed-menu .m.on{opacity:1}
 /* tool-edit menu = cancel · label · confirm */
 .ed-menu.editing{align-items:center;padding:5px 8px;padding-bottom:calc(var(--safe-b) + 5px)}
-.ed-menu .ticon{flex:none;width:60px;height:44px;display:grid;place-items:center;background:none;color:#EFE9E2;opacity:.7}
+.ed-menu .ticon{flex:none;width:60px;height:44px;display:grid;place-items:center;background:none;color:#292929;opacity:.7}
 .ed-menu .ticon.ok{opacity:1}
 .ed-menu .tname{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
-  font-size:13px;font-weight:600;color:#EFE9E2}
+  font-size:13px;font-weight:600;color:#292929}
 .ed-menu .tname svg{display:block}
 
 /* import progress — slim bar + count, non-blocking, only shown when an import takes a while */
@@ -379,13 +379,13 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
     transition:opacity .22s ease-out,visibility 0s}
   .ed-head{grid-column:1/-1;padding:12px 24px}
   .ed-head .t h2{position:static;width:auto;height:auto;margin:0;clip:auto;overflow:visible;
-    font-size:15px;font-weight:600;color:#EFE9E2;white-space:nowrap;text-overflow:ellipsis}
-  .preview{grid-column:1;grid-row:2;background:var(--bg)}
-  .preview canvas,.pv-ghost{padding:32px}
+    font-size:15px;font-weight:600;color:#292929;white-space:nowrap;text-overflow:ellipsis}
+  .preview{grid-column:1;grid-row:2;background:#fff}
+  .preview canvas,.pv-ghost{padding:40px}
 
   .ed-dock{grid-column:2;grid-row:2;display:flex;flex-direction:column;min-height:0;
-    border-top:0;border-left:1px solid var(--line)}
-  .ed-menu{order:-1;border-top:0;padding-bottom:0}
+    border-top:0;border-left:1px solid #292929}
+  .ed-menu{order:-1;border-top:0;border-bottom:1px solid #292929;padding-bottom:0}
   .ed-menu .m{flex-direction:row;justify-content:center;gap:8px;padding:15px 6px}
   .ed-menu.editing{padding:6px 10px}
   .ed-rail{flex:1;min-height:0}
