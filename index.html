@@ -186,7 +186,7 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   pointer-events:none;transition:.25s;z-index:50}
 .scrim.show{opacity:1;pointer-events:auto}
 .editor{
-  position:fixed;z-index:60;background:#fff;
+  position:fixed;z-index:60;background:var(--bg);
   display:flex;flex-direction:column;
   transition:transform .34s cubic-bezier(.2,.8,.2,1);
 }
@@ -199,7 +199,7 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
   .editor.open{transform:translateX(0)}
 }
 .ed-head{display:flex;align-items:center;gap:8px;padding:calc(var(--safe-t) + 12px) 14px 12px;
-  background:#fff;color:#292929;border-bottom:var(--div) solid #292929;flex:none}
+  background:var(--bg);color:#292929;border-bottom:var(--div) solid #292929;flex:none}
 .ed-head .x{position:relative;width:34px;height:34px;border-radius:var(--r-md);background:none;display:grid;place-items:center;flex:none;transition:background .15s}
 .ed-head .x:hover{background:rgba(41,41,41,.08)}
 .ed-head .x::before,.ed-head .hfav::before{content:"";position:absolute;inset:-5px}  /* ≥44px touch target */
@@ -211,7 +211,7 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .ed-head .hfav.on{color:#292929}
 
 /* preview fills the space above the dock — the photo is the hero */
-.preview{position:relative;width:100%;background:#fff;overflow:hidden;flex:1;min-height:0}
+.preview{position:relative;width:100%;background:var(--bg);overflow:hidden;flex:1;min-height:0}
 .preview canvas{width:100%;height:100%;object-fit:contain;display:block;box-sizing:border-box;padding:12px}
 .preview{touch-action:pan-y}
 .preview canvas{will-change:transform}
@@ -278,7 +278,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .ed-head .hbtn[hidden]{display:none}
 
 /* ---------- EDITOR DOCK (VSCO-style): a rail above a two-tab menu ---------- */
-.ed-dock{flex:none;background:#fff;border-top:var(--div) solid #292929}
+.ed-dock{flex:none;background:var(--bg);border-top:var(--div) solid #292929}
 .ed-rail{display:flex;align-items:center;min-height:80px;padding:7px 14px}
 .ed-rail.scroller{overflow-x:auto;gap:11px;scrollbar-width:none;-ms-overflow-style:none}
 .ed-rail.scroller::-webkit-scrollbar{display:none}
@@ -327,7 +327,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .ed-rail.editing{flex-direction:column;align-items:stretch;gap:11px;padding:16px 20px}
 .tool-val{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--txt)}
 /* two-tab menu */
-.ed-menu{display:flex;align-items:stretch;border-top:var(--div) solid #292929;padding-bottom:var(--safe-b);background:#fff}
+.ed-menu{display:flex;align-items:stretch;border-top:var(--div) solid #292929;padding-bottom:var(--safe-b);background:var(--bg)}
 .ed-menu .m{flex:1;padding:11px 6px;background:none;font-size:12px;font-weight:600;letter-spacing:.2px;
   color:#292929;opacity:.5;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}
 .ed-menu .m svg{display:block}
@@ -371,7 +371,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   .ed-head{grid-column:1/-1;padding:12px 24px}
   .ed-head .t h2{position:static;width:auto;height:auto;margin:0;clip:auto;overflow:visible;
     font-size:15px;font-weight:600;color:#292929;white-space:nowrap;text-overflow:ellipsis}
-  .preview{grid-column:1;grid-row:2;background:#fff}
+  .preview{grid-column:1;grid-row:2;background:var(--bg)}
   .preview canvas,.pv-ghost{padding:40px}
 
   .ed-dock{grid-column:2;grid-row:2;display:flex;flex-direction:column;min-height:0;
