@@ -222,6 +222,8 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 /* preview fills the space above the dock — the photo is the hero */
 .preview{position:relative;width:100%;background:var(--bg2);overflow:hidden;flex:1;min-height:0}
 .preview canvas{width:100%;height:100%;object-fit:contain;display:block;box-sizing:border-box}
+.preview{touch-action:pan-y}
+.preview canvas.slide{transition:transform .22s ease,opacity .22s ease}
 .preview.cropping canvas{padding:30px}   /* margin around the image so crop handles stay reachable (keep = PAD in imgDispRect) */
 
 /* crop tool — adjustable box with rule-of-thirds (ratio/apply controls live in the dock) */
@@ -1474,7 +1476,7 @@ function openEditorUI(){
   renderDock();paint();
   document.body.style.overflow='hidden';
   // a11y: remember focus origin, neutralise background, move focus into the dialog
-  lastFocused=document.activeElement;
+  if(!$('#editor').classList.contains('open'))lastFocused=document.activeElement;
   bgInert(true);
   $('#scrim').classList.add('show');$('#editor').classList.add('open');
   $('#edClose').focus();
@@ -1521,6 +1523,39 @@ function closeEditor(){if(currentItem)saveItem(true);teardownEditor();}   // clo
 $('#edClose').onclick=closeEditor;$('#scrim').onclick=closeEditor;
 $('#btnSave').onclick=()=>{if(cropMode)applyCrop();saveItem(false);teardownEditor();};   // in crop mode: validate the crop too, then save → gallery
 $('#btnDelete').onclick=deleteCurrent;
+
+// — swipe (or ←/→) on the preview: previous / next photo of the library —
+let navBusy=false;
+async function goPhoto(dir){            // dir: +1 = next in library order, -1 = previous
+  if(navBusy||!currentItem||cropMode||toolK||!$('#mxov').hidden)return;
+  const i=library.findIndex(x=>x.id===currentItem.id), n=library[i+dir];
+  if(!n)return;                          // first / last photo: nothing to do
+  navBusy=true;
+  const cv=pvCanvas;
+  try{
+    await saveItem(true);                // keep the edits of the photo we leave
+    cv.classList.add('slide');cv.style.transform=`translateX(${-dir*40}px)`;cv.style.opacity='0';
+    await openItem(n);
+    cv.classList.remove('slide');cv.style.transform=`translateX(${dir*40}px)`;
+    void cv.offsetWidth;cv.classList.add('slide');cv.style.transform='';cv.style.opacity='';
+  }finally{navBusy=false;}
+}
+(()=>{
+  const pv=$('#preview');let x0=0,y0=0,t0=0,track=false;
+  pv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;track=!cropMode&&!toolK;x0=e.clientX;y0=e.clientY;t0=Date.now();});
+  pv.addEventListener('pointerup',e=>{
+    if(!track)return;track=false;
+    const dx=e.clientX-x0,dy=e.clientY-y0;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5&&Date.now()-t0<600)goPhoto(dx<0?1:-1);   // swipe left → next
+  });
+  pv.addEventListener('pointercancel',()=>{track=false;});
+  document.addEventListener('keydown',e=>{
+    if(!$('#editor').classList.contains('open'))return;
+    if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+    const t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'))return;
+    goPhoto(e.key==='ArrowRight'?1:-1);
+  });
+})();
 
 //// ---------- EDITOR DOCK (VSCO-style: Préréglages / Réglages / single tool) ----------
 const SLIDER_BY_K=Object.fromEntries(ADJ.map(s=>[s.k,s]));
