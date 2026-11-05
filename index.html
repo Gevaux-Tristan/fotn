@@ -63,7 +63,9 @@ header.top{
 /* primary = the dark accent, matching the dark FAB that carries the same action */
 .sbtn.prim{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .sbtn.prim:hover{filter:brightness(1.15)}
-#selAll{height:38px}   /* same height as the close button */
+/* close + select-all share one look: no fill, 3px dark outline, same height */
+#selClose,#selAll{height:38px;background:none;border:3px solid var(--accent)}
+#selClose:hover,#selAll:hover{border-color:var(--accent)}
 .sbtn[aria-disabled="true"]{opacity:.4;pointer-events:none}
 .sbtn[hidden]{display:none}
 .sbtn.act{display:inline-flex;align-items:center;gap:7px}
