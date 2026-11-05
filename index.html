@@ -1835,27 +1835,29 @@ function mxBlend(base,layers,mode,opacity,maxEdge){
   return cv;
 }
 // Build the blended source for a stored edit. Caller must revoke the returned urls.
-async function mxSourceFor(edit,img){
+async function mxSourceFor(edit,img,onProg){
   const mx=mxClean(edit&&edit.mx);
   if(!mx)return {src:img,urls:[]};
   const layers=[],urls=[];
-  for(const id of mx.ids){
-    const it=library.find(x=>x.id===id);
+  for(let k=0;k<mx.ids.length;k++){
+    if(onProg)onProg(k/(mx.ids.length+1));
+    const it=library.find(x=>x.id===mx.ids[k]);
     if(!it||!it.blob)continue;                       // layer photo deleted since → simply skipped
     try{const r=await blobToImage(it.blob);layers.push(r.img);urls.push(r.url);}catch(e){}
   }
   if(!layers.length)return {src:img,urls:[]};
+  if(onProg){onProg(mx.ids.length/(mx.ids.length+1));await nextFrame();}
   return {src:mxBlend(img,layers,mx.mode,mx.opacity),urls};
 }
 
 // ---- editor wiring ----
 // Recompose what the editor renders from. userBase stays the untouched photo so the layers can
 // be changed or removed at any time; userImg is what every existing render path already reads.
-async function mxApply(mx){
+async function mxApply(mx,onProg){
   mxN=mxClean(mx);
   if(!userBase){userImg=userBase;return;}
   if(!mxN){userImg=userBase;return;}
-  const {src,urls}=await mxSourceFor({mx:mxN},userBase);
+  const {src,urls}=await mxSourceFor({mx:mxN},userBase,onProg);
   userImg=src;urls.forEach(u=>URL.revokeObjectURL(u));
 }
 function mxLabel(n){return n?(n>1?n+' calques':'1 calque'):'Aucun calque';}
@@ -1949,7 +1951,8 @@ $('#mxOk').onclick=async()=>{
   try{
     mxReleaseDraft();mxClose();
     await nextFrame();
-    await mxApply(keep.ids.length?keep:null);
+    await mxApply(keep.ids.length?keep:null,ov?ov.progress:null);
+    if(ov)ov.progress(1);
     renderDock();paint();
     toast(keep.ids.length?mxLabel(keep.ids.length)+' appliqué'+(keep.ids.length>1?'s':''):'Surimpression retirée');
   }finally{if(ov)hideBusy(ov);mxBusy=false;}
