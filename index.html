@@ -284,7 +284,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:0;backg
 
 /* ---------- EDITOR DOCK (VSCO-style): a rail above a two-tab menu ---------- */
 .ed-dock{flex:none;background:var(--bg);border-top:var(--div) solid var(--fg)}
-.ed-rail{display:flex;align-items:center;min-height:80px;padding:7px 14px}
+.ed-rail{display:flex;align-items:center;min-height:89px;padding:7px 14px}   /* = presets rail height (56 thumb + label + padding) so Filtres/Réglages swap without resizing the photo */
 .ed-rail.scroller{overflow-x:auto;gap:11px;scrollbar-width:none;-ms-overflow-style:none}
 .ed-rail.scroller::-webkit-scrollbar{display:none}
 /* presets rail — thumbnail chips */
@@ -332,9 +332,10 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:0;backg
 .ed-rail.editing{flex-direction:column;align-items:stretch;gap:11px;padding:16px 20px}
 .tool-val{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--txt)}
 /* two-tab menu */
-.ed-menu{display:flex;align-items:stretch;border-top:var(--div) solid var(--fg);padding-bottom:var(--safe-b);background:var(--bg)}
+.ed-menu{display:flex;align-items:stretch;border-top:var(--div) solid var(--fg);padding-bottom:var(--safe-b);background:var(--fg)}   /* cream footer */
 .ed-menu .m{flex:1;padding:11px 6px;background:none;font-size:12px;font-weight:600;letter-spacing:.2px;
-  color:var(--fg);opacity:.5;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+  color:var(--bg);opacity:.5;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.ed-menu:not(.editing) .m+.m{border-left:var(--div) solid var(--bg)}   /* divider between the two buttons */
 .ed-menu .m svg{display:block}
 .ed-menu .m:hover{opacity:.8}
 .ed-menu .m.on{opacity:1}
