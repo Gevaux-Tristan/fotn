@@ -284,7 +284,13 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:0;backg
   display:grid;place-items:center;flex:none;color:var(--fg);transition:background .15s,filter .15s}
 .ed-head .hbtn:hover{background:rgba(239,233,226,.08)}
 .ed-head .hbtn::before{content:"";position:absolute;inset:-5px}   /* ≥44px touch target */
-.ed-head .hbtn.exp.busy{opacity:.6;pointer-events:none}
+.ed-head .hbtn.exp.busy{pointer-events:none}
+.ed-head .hbtn .bs-ring{display:none;position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.ed-head .hbtn.busy .bs-ring{display:block}
+.ed-head .hbtn .bs-ring rect{fill:none;stroke-width:3;stroke-linejoin:miter}
+.ed-head .hbtn .bs-ring .bs-track{stroke:rgba(239,233,226,.16)}
+.ed-head .hbtn .bs-ring .bs-trace{stroke:var(--accent);stroke-dasharray:100;stroke-dashoffset:100;
+  animation:busytrace 1.6s cubic-bezier(.6,0,.4,1) infinite}
 .ed-head .hbtn.save{background:rgba(239,233,226,.08);color:var(--fg)}        /* primary action */
 .ed-head .hbtn.save:hover{background:rgba(239,233,226,.14)}
 .ed-head .hbtn[hidden]{display:none}
@@ -465,6 +471,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   <button class="fab" id="fabCam" title="Prendre une photo" aria-label="Prendre une photo">
     <svg class="ic-def" width="25" height="25" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.82843 5L7.82843 7H4V19H20V7H16.1716L14.1716 5H9.82843ZM9 3H15L17 5H21C21.5523 5 22 5.44772 22 6V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V6C2 5.44772 2.44772 5 3 5H7L9 3ZM12 18C8.96243 18 6.5 15.5376 6.5 12.5C6.5 9.46243 8.96243 7 12 7C15.0376 7 17.5 9.46243 17.5 12.5C17.5 15.5376 15.0376 18 12 18ZM12 16C13.933 16 15.5 14.433 15.5 12.5C15.5 10.567 13.933 9 12 9C10.067 9 8.5 10.567 8.5 12.5C8.5 14.433 10.067 16 12 16Z"></path></svg>
     <svg class="ic-sel" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 10H18L12 16L6 10H11V3H13V10ZM4 19H20V12H22V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V12H4V19Z"></path></svg>
+      <svg class="bs-ring" viewBox="0 0 34 34" aria-hidden="true"><rect class="bs-track" x="1.5" y="1.5" width="31" height="31"/><rect class="bs-trace" x="1.5" y="1.5" width="31" height="31" pathLength="100"/></svg>
   </button>
 </div>
 <!-- native system camera (capture) + library import file inputs -->
