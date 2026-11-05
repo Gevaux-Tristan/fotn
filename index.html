@@ -500,7 +500,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
     <button class="x" id="edClose" aria-label="Fermer">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
     </button>
-    <div class="t"><h2 id="edName">—</h2></div>
+    <div class="t"><h2 id="edName">—</h2><span id="edPos" aria-live="polite"></span></div>
     <button class="hbtn" id="btnReset" aria-label="Réinitialiser" title="Réinitialiser">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"></path></svg>
     </button>
@@ -1473,6 +1473,7 @@ async function openItem(it){
 function openEditorUI(){
   edMode='presets';toolK=null;
   $('#edName').textContent=(cur&&cur.name)||'';
+  {const i=currentItem?library.findIndex(x=>x.id===currentItem.id):-1;$('#edPos').textContent=i>=0?`${i+1}/${library.length}`:'';}
   renderDock();paint();
   document.body.style.overflow='hidden';
   // a11y: remember focus origin, neutralise background, move focus into the dialog
