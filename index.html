@@ -335,11 +335,11 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:0;backg
 /* two-tab menu */
 .ed-menu{display:flex;align-items:stretch;border-top:var(--div) solid var(--fg);padding-bottom:var(--safe-b);background:#1f1f1f}   /* footer: a touch darker than the editor ground */
 .ed-menu .m{flex:1;padding:11px 6px;background:none;font-size:12px;font-weight:600;letter-spacing:.2px;
-  color:var(--fg);opacity:.5;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+  color:var(--txt3);transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}   /* dimmed via colour, not opacity, so the divider stays solid cream */
 .ed-menu:not(.editing) .m+.m{border-left:var(--div) solid var(--fg)}   /* divider between the two buttons */
 .ed-menu .m svg{display:block}
-.ed-menu .m:hover{opacity:.8}
-.ed-menu .m.on{opacity:1}
+.ed-menu .m:hover{color:var(--txt2)}
+.ed-menu .m.on{color:var(--fg)}
 /* tool-edit menu = cancel · label · confirm */
 .ed-menu.editing{align-items:center;padding:5px 8px;padding-bottom:calc(var(--safe-b) + 5px)}
 .ed-menu .ticon{flex:none;width:60px;height:44px;display:grid;place-items:center;background:none;color:var(--fg);opacity:.7}
@@ -1355,6 +1355,8 @@ async function openItem(it){
   await mxApply(ed.mx||null);
   openEditorUI();
 }
+// phone status/nav bars follow the screen: dark in the editor, cream in the gallery
+function setThemeColor(c){const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',c);}
 function openEditorUI(){
   edMode='presets';toolK=null;
   $('#edName').textContent=(cur&&cur.name)||'';
@@ -1364,7 +1366,7 @@ function openEditorUI(){
   // a11y: remember focus origin, neutralise background, move focus into the dialog
   if(!$('#editor').classList.contains('open'))lastFocused=document.activeElement;
   bgInert(true);
-  $('#scrim').classList.add('show');$('#editor').classList.add('open');
+  $('#scrim').classList.add('show');$('#editor').classList.add('open');setThemeColor('#292929');
   $('#edClose').focus();
   setTimeout(()=>{if(!$('#editor').contains(document.activeElement))$('#edClose').focus();},60);
 }
@@ -1399,7 +1401,7 @@ async function deleteCurrent(){
 }
 function teardownEditor(){
   if(cropMode)exitCrop();
-  $('#scrim').classList.remove('show');$('#editor').classList.remove('open');
+  $('#scrim').classList.remove('show');$('#editor').classList.remove('open');setThemeColor('#EFE9E2');
   document.body.style.overflow='';
   bgInert(false);
   if(lastFocused&&lastFocused.focus){lastFocused.focus();}lastFocused=null;
