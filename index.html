@@ -265,15 +265,12 @@ body.selmode .fab.dim{opacity:.4;pointer-events:none}   /* nothing selected → 
 .crop-h.t::before,.crop-h.b::before{left:50%;top:50%;width:26px;height:3px;transform:translate(-50%,-50%)}
 .crop-h.l::before,.crop-h.r::before{left:50%;top:50%;width:3px;height:26px;transform:translate(-50%,-50%)}
 .crop-box:not(.free) .crop-h.edge{display:none}   /* ratio locked: corners only, so the ratio can't be broken by mistake */
-/* straighten: hide the box, show a full rule-of-thirds grid over the WYSIWYG result */
-.crop.tilt .crop-box{display:none}
 .crop-grid{position:absolute;inset:0;pointer-events:none;display:none;opacity:.4;
   background:
    linear-gradient(90deg,transparent calc(33.33% - .5px),#EFE9E2 calc(33.33% - .5px),#EFE9E2 calc(33.33% + .5px),transparent calc(33.33% + .5px)),
    linear-gradient(90deg,transparent calc(66.66% - .5px),#EFE9E2 calc(66.66% - .5px),#EFE9E2 calc(66.66% + .5px),transparent calc(66.66% + .5px)),
    linear-gradient(0deg,transparent calc(33.33% - .5px),#EFE9E2 calc(33.33% - .5px),#EFE9E2 calc(33.33% + .5px),transparent calc(33.33% + .5px)),
    linear-gradient(0deg,transparent calc(66.66% - .5px),#EFE9E2 calc(66.66% - .5px),#EFE9E2 calc(66.66% + .5px),transparent calc(66.66% + .5px))}
-.crop.tilt .crop-grid{display:block}
 /* single-adjustment slider (reused by the tool-edit view) */
 .range{position:relative;height:26px;display:flex;align-items:center}
 .range .track{position:absolute;left:0;right:0;height:4px;border-radius:0;background:var(--line2)}
@@ -951,7 +948,8 @@ let vals={};             // live adjustment values
 let userImg=null, userURL=null;   // what the editor renders from (photo, or photo + layers) + its object URL
 let userBase=null;                // the photo alone, untouched — surimpression rebuilds userImg from it
 let cropN=null;          // applied crop {x,y,w,h} normalised to the image, or null = full
-let cropMode=false, cropDraft=null, cropARn=null, cropARkey='free';
+let cropMode=false, cropDraft=null, cropARn=null, cropARR=null, cropARkey='free';
+let tbox={x:0,y:0,w:1,h:1};     // crop box in RESULT space while straightened/warped (committed into cropDraft on release)
 let library=[];          // the user's photos (newest first)
 let currentItem=null;    // library item being edited
 // "no preset" — shows the photo untouched (first chip in the rail, like VSCO's "—")
@@ -1935,12 +1933,15 @@ function mxRefresh(){
   $('#mxOpVal').textContent=mxDraft.opacity;
   const layers=mxDraft.ids.map(id=>mxDraftImgs.get(id)).filter(Boolean).map(r=>r.img);
   const src=layers.length?mxBlend(userBase,layers,mxDraft.mode,mxDraft.opacity,900):userBase;
-  const IW=src.naturalWidth||src.width||3, IH=src.naturalHeight||src.height||2;
+  // same geometry as the editor (90° turn, perspective, crop) so the preview matches what gets applied
+  const gs=geoSource(cropN,900,src), IW=gs.IW, IH=gs.IH;
   const reg=cropN?cropRegion(cropN,IW,IH):{sx:0,sy:0,sw:IW,sh:IH};
   let w=reg.sw,h=reg.sh,m=Math.max(w,h);if(m>760){const s=760/m;w*=s;h*=s;}
-  renderRecipe(src,cur,vals,$('#mxPrev'),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)),{crop:reg});
+  renderRecipe(gs.src,cur,vals,$('#mxPrev'),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)),{crop:reg});
 }
-$('#mxOpacity').addEventListener('input',()=>{if(mxDraft){mxDraft.opacity=parseInt($('#mxOpacity').value,10)||0;mxRefresh();}});
+let mxRaf=0;   // one repaint per frame while the slider moves (each repaint is a full-pixel render)
+$('#mxOpacity').addEventListener('input',()=>{if(mxDraft){mxDraft.opacity=parseInt($('#mxOpacity').value,10)||0;
+  if(!mxRaf)mxRaf=requestAnimationFrame(()=>{mxRaf=0;mxRefresh();});}});
 $('#mxCancel').onclick=()=>{mxReleaseDraft();mxClose();};
 $('#mxOk').onclick=async()=>{
   if(mxBusy||!mxDraft)return;
@@ -2016,8 +2017,8 @@ function orientImage(img,q){
   try{img.__orient={q,cv};}catch(e){}
   return cv;
 }
-function geoSource(g, cap){
-  let base=userImg||baseImg;
+function geoSource(g, cap, baseOverride){
+  let base=baseOverride||userImg||baseImg;
   if(g&&g.o)base=orientImage(base,g.o);              // 90° orientation first
   if(g&&(g.kv||g.kh)){const w=warpKeystone(base,g.kv,g.kh,cap||1500);return {src:w,IW:w.width,IH:w.height};}
   return {src:base,IW:base.naturalWidth||base.width||3,IH:base.naturalHeight||base.height||2};
@@ -2063,15 +2064,39 @@ function cropRegion(cn,IW,IH){
 // normalised aspect (w/h in 0..1 image space) for an output ratio R = outW/outH
 function arnFor(r){if(r==null)return null;const [IW,IH]=cropSrcWH();const R=(r==='orig')?(IW/IH):r;return R*IH/IW;}
 // displayed image rect inside #preview (object-fit: contain)
+// while a transform is active the preview shows the transformed RESULT, so the box lives in result space
+function tiltInfo(){const [IW,IH]=cropSrcWH();return {IW,IH,reg:cropRegion(cropDraft,IW,IH)};}
+function boxState(){return geoActive(cropDraft)?tbox:cropDraft;}
+function setBoxState(b){if(geoActive(cropDraft))tbox={...tbox,...b};else cropDraft={...cropDraft,...b};}
+// aspect (w/h) of the box in its own normalised space, for the ratio chosen in the dock
+function curArn(){
+  if(cropARR==null)return null;
+  if(geoActive(cropDraft)){const r=tiltInfo().reg;return cropARR*r.sh/r.sw;}
+  const [IW,IH]=cropSrcWH();return cropARR*IH/IW;
+}
+// move the sub-box drawn on the transformed result back into the crop (exact: same rotation, shifted centre)
+function commitTilt(){
+  if(!geoActive(cropDraft))return;
+  const t=tbox;if(t.w>=0.999&&t.h>=0.999&&t.x<=0.001&&t.y<=0.001)return;
+  const {IW,IH,reg}=tiltInfo();
+  const cx=reg.sx+reg.sw/2, cy=reg.sy+reg.sh/2, c=Math.cos(reg.rot), s=Math.sin(reg.rot);
+  const ox=(t.x+t.w/2-0.5)*reg.sw, oy=(t.y+t.h/2-0.5)*reg.sh;
+  const ncx=cx+c*ox+s*oy, ncy=cy-s*ox+c*oy, hw=reg.sw*t.w/2, hh=reg.sh*t.h/2;
+  cropDraft={...cropDraft,x:(ncx-hw)/IW,y:(ncy-hh)/IH,w:2*hw/IW,h:2*hh/IH};
+  tbox={x:0,y:0,w:1,h:1};
+  if(cropARR!=null)setCropRatio(cropARkey);
+  paintPreview();requestAnimationFrame(()=>requestAnimationFrame(layoutCropBox));
+}
 function imgDispRect(){
-  const pv=$('#preview').getBoundingClientRect();const [IW,IH]=cropSrcWH();
+  const pv=$('#preview').getBoundingClientRect();
+  const [IW,IH]=geoActive(cropDraft)?(r=>[r.sw,r.sh])(tiltInfo().reg):cropSrcWH();
   const PAD=30;                              // room around the full-frame box for the corner/edge handles
   const aw=Math.max(1,pv.width-2*PAD),ah=Math.max(1,pv.height-2*PAD);
   const s=Math.min(aw/IW,ah/IH),dW=IW*s,dH=IH*s;
   return {left:(pv.width-dW)/2,top:(pv.height-dH)/2,w:dW,h:dH};
 }
 function layoutCropBox(){
-  if(!cropDraft)return;const R=imgDispRect(),c=cropDraft,b=$('#cropBox');
+  if(!cropDraft)return;const R=imgDispRect(),c=boxState(),b=$('#cropBox');
   b.style.left=(R.left+c.x*R.w)+'px';b.style.top=(R.top+c.y*R.h)+'px';
   b.style.width=(c.w*R.w)+'px';b.style.height=(c.h*R.h)+'px';
 }
@@ -2096,7 +2121,7 @@ function buildCropControls(rail){
 // 90° clockwise orientation step; box resets to full frame in the new orientation.
 function rotate90(){
   cropDraft.o=((cropDraft.o||0)+1)%4;
-  cropDraft.x=0;cropDraft.y=0;cropDraft.w=1;cropDraft.h=1;
+  cropDraft.x=0;cropDraft.y=0;cropDraft.w=1;cropDraft.h=1;tbox={x:0,y:0,w:1,h:1};
   paintPreview();
   // re-lock the ratio + relayout the box once the preview canvas has its new dimensions
   requestAnimationFrame(()=>requestAnimationFrame(()=>setCropRatio(cropARkey)));
@@ -2127,8 +2152,10 @@ function geoSlider(label,key,min,max,unit,step){
 }
 function syncTransform(){
   $('#crop').classList.toggle('tilt',geoActive(cropDraft));
+  tbox={x:0,y:0,w:1,h:1};                          // the result changed → result-space box restarts full frame
+  if(geoActive(cropDraft)&&cropARR!=null)setCropRatio(cropARkey);
   paintPreview();
-  if(!geoActive(cropDraft))requestAnimationFrame(layoutCropBox);   // box returns when fully neutral
+  requestAnimationFrame(()=>requestAnimationFrame(layoutCropBox));   // after the new preview canvas is sized
 }
 function autoLevel(){
   cropDraft.rot=Math.max(-45,Math.min(45,Math.round(autoDeskew(orientImage(userImg||baseImg,cropDraft.o)))));
@@ -2145,17 +2172,21 @@ function buildCropMenu(menu){
   menu.appendChild(x);menu.appendChild(name);menu.appendChild(ok);
 }
 function setCropRatio(key){
-  cropARkey=key;cropARn=arnFor((CROP_RATIOS.find(c=>c.k===key)||{}).r);markCropRatios();
-  $('#cropBox').classList.toggle('free',!cropARn);   // free ratio → also show the edge handles
-  if(cropARn){                                   // snap to the largest box of this ratio, kept around the current centre
-    const cx=cropDraft.x+cropDraft.w/2, cy=cropDraft.y+cropDraft.h/2;
-    let w=1,h=w/cropARn; if(h>1){h=1;w=h*cropARn;}
-    cropDraft={x:clamp(cx-w/2,0,1-w),y:clamp(cy-h/2,0,1-h),w,h,rot:cropDraft.rot,kv:cropDraft.kv,kh:cropDraft.kh};
+  const ent=CROP_RATIOS.find(c=>c.k===key)||{};
+  cropARkey=key;const [IW,IH]=cropSrcWH();
+  cropARR=ent.r==null?null:(ent.r==='orig'?IW/IH:ent.r);
+  cropARn=cropARR==null?null:cropARR*IH/IW;markCropRatios();
+  const AR=curArn();
+  $('#cropBox').classList.toggle('free',!AR);   // free ratio → also show the edge handles
+  if(AR){                                        // snap to the largest box of this ratio, kept around the current centre
+    const b=boxState(), cx=b.x+b.w/2, cy=b.y+b.h/2;
+    let w=1,h=w/AR; if(h>1){h=1;w=h*AR;}
+    setBoxState({x:clamp(cx-w/2,0,1-w),y:clamp(cy-h/2,0,1-h),w,h});
   }
-  if(geoActive(cropDraft))paintPreview(); else layoutCropBox();
+  layoutCropBox();
 }
 function resizeCropCorner(corner,s,dnx,dny){
-  const MIN=0.07;
+  const MIN=0.07, AR=curArn();
   const cxs=(corner==='tr'||corner==='br')?s.x+s.w:s.x;   // dragged corner start pos
   const cys=(corner==='bl'||corner==='br')?s.y+s.h:s.y;
   const ax =(corner==='tr'||corner==='br')?s.x:s.x+s.w;   // fixed (anchor) corner
@@ -2163,54 +2194,54 @@ function resizeCropCorner(corner,s,dnx,dny){
   const dirX=(corner==='tr'||corner==='br')?1:-1, dirY=(corner==='bl'||corner==='br')?1:-1;
   const pnx=clamp(cxs+dnx,0,1), pny=clamp(cys+dny,0,1);
   const maxW=dirX>0?1-ax:ax, maxH=dirY>0?1-ay:ay;
-  if(!cropARn){
+  if(!AR){
     let nw=clamp(Math.abs(pnx-ax),MIN,maxW), nh=clamp(Math.abs(pny-ay),MIN,maxH);
-    cropDraft={x:dirX>0?ax:ax-nw, y:dirY>0?ay:ay-nh, w:nw, h:nh};
+    return {x:dirX>0?ax:ax-nw, y:dirY>0?ay:ay-nh, w:nw, h:nh};
   }else{
-    let w=Math.max(Math.abs(pnx-ax),Math.abs(pny-ay)*cropARn);
-    w=Math.min(w,maxW,maxH*cropARn);
-    let h=w/cropARn;
-    if(h<MIN){h=MIN;w=h*cropARn;}
-    if(w<MIN){w=MIN;h=w/cropARn;}
-    if(w>maxW){w=maxW;h=w/cropARn;} if(h>maxH){h=maxH;w=h*cropARn;}
-    cropDraft={x:dirX>0?ax:ax-w, y:dirY>0?ay:ay-h, w, h};
+    let w=Math.max(Math.abs(pnx-ax),Math.abs(pny-ay)*AR);
+    w=Math.min(w,maxW,maxH*AR);
+    let h=w/AR;
+    if(h<MIN){h=MIN;w=h*AR;}
+    if(w<MIN){w=MIN;h=w/AR;}
+    if(w>maxW){w=maxW;h=w/AR;} if(h>maxH){h=maxH;w=h*AR;}
+    return {x:dirX>0?ax:ax-w, y:dirY>0?ay:ay-h, w, h};
   }
 }
 // single-edge drag (free ratio only) — resize one side, opposite side stays put
 function resizeCropEdge(edge,s,dnx,dny){
   const MIN=0.07;
-  if(edge==='l'){const r=s.x+s.w,nx=clamp(s.x+dnx,0,r-MIN);cropDraft={...s,x:nx,w:r-nx};}
-  else if(edge==='r'){cropDraft={...s,w:clamp(s.w+dnx,MIN,1-s.x)};}
-  else if(edge==='t'){const b=s.y+s.h,ny=clamp(s.y+dny,0,b-MIN);cropDraft={...s,y:ny,h:b-ny};}
-  else if(edge==='b'){cropDraft={...s,h:clamp(s.h+dny,MIN,1-s.y)};}
+  if(edge==='l')return {...s,x:clamp(s.x+dnx,0,s.x+s.w-MIN),w:s.x+s.w-clamp(s.x+dnx,0,s.x+s.w-MIN)};
+  else if(edge==='r')return {...s,w:clamp(s.w+dnx,MIN,1-s.x)};
+  else if(edge==='t'){const b=s.y+s.h,ny=clamp(s.y+dny,0,b-MIN);return {...s,y:ny,h:b-ny};}
+  else return {...s,h:clamp(s.h+dny,MIN,1-s.y)};
 }
 (function cropDrag(){
   const ov=$('#crop');let active=null;
   ov.addEventListener('pointerdown',e=>{
-    if(geoActive(cropDraft))return;                // no box drag while a transform is active (WYSIWYG result)
     const h=e.target.closest('.crop-h');
     const box=$('#cropBox').getBoundingClientRect();
     const inBox=e.clientX>=box.left&&e.clientX<=box.right&&e.clientY>=box.top&&e.clientY<=box.bottom;
     if(!h&&!inBox)return;
-    active={corner:h&&h.dataset.c,px:e.clientX,py:e.clientY,start:{...cropDraft},R:imgDispRect()};
+    active={corner:h&&h.dataset.c,px:e.clientX,py:e.clientY,start:{...boxState()},R:imgDispRect()};
     ov.setPointerCapture(e.pointerId);e.preventDefault();
   });
   ov.addEventListener('pointermove',e=>{
     if(!active)return;
     const dnx=(e.clientX-active.px)/active.R.w, dny=(e.clientY-active.py)/active.R.h, s=active.start;
-    if(active.corner==='t'||active.corner==='b'||active.corner==='l'||active.corner==='r')resizeCropEdge(active.corner,s,dnx,dny);
-    else if(active.corner)resizeCropCorner(active.corner,s,dnx,dny);
-    else cropDraft={x:clamp(s.x+dnx,0,1-s.w),y:clamp(s.y+dny,0,1-s.h),w:s.w,h:s.h};
-    layoutCropBox();
+    let nb;
+    if(active.corner==='t'||active.corner==='b'||active.corner==='l'||active.corner==='r')nb=resizeCropEdge(active.corner,s,dnx,dny);
+    else if(active.corner)nb=resizeCropCorner(active.corner,s,dnx,dny);
+    else nb={x:clamp(s.x+dnx,0,1-s.w),y:clamp(s.y+dny,0,1-s.h),w:s.w,h:s.h};
+    setBoxState(nb);layoutCropBox();
   });
-  const end=e=>{if(active){try{ov.releasePointerCapture(e.pointerId);}catch(_){}active=null;}};
+  const end=e=>{if(active){try{ov.releasePointerCapture(e.pointerId);}catch(_){}active=null;commitTilt();}};
   ov.addEventListener('pointerup',end);ov.addEventListener('pointercancel',end);
 })();
 function enterCrop(){
   if(!cur)return;
   cropMode=true;toolK=null;cropDraft=cropN?{...cropN}:{x:0,y:0,w:1,h:1,rot:0,kv:0,kh:0,o:0};
   cropDraft.rot=cropDraft.rot||0;cropDraft.kv=cropDraft.kv||0;cropDraft.kh=cropDraft.kh||0;cropDraft.o=cropDraft.o||0;
-  cropARkey='free';cropARn=null;
+  cropARkey='free';cropARn=null;cropARR=null;tbox={x:0,y:0,w:1,h:1};
   $('#cropBox').classList.add('free');
   $('#preview').classList.add('cropping');
   $('#crop').hidden=false;$('#crop').classList.toggle('tilt',geoActive(cropDraft));
@@ -2220,6 +2251,7 @@ function enterCrop(){
 function exitCrop(){cropMode=false;$('#preview').classList.remove('cropping');$('#crop').hidden=true;$('#crop').classList.remove('tilt');}
 function cancelCrop(){exitCrop();renderDock();paintPreview();}
 function applyCrop(){
+  commitTilt();
   const c=cropDraft;
   const full=c.w>=0.999&&c.h>=0.999&&c.x<=0.001&&c.y<=0.001&&!c.rot&&!c.kv&&!c.kh&&!(c.o%4);
   cropN=full?null:{...c};                          // full, level, unrotated & no perspective = no crop
