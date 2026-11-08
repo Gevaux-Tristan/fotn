@@ -1819,7 +1819,9 @@ function mxBlend(base,layers,mode,opacity,maxEdge){
   let W=base.naturalWidth||base.width||1, H=base.naturalHeight||base.height||1;
   if(maxEdge){const m=Math.max(W,H);if(m>maxEdge){const s=maxEdge/m;W=Math.max(1,Math.round(W*s));H=Math.max(1,Math.round(H*s));}}
   const cv=document.createElement('canvas');cv.width=W;cv.height=H;
-  const x=cv.getContext('2d');
+  // software canvas: big GPU canvases + blend modes produce random pixelated tiles on some devices (iOS)
+  const x=cv.getContext('2d',{willReadFrequently:true});
+  x.imageSmoothingQuality='high';
   x.drawImage(base,0,0,W,H);
   const a=Math.max(0,Math.min(1,(opacity==null?60:opacity)/100));
   layers.forEach(im=>{
