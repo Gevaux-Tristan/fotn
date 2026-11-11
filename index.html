@@ -333,6 +333,13 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:0;backg
 .tchip.act .tlabel{color:var(--accent)}
 /* tool-edit — one full-width slider */
 .ed-rail.editing{flex-direction:column;align-items:stretch;gap:11px;padding:16px 20px}
+.framepanel{flex-direction:column;align-items:stretch;gap:10px}
+.frame-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.fbtn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid var(--line,#444);background:transparent;color:var(--txt2);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.fbtn.on{border-color:var(--fg);color:var(--accent)}
+.fbtn i{width:14px;height:14px;border:1px solid #888;display:inline-block}
+.fbtn i.rainbow{background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
+.frame-picker{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .tool-val{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--txt)}
 /* two-tab menu */
 .ed-menu{display:flex;align-items:stretch;border-top:var(--div) solid var(--fg);padding-bottom:var(--safe-b);background:#1f1f1f}   /* footer: a touch darker than the editor ground */
@@ -815,6 +822,20 @@ function renderRecipe(src,P,A,canvas,w,h,opts){
   if(O.hal||O.bloom)applyGlow(d,w,h,O);
   if(O.grain&&!(opts&&opts.noGrain))applyGrain(d,w,h,O,!!P.mono);
   ctx.putImageData(id,0,0);
+  if(A&&A.frame>0)applyFrame(canvas,ctx,A);
+}
+// Border: the canvas size (final format) never changes. The photo is shrunk uniformly (ratio kept)
+// until its tightest side leaves a margin of t; the rest is filled with the border colour.
+const FRAME_T=[0,.025,.05,.09], FRAME_LABEL=['Aucune','Fine','Moyenne','Épaisse'];
+function applyFrame(canvas,ctx,A){
+  const w=canvas.width,h=canvas.height,t=FRAME_T[A.frame|0]*Math.max(w,h);
+  if(!(t>0)||w-2*t<4||h-2*t<4)return;
+  const tmp=document.createElement('canvas');tmp.width=w;tmp.height=h;tmp.getContext('2d').drawImage(canvas,0,0);
+  const s=Math.min((w-2*t)/w,(h-2*t)/h), iw=w*s, ih=h*s;
+  ctx.fillStyle=/^#[0-9a-f]{6}$/i.test(A.frameC)?A.frameC:'#000000';
+  ctx.fillRect(0,0,w,h);
+  ctx.imageSmoothingQuality='high';
+  ctx.drawImage(tmp,(w-iw)/2,(h-ih)/2,iw,ih);
 }
 
 // Separable box blur on a small float buffer (clamped edges), in place.
@@ -1350,7 +1371,7 @@ const ADJ=[
   {k:'vignette',   label:'Vignettage',     min:0,   max:100,step:1},
   {k:'fade',       label:'Estompé',        min:0,   max:100,step:1},
 ];
-function neutralAdj(){const o={};ADJ.forEach(a=>o[a.k]=(a.def==null?0:a.def));return o;}
+function neutralAdj(){const o={};ADJ.forEach(a=>o[a.k]=(a.def==null?0:a.def));o.frame=0;o.frameC='#000000';return o;}
 
 // — load a photo Image from its stored blob —
 function blobToImage(blob){return new Promise((res,rej)=>{
@@ -1594,6 +1615,7 @@ function selectPreset(p){
 }
 
 // — réglages rail: a Crop entry + one chip per adjustment (icon + name only) —
+const FRAME_ICON='M3 3H21V21H3ZM5 5V19H19V5ZM8 8H16V16H8Z';
 const CROP_ICON='M15 17V19H6C5.44772 19 5 18.5523 5 18V7H2V5H5V2H7V17H15ZM17 22V7H9V5H18C18.5523 5 19 5.44772 19 6V17H22V19H19V22H17Z';
 function buildToolChips(rail){
   const cb=el('button','tchip'+(cropN?' act':''));cb.setAttribute('aria-label','Recadrer');
@@ -1602,6 +1624,11 @@ function buildToolChips(rail){
   cb.appendChild(ci);cb.appendChild(cl);
   cb.onclick=enterCrop;
   rail.appendChild(cb);
+  const fb=el('button','tchip'+(vals.frame>0?' act':''));fb.setAttribute('aria-label','Bordure');
+  const fi=el('span','tico');fi.innerHTML=svgIcon(FRAME_ICON,22);
+  const fl=el('span','tlabel');fl.textContent='Bordure';
+  fb.appendChild(fi);fb.appendChild(fl);fb.onclick=()=>openTool('frame');
+  rail.appendChild(fb);
   ADJ.forEach(a=>{
     const active=vals[a.k]!==adjDef(a);
     const b=el('button','tchip'+(active?' act':''));b.setAttribute('aria-label',a.label);
@@ -1614,10 +1641,13 @@ function buildToolChips(rail){
 }
 
 // — single-adjustment editing: one slider with cancel / confirm —
-function openTool(k){toolK=k;toolEntry=vals[k];renderDock();}
+let frameEntry=null;
+function openTool(k){toolK=k;toolEntry=vals[k];if(k==='frame')frameEntry={f:vals.frame,c:vals.frameC};renderDock();}
 function confirmTool(){toolK=null;edMode='adjust';renderDock();}
-function cancelTool(){if(toolK!=null){vals[toolK]=toolEntry;paint();}toolK=null;edMode='adjust';renderDock();}
+function cancelTool(){if(toolK==='frame'&&frameEntry){vals.frame=frameEntry.f;vals.frameC=frameEntry.c;paint();}
+  else if(toolK!=null){vals[toolK]=toolEntry;paint();}toolK=null;edMode='adjust';renderDock();}
 function buildToolSlider(rail){
+  if(toolK==='frame'){buildFramePanel(rail);return;}
   const a=SLIDER_BY_K[toolK];
   const val=el('div','tool-val');val.id='toolVal';
   const range=el('div','range');
@@ -1631,6 +1661,32 @@ function buildToolSlider(rail){
   inp.addEventListener('input',onInput);    // keyboard (arrows) still works
   inp.addEventListener('change',onCommit);
   attachRelativeSlider(inp,onInput,onCommit);
+}
+// Border panel: thickness steps + colour (black / white / custom picker, with the screen eyedropper when available)
+function buildFramePanel(rail){
+  rail.classList.add('framepanel');
+  const rowT=el('div','frame-row'), rowC=el('div','frame-row');
+  const mark=()=>{
+    rowT.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===(vals.frame|0)));
+    const c=(vals.frameC||'#000000').toLowerCase();
+    rowC.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.c===c||(b.dataset.c==='custom'&&c!=='#000000'&&c!=='#ffffff')));
+    cust.style.background=(c!=='#000000'&&c!=='#ffffff')?c:'';
+  };
+  FRAME_LABEL.forEach((l,i)=>{const b=el('button','fbtn');b.textContent=l;
+    b.onclick=()=>{vals.frame=i;mark();paintLook(false);};rowT.appendChild(b);});
+  const setC=(c,draft)=>{vals.frameC=c;if(!(vals.frame>0))vals.frame=2;mark();paintLook(!!draft);rowT.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===(vals.frame|0)));};
+  [['Noir','#000000'],['Blanc','#ffffff']].forEach(([l,c])=>{const b=el('button','fbtn');b.dataset.c=c;
+    b.innerHTML='<i style="background:'+c+'"></i>'+l;b.onclick=()=>setC(c);rowC.appendChild(b);});
+  const cust=el('button','fbtn');cust.dataset.c='custom';cust.innerHTML='<i class="rainbow"></i>Perso';
+  const inp=document.createElement('input');inp.type='color';inp.value=/^#[0-9a-f]{6}$/i.test(vals.frameC)?vals.frameC:'#000000';
+  inp.className='frame-picker';inp.setAttribute('aria-label','Couleur de la bordure');
+  inp.addEventListener('input',()=>setC(inp.value,true));
+  inp.addEventListener('change',()=>setC(inp.value,false));
+  cust.onclick=()=>inp.click();
+  rowC.appendChild(cust);rowC.appendChild(inp);
+  if(window.EyeDropper){const p=el('button','fbtn');p.textContent='Pipette';p.setAttribute('aria-label','Prélever une couleur à l\u2019écran');
+    p.onclick=async()=>{try{const r=await new EyeDropper().open();inp.value=r.sRGBHex;setC(r.sRGBHex);}catch(_){}};rowC.appendChild(p);}
+  rail.appendChild(rowT);rail.appendChild(rowC);mark();
 }
 // VSCO-style RELATIVE dragging: touching anywhere keeps the current value; only the finger's
 // horizontal movement changes it (delta), so there's no jump-to-touch on the first contact.
@@ -1667,9 +1723,9 @@ function updToolSlider(){
   f.parentNode.querySelector('.midmark').style.left=mid+'%';
 }
 function buildToolMenu(menu){
-  const a=SLIDER_BY_K[toolK];
+  const a=toolK==='frame'?{label:'Bordure'}:SLIDER_BY_K[toolK];
   const x=el('button','ticon');x.innerHTML=svgIcon(MI.close,22);x.setAttribute('aria-label','Annuler');x.onclick=cancelTool;
-  const name=el('div','tname');name.innerHTML=(ADJ_ICON[toolK]?svgIcon(ADJ_ICON[toolK],18):'')+'<span>'+esc(a.label)+'</span>';
+  const name=el('div','tname');name.innerHTML=(toolK==='frame'?svgIcon(FRAME_ICON,18):ADJ_ICON[toolK]?svgIcon(ADJ_ICON[toolK],18):'')+'<span>'+esc(a.label)+'</span>';
   const ok=el('button','ticon ok');ok.innerHTML=svgIcon('M9.9997 15.1709L19.1921 5.97852L20.6063 7.39273L9.9997 17.9993L3.63574 11.6354L5.04996 10.2212L9.9997 15.1709Z',22);ok.setAttribute('aria-label','Valider');ok.onclick=confirmTool;
   menu.appendChild(x);menu.appendChild(name);menu.appendChild(ok);
 }
