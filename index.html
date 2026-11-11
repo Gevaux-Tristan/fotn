@@ -339,8 +339,6 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:0;backg
 .preview.picking{cursor:crosshair}
 .fbtn.on{border-color:var(--fg);color:var(--accent)}
 .fbtn i{width:14px;height:14px;border:1px solid #888;display:inline-block}
-.fbtn i.rainbow{background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
-.frame-picker{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .tool-val{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--txt)}
 /* two-tab menu */
 .ed-menu{display:flex;align-items:stretch;border-top:var(--div) solid var(--fg);padding-bottom:var(--safe-b);background:#1f1f1f}   /* footer: a touch darker than the editor ground */
@@ -1687,7 +1685,6 @@ $('#preview').addEventListener('pointerdown',e=>{
   const n=d.length/4,h=v=>Math.round(v/n).toString(16).padStart(2,'0');
   const cb=pickCb;setPicking(false);
   if(cb)cb('#'+h(R)+h(G)+h(B));
-  document.querySelectorAll('#edRail .fbtn').forEach(b=>{if(b.textContent==='Pipette')b.classList.remove('on');});
 },true);
 // Border panel: thickness steps + colour (black / white / custom picker, with the screen eyedropper when available)
 function buildFramePanel(rail){
@@ -1696,24 +1693,19 @@ function buildFramePanel(rail){
   const mark=()=>{
     rowT.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===(vals.frame|0)));
     const c=(vals.frameC||'#000000').toLowerCase();
-    rowC.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.c===c||(b.dataset.c==='custom'&&c!=='#000000'&&c!=='#ffffff')));
-    cust.style.background=(c!=='#000000'&&c!=='#ffffff')?c:'';
+    const custom=c!=='#000000'&&c!=='#ffffff';
+    rowC.querySelectorAll('button[data-c]').forEach(b=>b.classList.toggle('on',b.dataset.c===c));
+    pip.classList.toggle('on',picking||custom);
+    pip.firstChild.style.color=custom?c:'';
   };
   FRAME_LABEL.forEach((l,i)=>{const b=el('button','fbtn');b.textContent=l;
     b.onclick=()=>{vals.frame=i;mark();paintLook(false);};rowT.appendChild(b);});
   const setC=(c,draft)=>{vals.frameC=c;if(!(vals.frame>0))vals.frame=2;mark();paintLook(!!draft);rowT.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===(vals.frame|0)));};
   [['Noir','#000000'],['Blanc','#ffffff']].forEach(([l,c])=>{const b=el('button','fbtn');b.dataset.c=c;
     b.innerHTML='<i style="background:'+c+'"></i>'+l;b.onclick=()=>setC(c);rowC.appendChild(b);});
-  const cust=el('button','fbtn');cust.dataset.c='custom';cust.innerHTML='<i class="rainbow"></i>Perso';
-  const inp=document.createElement('input');inp.type='color';inp.value=/^#[0-9a-f]{6}$/i.test(vals.frameC)?vals.frameC:'#000000';
-  inp.className='frame-picker';inp.setAttribute('aria-label','Couleur de la bordure');
-  inp.addEventListener('input',()=>setC(inp.value,true));
-  inp.addEventListener('change',()=>setC(inp.value,false));
-  cust.onclick=()=>inp.click();
-  rowC.appendChild(cust);rowC.appendChild(inp);
   const pip=el('button','fbtn');pip.innerHTML=svgIcon(PIPETTE_ICON,16)+'Pipette';
   pip.setAttribute('aria-label','Prélever une couleur sur la photo');
-  pip.onclick=()=>{setPicking(!picking,c=>{inp.value=c;setC(c);});pip.classList.toggle('on',picking);};
+  pip.onclick=()=>{setPicking(!picking,c=>setC(c));mark();};
   rowC.appendChild(pip);
   rail.appendChild(rowT);rail.appendChild(rowC);mark();
 }
