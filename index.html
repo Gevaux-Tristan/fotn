@@ -336,6 +336,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:0;backg
 .framepanel{flex-direction:column;align-items:stretch;gap:10px}
 .frame-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .fbtn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid var(--line,#444);background:transparent;color:var(--txt2);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.preview.picking{cursor:crosshair}
 .fbtn.on{border-color:var(--fg);color:var(--accent)}
 .fbtn i{width:14px;height:14px;border:1px solid #888;display:inline-block}
 .fbtn i.rainbow{background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
@@ -1643,8 +1644,8 @@ function buildToolChips(rail){
 // — single-adjustment editing: one slider with cancel / confirm —
 let frameEntry=null;
 function openTool(k){toolK=k;toolEntry=vals[k];if(k==='frame')frameEntry={f:vals.frame,c:vals.frameC};renderDock();}
-function confirmTool(){toolK=null;edMode='adjust';renderDock();}
-function cancelTool(){if(toolK==='frame'&&frameEntry){vals.frame=frameEntry.f;vals.frameC=frameEntry.c;paint();}
+function confirmTool(){setPicking(false);toolK=null;edMode='adjust';renderDock();}
+function cancelTool(){setPicking(false);if(toolK==='frame'&&frameEntry){vals.frame=frameEntry.f;vals.frameC=frameEntry.c;paint();}
   else if(toolK!=null){vals[toolK]=toolEntry;paint();}toolK=null;edMode='adjust';renderDock();}
 function buildToolSlider(rail){
   if(toolK==='frame'){buildFramePanel(rail);return;}
@@ -1662,6 +1663,32 @@ function buildToolSlider(rail){
   inp.addEventListener('change',onCommit);
   attachRelativeSlider(inp,onInput,onCommit);
 }
+// Eyedropper on the photo itself: while active the preview is drawn WITHOUT the border (so only photo pixels
+// can be picked) and a tap samples a 5×5 average (grain would make a single pixel noisy).
+const PIPETTE_ICON='M13.2 3.2l1.4 1.4 2-2a2 2 0 112.8 2.8l-2 2 1.4 1.4-1.4 1.4-.7-.7-8.3 8.3a2 2 0 01-1 .5l-3 .6.6-3a2 2 0 01.5-1l8.3-8.3-.7-.7 1.4-1.4zM6.6 15.4l-.3 1.3 1.3-.3 8.3-8.3-1-1-8.3 8.3z';
+let picking=false,pickCb=null;
+function setPicking(on,cb){
+  if(on===picking)return;picking=on;pickCb=on?cb:null;
+  $('#preview').classList.toggle('picking',on);
+  if(on)toast('Touche la photo pour prélever une couleur');
+  paintPreview();
+}
+$('#preview').addEventListener('pointerdown',e=>{
+  if(!picking)return;
+  e.stopPropagation();e.preventDefault();
+  const r=pvCanvas.getBoundingClientRect(),cs=getComputedStyle(pvCanvas),pl=parseFloat(cs.paddingLeft)||0,pt=parseFloat(cs.paddingTop)||0;
+  const cw=r.width-2*pl,ch=r.height-2*pt,s=Math.min(cw/pvCanvas.width,ch/pvCanvas.height);
+  const dw=pvCanvas.width*s,dh=pvCanvas.height*s,ox=r.left+pl+(cw-dw)/2,oy=r.top+pt+(ch-dh)/2;
+  const x=(e.clientX-ox)/s,y=(e.clientY-oy)/s;
+  if(x<0||y<0||x>=pvCanvas.width||y>=pvCanvas.height)return;     // tap outside the photo: keep picking
+  const px=Math.max(0,Math.min(pvCanvas.width-5,Math.round(x)-2)),py=Math.max(0,Math.min(pvCanvas.height-5,Math.round(y)-2));
+  const d=pvCanvas.getContext('2d').getImageData(px,py,5,5).data;let R=0,G=0,B=0;
+  for(let i=0;i<d.length;i+=4){R+=d[i];G+=d[i+1];B+=d[i+2];}
+  const n=d.length/4,h=v=>Math.round(v/n).toString(16).padStart(2,'0');
+  const cb=pickCb;setPicking(false);
+  if(cb)cb('#'+h(R)+h(G)+h(B));
+  document.querySelectorAll('#edRail .fbtn').forEach(b=>{if(b.textContent==='Pipette')b.classList.remove('on');});
+},true);
 // Border panel: thickness steps + colour (black / white / custom picker, with the screen eyedropper when available)
 function buildFramePanel(rail){
   rail.classList.add('framepanel');
@@ -1684,8 +1711,10 @@ function buildFramePanel(rail){
   inp.addEventListener('change',()=>setC(inp.value,false));
   cust.onclick=()=>inp.click();
   rowC.appendChild(cust);rowC.appendChild(inp);
-  if(window.EyeDropper){const p=el('button','fbtn');p.textContent='Pipette';p.setAttribute('aria-label','Prélever une couleur à l\u2019écran');
-    p.onclick=async()=>{try{const r=await new EyeDropper().open();inp.value=r.sRGBHex;setC(r.sRGBHex);}catch(_){}};rowC.appendChild(p);}
+  const pip=el('button','fbtn');pip.innerHTML=svgIcon(PIPETTE_ICON,16)+'Pipette';
+  pip.setAttribute('aria-label','Prélever une couleur sur la photo');
+  pip.onclick=()=>{setPicking(!picking,c=>{inp.value=c;setC(c);});pip.classList.toggle('on',picking);};
+  rowC.appendChild(pip);
   rail.appendChild(rowT);rail.appendChild(rowC);mark();
 }
 // VSCO-style RELATIVE dragging: touching anywhere keeps the current value; only the finger's
@@ -1756,7 +1785,7 @@ function paintPreview(draft){
     }
     let w=reg.sw, h=reg.sh, m=Math.max(w,h), cap=full?(window.innerWidth>=1024?1800:1100):640;   // low-res while scrubbing → smooth
     if(m>cap){const s=cap/m;w*=s;h*=s;}
-    renderRecipe(src, cur, vals, pvCanvas, Math.round(w), Math.round(h), {crop:reg});});
+    renderRecipe(src, cur, picking?Object.assign({},vals,{frame:0}):vals, pvCanvas, Math.round(w), Math.round(h), {crop:reg});});
 }
 // slider handlers call paintLook(); keep the name, route to the canvas render.
 const paintLook=paintPreview;
