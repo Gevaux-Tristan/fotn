@@ -343,7 +343,8 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:0;backg
 /* two-tab menu */
 .ed-menu{display:flex;align-items:stretch;border-top:var(--div) solid var(--fg);padding-bottom:var(--safe-b);background:#1f1f1f}   /* footer: a touch darker than the editor ground */
 .ed-menu .m{flex:1;padding:11px 6px;background:none;font-size:12px;font-weight:600;letter-spacing:.2px;
-  color:var(--txt3);transition:.15s;display:flex;flex-direction:column;align-items:center;gap:4px}   /* dimmed via colour, not opacity, so the divider stays solid cream */
+  color:var(--txt3);transition:color .15s;touch-action:manipulation;user-select:none;display:flex;flex-direction:column;align-items:center;gap:4px}
+.ed-menu .m:active{color:var(--fg)}   /* instant press feedback, before the rail rebuild   /* dimmed via colour, not opacity, so the divider stays solid cream */
 .ed-menu:not(.editing) .m+.m{border-left:var(--div) solid var(--fg)}   /* divider between the two buttons */
 .ed-menu .m svg{display:block}
 .ed-menu .m:hover{color:var(--txt2)}
@@ -1567,7 +1568,12 @@ function renderMenu(){
     const b=el('button','m');b.setAttribute('role','tab');
     b.innerHTML=svgIcon(TAB_ICON[m],22)+'<span>'+label+'</span>';
     if(edMode===m){b.classList.add('on');b.setAttribute('aria-selected','true');}
-    b.onclick=()=>{if(edMode!==m){edMode=m;toolK=null;renderDock();}};
+    b.onclick=()=>{
+      if(edMode===m)return;
+      edMode=m;toolK=null;
+      menu.querySelectorAll('.m').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-selected',on?'true':'false');});   // instant feedback
+      requestAnimationFrame(()=>setTimeout(renderDock,0));   // heavy rail rebuild after the browser has painted the tap
+    };
     menu.appendChild(b);
   });
 }
@@ -1594,9 +1600,15 @@ function paintPresetRail(){
   requestAnimationFrame(()=>{stripScheduled=false;
     const src=userImg||baseImg;
     if(!src||!(src.naturalWidth||src.width))return;
-    document.querySelectorAll('#edRail .pchip canvas').forEach(cv=>{
-      const p=presetByI(+cv.parentNode.dataset.i);if(p)renderRecipe(src,p,NEUTRAL,cv,112,112);
-    });
+    const cvs=[...document.querySelectorAll('#edRail .pchip canvas')];
+    let k=0;
+    (function batch(){   // a few thumbnails per frame: no long main-thread block that swallows taps
+      for(const end=Math.min(k+3,cvs.length);k<end;k++){
+        const cv=cvs[k];if(!cv.isConnected)return;
+        const p=presetByI(+cv.parentNode.dataset.i);if(p)renderRecipe(src,p,NEUTRAL,cv,112,112);
+      }
+      if(k<cvs.length)requestAnimationFrame(batch);
+    })();
   });
 }
 function markPresetRail(){
