@@ -1,5 +1,5 @@
 // fotn service worker — offline app shell + asset cache
-const CACHE = 'fotn-v37';
+const CACHE = 'fotn-v38';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './fonts/GoogleSansFlex-latin.woff2', './fonts/GoogleSansFlex-latin-ext.woff2',
@@ -38,11 +38,15 @@ self.addEventListener('fetch', e => {
   // immediately; fall back to the cached shell only when offline.
   if (req.mode === 'navigate') {
     e.respondWith(
-      fetch('./index.html', {cache: 'reload'}).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put('./index.html', copy));
-        return res;
-      }).catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
+      // 3 s cap: on a dead/very weak network (no error, just a hang) fall back to the cached shell
+      Promise.race([
+        fetch('./index.html', {cache: 'reload'}).then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put('./index.html', copy));
+          return res;
+        }),
+        new Promise((_, rej) => setTimeout(rej, 3000)),
+      ]).catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
     );
     return;
   }
