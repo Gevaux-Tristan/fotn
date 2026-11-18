@@ -1787,10 +1787,16 @@ function paintPreview(draft){
       src=userImg||baseImg; IW=src.naturalWidth||src.width||3; IH=src.naturalHeight||src.height||2;
       reg={sx:0,sy:0,sw:IW,sh:IH};
     }
-    let w=reg.sw, h=reg.sh, m=Math.max(w,h), cap=full?(window.innerWidth>=1024?1800:1100):640;   // low-res while scrubbing → smooth
+    let w=reg.sw, h=reg.sh, m=Math.max(w,h), cap=Math.round((full?(window.innerWidth>=1024?1800:1100):640)*pvScale);   // low-res while scrubbing → smooth; pvScale self-tunes to the device
     if(m>cap){const s=cap/m;w*=s;h*=s;}
-    renderRecipe(src, cur, picking?Object.assign({},vals,{frame:0}):vals, pvCanvas, Math.round(w), Math.round(h), {crop:reg});});
+    const t0=performance.now();
+    renderRecipe(src, cur, picking?Object.assign({},vals,{frame:0}):vals, pvCanvas, Math.round(w), Math.round(h), {crop:reg});
+    // adaptive quality: slow device (old iPad) → shrink the render size; fast → grow back. Only judged on full renders.
+    if(full){const dt=performance.now()-t0;
+      if(dt>280)pvScale=Math.max(.4,pvScale*.8); else if(dt<90)pvScale=Math.min(1,pvScale*1.1);}
+  });
 }
+let pvScale=1;
 // slider handlers call paintLook(); keep the name, route to the canvas render.
 const paintLook=paintPreview;
 
