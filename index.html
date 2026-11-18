@@ -1326,17 +1326,20 @@ async function exportBatch(items){
       }
       downloadBlob(rendered[0].blob,f.name);exitSelect();toast('Photo exportée');return;
     }
-    // …multiple photos → ONE zip whose contents live in a FOTN/ folder (unzips to a FOTN folder).
-    ov.set('Compression…');ov.progress(.85);await nextFrame();
-    const entries=rendered.map(r=>({name:'FOTN/'+r.name, blob:r.blob}));
-    const zip=await makeZip(entries), zname='FOTN_'+stampCompact()+'.zip';
-    const zfile=new File([zip],zname,{type:'application/zip'});
-    const done=()=>{exitSelect();toast(entries.length+' photos → dossier FOTN'+(failed?` (${failed} échec)`:''));};
-    if(navigator.canShare&&navigator.canShare({files:[zfile]})){
-      try{await navigator.share({files:[zfile],title:'FOTN'});done();return;}
+    // …multiple photos → one share sheet with every JPEG as its own file (Enregistrer N images / Fichiers), no zip.
+    ov.set('Enregistrement…');ov.progress(.9);await nextFrame();
+    const files=rendered.map(r=>new File([r.blob],r.name,{type:'image/jpeg'}));
+    const done=()=>{exitSelect();toast(files.length+' photos exportées'+(failed?` (${failed} échec)`:''));};
+    if(navigator.canShare&&navigator.canShare({files})){
+      try{await navigator.share({files,title:'FOTN'});done();return;}
       catch(e){if(e&&e.name==='AbortError')return;}
     }
-    downloadBlob(zip,zname);done();
+    // fallback: one download per photo, one after the other
+    for(let i=0;i<rendered.length;i++){
+      ov.set(`Téléchargement ${i+1}/${rendered.length}…`);
+      downloadBlob(rendered[i].blob,rendered[i].name);await new Promise(r=>setTimeout(r,600));
+    }
+    done();
   }catch(e){toast('Export impossible');}
   finally{hideBusy(ov);}
 }
