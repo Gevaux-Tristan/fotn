@@ -338,6 +338,11 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:0;backg
 .fbtn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid var(--line,#444);background:transparent;color:var(--txt2);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .preview.picking{cursor:crosshair}
 .fbtn.on{border-color:var(--fg);color:var(--accent)}
+.ed-rail.editing.hslpanel{gap:7px;padding:10px 20px}
+.hsl-sw{width:28px;height:28px;border-radius:50%;border:2px solid transparent;padding:0;cursor:pointer;position:relative;flex:none}
+.hsl-sw.on{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
+.hsl-sw.mod::after{content:"";position:absolute;left:50%;bottom:-6px;width:4px;height:4px;margin-left:-2px;background:var(--fg)}
+.hslpanel .fbtn{padding:6px 10px;font-size:12px}
 .fbtn i{width:14px;height:14px;border:1px solid #888;display:inline-block}
 .tool-val{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--txt)}
 /* two-tab menu */
@@ -694,6 +699,29 @@ PRESETS.forEach(p=>{p.mono=!!p.mono;});
 // neutral user adjustments (cards render presets at their default look)
 const NEUTRAL={};
 
+// HSL par couleur: 8 bandes (centre en degrés). Valeurs -100..100 par bande, stockées à plat dans vals
+// (hslH0..7 teinte, hslS0..7 saturation, hslL0..7 luminosité). Table 360 entrées interpolée linéairement.
+const HSL_BANDS=[
+  {n:'Rouge',   c:0,   col:'#e5373b'},{n:'Orange', c:30,  col:'#f08a24'},{n:'Jaune',  c:60,  col:'#f2d12e'},
+  {n:'Vert',    c:120, col:'#3fb950'},{n:'Aqua',   c:180, col:'#2cc4c4'},{n:'Bleu',   c:240, col:'#3a6fe8'},
+  {n:'Violet',  c:275, col:'#8a4fe0'},{n:'Magenta',c:320, col:'#d94fb5'}];
+const HSL_MODES=[{k:'hslH',label:'Teinte'},{k:'hslS',label:'Saturation'},{k:'hslL',label:'Luminosité'}];
+const hslKeys=()=>{const a=[];HSL_MODES.forEach(m=>HSL_BANDS.forEach((_,i)=>a.push(m.k+i)));return a;};
+function buildHslTable(A){
+  if(!A)return null;
+  let any=false;const H=[],S=[],L=[];
+  for(let i=0;i<8;i++){H[i]=(A['hslH'+i]||0)/100*30;S[i]=(A['hslS'+i]||0)/100;L[i]=(A['hslL'+i]||0)/100*0.5;
+    if(A['hslH'+i]||A['hslS'+i]||A['hslL'+i])any=true;}
+  if(!any)return null;
+  const t=new Float32Array(360*3);
+  for(let d=0;d<360;d++){
+    let i=7;for(let j=0;j<8;j++){if(HSL_BANDS[j].c<=d)i=j;}
+    const j=(i+1)%8, c0=HSL_BANDS[i].c, c1=HSL_BANDS[j].c+(j===0?360:0), dd=d<c0?d+360:d, f=(dd-c0)/(c1-c0);
+    t[d*3]=H[i]+(H[j]-H[i])*f; t[d*3+1]=S[i]+(S[j]-S[i])*f; t[d*3+2]=L[i]+(L[j]-L[i])*f;
+  }
+  return t;
+}
+
 // Merge a preset (P) with live user adjustments (A) into per-pixel constants.
 // k = preset intensity (0..1): scales the PRESET toward neutral, while the
 // universal user adjustments always apply at full strength.
@@ -720,8 +748,9 @@ function buildOps(P,A){
   const lens=clamp((A.lens||0)/100,0,1);
   const gSize=(A.grainSize==null?40:A.grainSize)/100;
   const sharp=clamp((A.sharpness||0)/100,0,1), clar=clamp((A.clarity||0)/100,-1,1);
+  const hslT=buildHslTable(A);
   const baseMx=P.mx||I3, mx=baseMx===I3?I3:baseMx.map((v,i)=>lerp(I3[i],v,k));
-  return {rG,gG,bG,exp,sat,con,hi,sh,lift,grain,vig,hal,bloom,lens,gSize,sharp,clar,
+  return {rG,gG,bG,exp,sat,con,hi,sh,lift,grain,vig,hal,bloom,lens,gSize,sharp,clar,hsl:hslT,
     split:(P.split||0)*k, splitS:P.splitS||[0,0,0], splitH:P.splitH||[0,0,0],
     mx,
     lut:lutReady?L.data:null, lutN:lutReady?L.n:LUT_N, lutK:k,   // LUT applied first, blended by intensity
@@ -787,6 +816,22 @@ function renderRecipe(src,P,A,canvas,w,h,opts){
       let lum=0.299*r+0.587*g+0.114*b;
       // 3. saturation
       r=lum+(r-lum)*O.sat; g=lum+(g-lum)*O.sat; b=lum+(b-lum)*O.sat;
+      // 3b. HSL par couleur (teinte / saturation / luminosité), pondéré par la saturation du pixel
+      if(O.hsl){
+        const mxv=r>g?(r>b?r:b):(g>b?g:b), mnv=r<g?(r<b?r:b):(g<b?g:b), cc=mxv-mnv;
+        if(cc>0.004&&mxv>0){
+          let h6=mxv===r?((g-b)/cc+6)%6:mxv===g?(b-r)/cc+2:(r-g)/cc+4;
+          const sv=cc/mxv, wt=sv>0.33?1:sv*3, ti=((h6*60)|0)%360*3, T=O.hsl;
+          h6+=T[ti]*wt/60; h6=((h6%6)+6)%6;
+          let s2=sv*(1+T[ti+1]*wt); s2=s2<0?0:s2>1?1:s2;
+          const ch=mxv*s2, xx=ch*(1-Math.abs(h6%2-1)), m0=mxv-ch, hi6=h6|0;
+          if(hi6===0){r=ch;g=xx;b=0;}else if(hi6===1){r=xx;g=ch;b=0;}else if(hi6===2){r=0;g=ch;b=xx;}
+          else if(hi6===3){r=0;g=xx;b=ch;}else if(hi6===4){r=xx;g=0;b=ch;}else{r=ch;g=0;b=xx;}
+          r+=m0;g+=m0;b+=m0;
+          const la=T[ti+2]*wt;
+          if(la>0){r+=(1-r)*la;g+=(1-g)*la;b+=(1-b)*la;}else if(la<0){const q=1+la;r*=q;g*=q;b*=q;}
+        }
+      }
       // 4. split-tone (shadows / highlights)
       if(O.split){
         const sF=lum<0.5?(0.5-lum)*2:0, hF=lum>0.5?(lum-0.5)*2:0, sp=O.split;
@@ -1374,7 +1419,7 @@ const ADJ=[
   {k:'vignette',   label:'Vignettage',     min:0,   max:100,step:1},
   {k:'fade',       label:'Estompé',        min:0,   max:100,step:1},
 ];
-function neutralAdj(){const o={};ADJ.forEach(a=>o[a.k]=(a.def==null?0:a.def));o.frame=0;o.frameC='#000000';return o;}
+function neutralAdj(){const o={};ADJ.forEach(a=>o[a.k]=(a.def==null?0:a.def));o.frame=0;o.frameC='#000000';hslKeys().forEach(k=>o[k]=0);return o;}
 
 // — load a photo Image from its stored blob —
 function blobToImage(blob){return new Promise((res,rej)=>{
@@ -1629,6 +1674,7 @@ function selectPreset(p){
 }
 
 // — réglages rail: a Crop entry + one chip per adjustment (icon + name only) —
+const HSL_ICON='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18V4a8 8 0 010 16z';
 const FRAME_ICON='M3 3H21V21H3ZM5 5V19H19V5ZM8 8H16V16H8Z';
 const CROP_ICON='M15 17V19H6C5.44772 19 5 18.5523 5 18V7H2V5H5V2H7V17H15ZM17 22V7H9V5H18C18.5523 5 19 5.44772 19 6V17H22V19H19V22H17Z';
 function buildToolChips(rail){
@@ -1643,6 +1689,11 @@ function buildToolChips(rail){
   const fl=el('span','tlabel');fl.textContent='Bordure';
   fb.appendChild(fi);fb.appendChild(fl);fb.onclick=()=>openTool('frame');
   rail.appendChild(fb);
+  const hb=el('button','tchip'+(hslKeys().some(k=>vals[k])?' act':''));hb.setAttribute('aria-label','TSL');
+  const hi=el('span','tico');hi.innerHTML=svgIcon(HSL_ICON,22);
+  const hl=el('span','tlabel');hl.textContent='TSL';
+  hb.appendChild(hi);hb.appendChild(hl);hb.onclick=()=>openTool('hsl');
+  rail.appendChild(hb);
   ADJ.forEach(a=>{
     const active=vals[a.k]!==adjDef(a);
     const b=el('button','tchip'+(active?' act':''));b.setAttribute('aria-label',a.label);
@@ -1656,12 +1707,16 @@ function buildToolChips(rail){
 
 // — single-adjustment editing: one slider with cancel / confirm —
 let frameEntry=null;
-function openTool(k){toolK=k;toolEntry=vals[k];if(k==='frame')frameEntry={f:vals.frame,c:vals.frameC};renderDock();}
+let hslEntry=null,hslBand=0,hslMode=0;
+function openTool(k){toolK=k;toolEntry=vals[k];if(k==='frame')frameEntry={f:vals.frame,c:vals.frameC};
+  if(k==='hsl'){hslEntry={};hslKeys().forEach(x=>hslEntry[x]=vals[x]||0);}renderDock();}
 function confirmTool(){setPicking(false);toolK=null;edMode='adjust';renderDock();}
 function cancelTool(){setPicking(false);if(toolK==='frame'&&frameEntry){vals.frame=frameEntry.f;vals.frameC=frameEntry.c;paint();}
+  else if(toolK==='hsl'&&hslEntry){Object.assign(vals,hslEntry);paint();}
   else if(toolK!=null){vals[toolK]=toolEntry;paint();}toolK=null;edMode='adjust';renderDock();}
 function buildToolSlider(rail){
   if(toolK==='frame'){buildFramePanel(rail);return;}
+  if(toolK==='hsl'){buildHslPanel(rail);return;}
   const a=SLIDER_BY_K[toolK];
   const val=el('div','tool-val');val.id='toolVal';
   const range=el('div','range');
@@ -1724,6 +1779,32 @@ function buildFramePanel(rail){
   rowC.appendChild(pip);
   rail.appendChild(rowT);rail.appendChild(rowC);mark();
 }
+// TSL panel: 8 colour dots, Teinte / Saturation / Luminosité tabs, one slider for the selected band + mode.
+function buildHslPanel(rail){
+  rail.classList.add('hslpanel');
+  const rowC=el('div','frame-row'), rowM=el('div','frame-row');
+  const val=el('div','tool-val'), range=el('div','range');
+  range.innerHTML='<div class="track"></div><div class="midmark" style="left:50%"></div><div class="fill"></div><input type="range" min="-100" max="100" step="1">';
+  const inp=range.querySelector('input'), fill=range.querySelector('.fill');
+  const key=()=>HSL_MODES[hslMode].k+hslBand;
+  const upd=()=>{
+    const v=vals[key()]||0;inp.value=v;val.textContent=(v>0?'+':'')+v;inp.setAttribute('aria-valuetext',val.textContent);
+    const pct=(v+100)/2;
+    if(v>=0){fill.style.left='50%';fill.style.width=(pct-50)+'%';fill.style.background='var(--pos)';}
+    else{fill.style.left=pct+'%';fill.style.width=(50-pct)+'%';fill.style.background='var(--neg)';}
+    rowC.querySelectorAll('.hsl-sw').forEach((b,i)=>{b.classList.toggle('on',i===hslBand);
+      b.classList.toggle('mod',HSL_MODES.some(m=>vals[m.k+i]));});
+    rowM.querySelectorAll('.fbtn').forEach((b,i)=>b.classList.toggle('on',i===hslMode));
+  };
+  HSL_BANDS.forEach((bd,i)=>{const b=el('button','hsl-sw');b.style.background=bd.col;b.setAttribute('aria-label',bd.n);
+    b.onclick=()=>{hslBand=i;upd();};rowC.appendChild(b);});
+  HSL_MODES.forEach((m,i)=>{const b=el('button','fbtn');b.textContent=m.label;b.onclick=()=>{hslMode=i;upd();};rowM.appendChild(b);});
+  const onInput =()=>{vals[key()]=parseFloat(inp.value);upd();paintLook(true);};
+  const onCommit=()=>{vals[key()]=parseFloat(inp.value);upd();paintLook(false);};
+  inp.addEventListener('input',onInput);inp.addEventListener('change',onCommit);
+  attachRelativeSlider(inp,onInput,onCommit);
+  rail.appendChild(rowC);rail.appendChild(rowM);rail.appendChild(val);rail.appendChild(range);upd();
+}
 // VSCO-style RELATIVE dragging: touching anywhere keeps the current value; only the finger's
 // horizontal movement changes it (delta), so there's no jump-to-touch on the first contact.
 function attachRelativeSlider(inp,onInput,onCommit){
@@ -1759,9 +1840,9 @@ function updToolSlider(){
   f.parentNode.querySelector('.midmark').style.left=mid+'%';
 }
 function buildToolMenu(menu){
-  const a=toolK==='frame'?{label:'Bordure'}:SLIDER_BY_K[toolK];
+  const a=toolK==='frame'?{label:'Bordure'}:toolK==='hsl'?{label:'TSL'}:SLIDER_BY_K[toolK];
   const x=el('button','ticon');x.innerHTML=svgIcon(MI.close,22);x.setAttribute('aria-label','Annuler');x.onclick=cancelTool;
-  const name=el('div','tname');name.innerHTML=(toolK==='frame'?svgIcon(FRAME_ICON,18):ADJ_ICON[toolK]?svgIcon(ADJ_ICON[toolK],18):'')+'<span>'+esc(a.label)+'</span>';
+  const name=el('div','tname');name.innerHTML=(toolK==='frame'?svgIcon(FRAME_ICON,18):toolK==='hsl'?svgIcon(HSL_ICON,18):ADJ_ICON[toolK]?svgIcon(ADJ_ICON[toolK],18):'')+'<span>'+esc(a.label)+'</span>';
   const ok=el('button','ticon ok');ok.innerHTML=svgIcon('M9.9997 15.1709L19.1921 5.97852L20.6063 7.39273L9.9997 17.9993L3.63574 11.6354L5.04996 10.2212L9.9997 15.1709Z',22);ok.setAttribute('aria-label','Valider');ok.onclick=confirmTool;
   menu.appendChild(x);menu.appendChild(name);menu.appendChild(ok);
 }
